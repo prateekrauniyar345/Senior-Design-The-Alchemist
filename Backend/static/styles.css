@@ -1,0 +1,41 @@
+
+:root{
+    /* dark shades */
+    --primary-dark1-color : #3e3e42;
+    --primary-dark2-color : #2d2d30;
+    --primary-dark3-color : #252526;
+    --primary-dark4-color : #1e1e1e;
+    --primary-dark5-color : #000000;
+
+    /* light shades */
+    --primary-light1-color : #E5E6E4;
+    --primary-light2-color : #ECECEB;
+    --primary-light3-color : #F2F3F2;
+    --primary-light4-color : #F9F9F8;
+    --primary-light5-color : #FFFFFF;
+}
+
+html{
+    font-size: 16px;
+    margin-left: 100px;
+    margin-right: 100px;
+}
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    box-sizing: border-box;
+    color: var(--primary-light5-color);
+    background-color: var(--primary-dark5-color);
+    min-height: 100vh;
+
+    
+}
+
+*, 
+*::before,
+*::after{
+    box-sizing: border-box;
+}
