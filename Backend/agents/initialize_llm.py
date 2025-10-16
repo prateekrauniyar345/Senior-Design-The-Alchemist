@@ -25,3 +25,4 @@ def initialize_llm() -> AzureChatOpenAI:
         timeout=None,
     )
     return llm
+
