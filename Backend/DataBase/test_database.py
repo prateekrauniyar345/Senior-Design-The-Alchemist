@@ -18,7 +18,7 @@ try:
         print("Connection successful!")
         print("Current time from database:", result.scalar())
 except Exception as e:
-    print("Connection failed:")
+    print("Connection faileddd:")
     print(e)
 
 
