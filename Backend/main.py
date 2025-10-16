@@ -1,7 +1,11 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(
         title="LLM-Driven Smart Agents for User-Friendly Access to an Open Data Portal", 
@@ -10,10 +14,10 @@ app = FastAPI(
     )
 
 # Mount the Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # templates directory for rendering HTML files
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 
 # default route
