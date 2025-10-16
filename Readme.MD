@@ -1,6 +1,6 @@
 # The Alchemist
 
-## 📌 Overview
+### 📌 Overview
 
 **The Alchemist** is a full-stack application that leverages **LangChain**, **LangGraph**, and **LangSmith** to build an intelligent, AI-powered system for exploring mineral data. The application uses:
 
