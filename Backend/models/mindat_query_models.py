@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
-import os
+from utils.helpers import check_sample_data_path, check_plots_path, get_endpoints, set_headers_for_mindat_api
 
 
 class MindatGeoMaterialQuery(BaseModel):
@@ -45,5 +45,13 @@ def mindat_geo_material_collector_input_example(query : dict):
     if 'expand' in query:
         query.update({'page_size': 200})
     filtered_query = { k: v for k, v in query.items() if v is not None }
+    print(f"Filtered query: {filtered_query}")
+
+    # get the geo material endpoints
+    endpoints = get_endpoints()
+    geomaterial_endpoint = endpoints.get("geomaterials")
+
+
+
 
     
