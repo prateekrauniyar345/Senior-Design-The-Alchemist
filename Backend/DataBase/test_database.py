@@ -1,24 +1,29 @@
-# test_connection.py
-from sqlalchemy import create_engine, text
+import psycopg2
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
+# Load environment variables from .env
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+print("Loaded URL:", DATABASE_URL)
 
-# Create engine
-engine = create_engine(DATABASE_URL)
+if not DATABASE_URL:
+    print("DATABASE_URL not found. Check your .env file or working directory.")
+    exit()
 
-# Test connection
 try:
-    with engine.connect() as connection:
-        result = connection.execute(text("SELECT NOW();"))
-        print("Connection successful!")
-        print("Current time from database:", result.scalar())
+    # Connect directly using the DATABASE_URL
+    connection = psycopg2.connect(DATABASE_URL)
+    print("Connection successful!")
+
+    cursor = connection.cursor()
+    cursor.execute("SELECT NOW();")
+    result = cursor.fetchone()
+    print("🕒 Current Time from Supabase:", result)
+
+    cursor.close()
+    connection.close()
+    print("Connection closed.")
 except Exception as e:
-    print("Connection failed:")
-    print(e)
-
-
+    print(f"Failed to connect: {e}")
