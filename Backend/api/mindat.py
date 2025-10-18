@@ -3,7 +3,7 @@ from ..config.mindat_config import MindatAPIClient
 from ..models.mindat_query_models import MindatGeoMaterialQuery
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
 
-
+# this class will be used to interact with the geomaterial endpoint of the Mindat API
 class GeomaterialAPI():
     """
     Geomaterial API Client
@@ -19,6 +19,6 @@ class GeomaterialAPI():
         params = Dict(query_params)
         if not params:
             raise MindatAPIException(
-                
+
             )
         return self.client.get_data_from_api(self.endpoint, params)
