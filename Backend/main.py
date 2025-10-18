@@ -49,8 +49,7 @@ async def terms_of_service(request: Request):
 
 @app.get("/api/mindat/geomaterials")
 async def test_mindat_search(
-    ima: str = Query(..., description="Search query for minerals"),
-    
+    ima: str = Query(..., description="Search query for minerals")
 ):
     """Test Mindat API search functionality"""
     print( "Received search request:", ima)
@@ -68,7 +67,6 @@ async def test_mindat_search(
             "total_results": response.get("count", 0),
             "results": response.get("results", [])
         }
-        
     except MindatAPIException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
