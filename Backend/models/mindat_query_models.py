@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict
+import os
 
 
 class MindatGeoMaterialQuery(BaseModel):
@@ -21,3 +22,28 @@ class MindatLocalityQuery(BaseModel):
     """
     country: str = Field(description="The country name")
     # txt: str = Field(description="The keywords to search for localities")
+
+
+class MindatGeoMaterialCollectorInput(BaseModel):
+    query: MindatGeoMaterialQuery = Field(description="""Example dicts, all of the keys are optional, leave blank if necessary:
+                            {
+                                "ima": True,  # Only IMA-approved names
+                                "hardness_min": 1.0,  # Mohs hardness from 1
+                                "hardness_max": 10.0,  # Mohs hardness to 10
+                                "crystal_system": ["Hexagonal"],  # Hexagonal crystal system
+                                "el_inc": "Ag,H",  # Must include Gold (Ag) and Hxygen (H)
+                                "el_exc": "Fe"  # Exclude Iron (Fe)
+                            }
+                            """)
+
+
+
+def mindat_geo_material_collector_input_example(query : dict):
+    query = Dict(query)
+    if not query:
+        return
+    if 'expand' in query:
+        query.update({'page_size': 200})
+    filtered_query = { k: v for k, v in query.items() if v is not None }
+
+    
