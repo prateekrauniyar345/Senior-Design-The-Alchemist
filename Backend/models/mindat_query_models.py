@@ -18,19 +18,3 @@ class MindatGeoMaterialQuery(BaseModel):
 
 
 
-class GeomaterialAPI():
-    """
-    Geomaterial API Client
-    """
-    def __init__(self, client : MindatAPIClient):
-        self.client = client
-        self.endpoint = self.client.endpoints["geomaterials"]
-
-    def search_geomaterials_minerals(self, query_params: MindatGeoMaterialQuery) -> Dict:
-        """
-        Search geomaterials/minerals with given query parameters
-        """
-        params = Dict(query_params)
-        if not params:
-            CustomErrorMessage("At least one query parameter must be provided for searching geomaterials.")
-        return self.client.get_data_from_api(self.endpoint, params)

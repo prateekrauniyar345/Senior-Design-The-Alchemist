@@ -1,42 +1,41 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
-from dotenv import load_dotenv
-import os
 import requests
 from urllib.parse import urljoin
-from ..utils.custom_message import CustomErrorMessage
-from dotenv import load_dotenv
-
-# load the environment variables
-load_dotenv()
+from ..utils.custom_message import MindatAPIException, ErrorSeverity
+from ..config.settings import settings
 
 
-
-Mindat_Base_Url  = os.getenv("MINDAT_HOST", "https://api.mindat.org/v1/")
-Mindat_Api_Key  = os.getenv("MINDAT_API_KEY", "")
-
-
-class MindatConfig(BaseModel):
-    host:str = Field(..., description="Host URL of the Mindat API", example="https://www.mindat.org/api/v1")
-    api_key: str = Field(..., description="API key for accessing the Mindat API", example="******************")
 
 
 class MindatAuth:
     """Handle Mindat API authentication"""
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv('MINDAT_API_KEY')
+    def __init__(self, config =settings):
+        self.api_key = config.mindat_api_key
+        self.base_url  = config.mindat_base_url
         if not self.api_key:
-            print("⚠️  Warning: No API key found!")
-            print("Get your API key from: https://www.mindat.org/a/how_to_get_an_api_key")
-            print("Set it as MINDAT_API_KEY environment variable")
-            raise CustomErrorMessage("Mindat API key for MinDat is missing. Please set the MINDAT_API_KEY environment variable.")
-        else:
-            print(f"✅ API key loaded: {self.api_key[:8]}{'*' * (len(self.api_key) - 8)}")
-    
+            raise MindatAPIException(
+                message="Mindat API key is missing.",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={
+                    "hint": "Set MINDAT_API_KEY in your environment or .env file.",
+                    "doc": "https://www.mindat.org/a/how_to_get_an_api_key",
+                },
+            )
+       
     def get_headers(self) -> Dict[str, str]:
         """Get authentication headers for API requests"""
         if not self.api_key:
-            raise CustomErrorMessage("Mindat API key for MinDat is missing. Please set the MINDAT_API_KEY environment variable.")
+            raise MindatAPIException(
+                message="Mindat API key is missing.",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={
+                    "hint": "Set MINDAT_API_KEY in your environment or .env file.",
+                    "doc": "https://www.mindat.org/a/how_to_get_an_api_key",
+                },
+            )
         return {
             'Authorization': f'Token {self.api_key}',
             'Content-Type': 'application/json',
@@ -47,9 +46,9 @@ class MindatAuth:
 
 class MindatAPIClient:
     """Comprehensive client for the Mindat.org API"""
-    def __init__(self, api_key: str = None):
-        self.auth = MindatAuth(api_key)
-        self.base_url = Mindat_Base_Url
+    def __init__(self, auth : MindatAuth = None):
+        self.auth = auth or MindatAuth()
+        self.base_url = self.auth.base_url
         self.session = requests.Session()
         self.session.headers.update(self.auth.get_headers())
         
@@ -83,18 +82,21 @@ class MindatAPIClient:
                 "reference-languages": "https://api.mindat.org/v1/reference-languages/",
                 "reference-isbn": "https://api.mindat.org/v1/reference-isbn/"
         }
-        
-        print(f"Mindat API Client initialized")
-        print(f"Base URL: {self.base_url}")
-        print(f"Available endpoints: {len(self.endpoints)}")
     
     def get_data_from_api(self, endpoint: str, params: Dict = None, timeout: int = 30) -> Dict:
         """Make GET request to API endpoint"""
         if endpoint:
             url  = endpoint
         else : 
-            CustomErrorMessage("Endpoint URL is required for GET request.")
-        
+            raise MindatAPIException(
+                message="Mindat API key is missing.",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={
+                    "hint": "Set MINDAT_API_KEY in your environment or .env file.",
+                    "doc": "https://www.mindat.org/a/how_to_get_an_api_key",
+                },
+            )
         try:
             response = self.session.get(url, params=params, timeout=timeout)
             response.raise_for_status()
@@ -107,4 +109,3 @@ class MindatAPIClient:
 
 # Initialize the API client
 client = MindatAPIClient()
-client.list_endpoints()
