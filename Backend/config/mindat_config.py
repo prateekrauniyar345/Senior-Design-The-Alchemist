@@ -51,7 +51,6 @@ class MindatAPIClient:
         self.base_url = self.auth.base_url
         self.session = requests.Session()
         self.session.headers.update(self.auth.get_headers())
-        
         # Available endpoints
         self.endpoints = {
                 "minerals-ima": "https://api.mindat.org/v1/minerals-ima/",
@@ -101,10 +100,20 @@ class MindatAPIClient:
             response = self.session.get(url, params=params, timeout=timeout)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"❌ API request failed: {e}")
-            raise
-    
+        except requests.HTTPError as http_err:
+            raise MindatAPIException(
+                message="HTTP error occurred while accessing Mindat API",
+                status_code=response.status_code,
+                severity=ErrorSeverity.CRITICAL,
+                details={"error": str(http_err), "url": url, "params": params}
+            )
+        except requests.RequestException as req_err:
+            raise MindatAPIException(
+                message="Request error occurred while accessing Mindat API",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={"error": str(req_err), "url": url, "params": params}
+            )
     
 
 # Initialize the API client

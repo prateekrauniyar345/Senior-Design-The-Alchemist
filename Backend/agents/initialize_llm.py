@@ -10,7 +10,6 @@ DEFAULT_MODEL = "gpt-4o"
 DEFAULT_TEMPERATURE = 0.7
 
 
-
 def initialize_llm() -> AzureChatOpenAI:
     """
     Build an AzureChatOpenAI client using strongly-typed app settings.
@@ -34,15 +33,5 @@ def initialize_llm() -> AzureChatOpenAI:
         )
 
         return llm 
-    except ValidationError as ve:
-        raise LLMException(
-            message="Invalid Azure OpenAI configuration.",
-            status_code=500,
-            details={"validation_errors": ve.errors()},
-        ) from ve
     except Exception as e:
-        raise LLMException(
-            message="Failed to initialize Azure OpenAI client.",
-            status_code=500,
-            details={"error": str(e)},
-        ) from e
+        print(f"Error initializing LLM: {e}")
