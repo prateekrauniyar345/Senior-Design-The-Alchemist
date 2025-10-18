@@ -4,39 +4,25 @@ from dotenv import load_dotenv
 import os
 import requests
 from urllib.parse import urljoin
-from ..utils.custom_message import CustomErrorMessage
-from dotenv import load_dotenv
-
-# load the environment variables
-load_dotenv()
+from ..utils.custom_message import MindatAPIException, ErrorSeverity
+from ..config.settings import settings
 
 
 
-Mindat_Base_Url  = os.getenv("MINDAT_HOST", "https://api.mindat.org/v1/")
-Mindat_Api_Key  = os.getenv("MINDAT_API_KEY", "")
-
-
-class MindatConfig(BaseModel):
-    host:str = Field(..., description="Host URL of the Mindat API", example="https://www.mindat.org/api/v1")
-    api_key: str = Field(..., description="API key for accessing the Mindat API", example="******************")
-
-
-class MindatAuth:
+class MindatAuth():
     """Handle Mindat API authentication"""
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv('MINDAT_API_KEY')
+    def __init__(self):
+        self.api_key = settings.mindat_api_key
+        self.base_url = settings.mindat_base_url
+        if not self.base_url:
+            raise ValueError("Mindat BASE URL is not configured.")
         if not self.api_key:
-            print("⚠️  Warning: No API key found!")
-            print("Get your API key from: https://www.mindat.org/a/how_to_get_an_api_key")
-            print("Set it as MINDAT_API_KEY environment variable")
-            raise CustomErrorMessage("Mindat API key for MinDat is missing. Please set the MINDAT_API_KEY environment variable.")
-        else:
-            print(f"✅ API key loaded: {self.api_key[:8]}{'*' * (len(self.api_key) - 8)}")
+            raise ValueError("Mindat API KEY is not configured.")
     
     def get_headers(self) -> Dict[str, str]:
         """Get authentication headers for API requests"""
         if not self.api_key:
-            raise CustomErrorMessage("Mindat API key for MinDat is missing. Please set the MINDAT_API_KEY environment variable.")
+            raise ValueError("Mindat API KEY is not configured.")
         return {
             'Authorization': f'Token {self.api_key}',
             'Content-Type': 'application/json',
@@ -47,12 +33,11 @@ class MindatAuth:
 
 class MindatAPIClient:
     """Comprehensive client for the Mindat.org API"""
-    def __init__(self, api_key: str = None):
-        self.auth = MindatAuth(api_key)
-        self.base_url = Mindat_Base_Url
+    def __init__(self, auth: MindatAuth = None):
+        self.auth = auth or MindatAuth()
+        self.base_url = auth.base_url
         self.session = requests.Session()
         self.session.headers.update(self.auth.get_headers())
-        
         # Available endpoints
         self.endpoints = {
                 "minerals-ima": "https://api.mindat.org/v1/minerals-ima/",
@@ -90,21 +75,34 @@ class MindatAPIClient:
     
     def get_data_from_api(self, endpoint: str, params: Dict = None, timeout: int = 30) -> Dict:
         """Make GET request to API endpoint"""
-        if endpoint:
-            url  = endpoint
-        else : 
-            CustomErrorMessage("Endpoint URL is required for GET request.")
-        
+        if not endpoint:
+            raise MindatAPIException(
+                message="API endpoint is required",
+                status_code=400,
+                severity=ErrorSeverity.ERROR,
+                details={"endpoint": endpoint}
+            )
+        else:
+            url  = self.endpoints[endpoint]
         try:
             response = self.session.get(url, params=params, timeout=timeout)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"❌ API request failed: {e}")
-            raise
-    
+        except requests.HTTPError as http_err:
+            raise MindatAPIException(
+                message="HTTP error occurred while accessing Mindat API",
+                status_code=response.status_code,
+                severity=ErrorSeverity.CRITICAL,
+                details={"error": str(http_err), "url": url, "params": params}
+            )
+        except requests.RequestException as req_err:
+            raise MindatAPIException(
+                message="Request error occurred while accessing Mindat API",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={"error": str(req_err), "url": url, "params": params}
+            )
     
 
 # Initialize the API client
 client = MindatAPIClient()
-client.list_endpoints()

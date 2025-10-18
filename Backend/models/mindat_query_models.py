@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from utils.helpers import check_sample_data_path, check_plots_path, get_endpoints, set_headers_for_mindat_api
-from config.mindat_config import MindatAPIClient
-from utils.custom_message import CustomErrorMessage
+from ..config.mindat_config import MindatAPIClient
+from ..utils.custom_message import MindatAPIException
 
 class MindatGeoMaterialQuery(BaseModel):
     """
@@ -32,5 +32,10 @@ class GeomaterialAPI():
         """
         params = Dict(query_params)
         if not params:
-            CustomErrorMessage("At least one query parameter must be provided for searching geomaterials.")
-        return self.client.get_data_from_api(self.endpoint, params)
+            raise MindatAPIException(
+                message="Query parameters are required for searching geomaterials.",
+                status_code=400,
+                details={"query_params": query_params}
+            )
+        return self.client.get_data_from_api("geomaterials", params=params)
+        
