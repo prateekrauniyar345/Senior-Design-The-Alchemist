@@ -1,8 +1,5 @@
 from pathlib import Path
-from config.mindat_config import MindatConfig
-import os
-from dotenv import load_dotenv
-load_dotenv()
+
 
 
 # check path for storing the samples files in directory folder

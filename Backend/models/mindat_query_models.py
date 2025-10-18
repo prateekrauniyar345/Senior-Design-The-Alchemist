@@ -1,8 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
-from utils.helpers import check_sample_data_path, check_plots_path, get_endpoints, set_headers_for_mindat_api
-from ..config.mindat_config import MindatAPIClient
-from ..utils.custom_message import MindatAPIException
+from typing import Optional
 
 class MindatGeoMaterialQuery(BaseModel):
     """

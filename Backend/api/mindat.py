@@ -14,6 +14,9 @@ class GeomaterialAPI:
         
         # Use dict directly instead of Pydantic model for now
         params = query_params if query_params else {}
+
+
+        print("Params in search_geomaterials_minerals:", params)
         
         if not params:
             raise MindatAPIException(

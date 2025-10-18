@@ -9,6 +9,7 @@ including API clients, configurations, utilities, and agents.
 from .api import GeomaterialAPI
 from .config import settings, get_mindat_client, MindatAPIClient
 from .utils import AlchemistException, MindatAPIException, LLMException, ErrorSeverity
+from .models import MindatGeoMaterialQuery
 
 __version__ = "0.1.0"
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "AlchemistException", 
     "MindatAPIException", 
     "LLMException", 
-    "ErrorSeverity"
+    "ErrorSeverity", 
+    "MindatGeoMaterialQuery"
 ]
