@@ -1,9 +1,12 @@
 import os
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+# Import from our Backend package
+from .api import get_geomaterial_api
+from .utils import MindatAPIException
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,6 +44,37 @@ async def privacy_policy(request: Request):
 @app.get("/terms-of-service", response_class=HTMLResponse)
 async def terms_of_service(request: Request):
     return templates.TemplateResponse("terms_of_service.html", {"request": request})
+
+
+
+@app.get("/api/mindat/geomaterials")
+async def test_mindat_search(
+    q: str = Query(..., description="Search query for minerals"),
+    limit: int = Query(10, ge=1, le=100, description="Number of results to return")
+):
+    """Test Mindat API search functionality"""
+    try:
+        geo_api = get_geomaterial_api()
+        
+        # Create simple test params (you'll need to adjust based on your model)
+        test_params = {"q": q, "limit": limit}
+        response = geo_api.client.get_data_from_api(geo_api.endpoint, test_params)
+        
+        return {
+            "success": True,
+            "query": q,
+            "limit": limit,
+            "total_results": response.get("count", 0),
+            "results": response.get("results", [])
+        }
+        
+    except MindatAPIException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+
 
 if __name__ == "__main__":
     # uvicorn is used to run the FastAPI app

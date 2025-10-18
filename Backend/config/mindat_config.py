@@ -3,7 +3,7 @@ from typing import Optional, List, Dict
 import requests
 from urllib.parse import urljoin
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
-from ..config.settings import settings
+from .settings import settings
 
 
 
@@ -114,7 +114,8 @@ class MindatAPIClient:
                 severity=ErrorSeverity.CRITICAL,
                 details={"error": str(req_err), "url": url, "params": params}
             )
-    
 
-# Initialize the API client
-client = MindatAPIClient()
+# Factory function to get a configured client instance
+def get_mindat_client() -> MindatAPIClient:
+    """Get a configured Mindat API client instance"""
+    return MindatAPIClient()

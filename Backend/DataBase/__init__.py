@@ -1,0 +1,1 @@
+# Database package - contains database-related functionality
