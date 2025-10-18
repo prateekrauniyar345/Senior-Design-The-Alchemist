@@ -32,8 +32,3 @@ class GeomaterialAPI:
                 severity=ErrorSeverity.ERROR,
                 details={"query_params": params}
             )
-
-# Factory function
-def get_geomaterial_api() -> GeomaterialAPI:
-    """Get GeomaterialAPI instance"""
-    return GeomaterialAPI()

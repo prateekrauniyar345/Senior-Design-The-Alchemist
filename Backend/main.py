@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 # Import from our Backend package
-from .api import get_geomaterial_api
+from .api import GeomaterialAPI
 from .utils import MindatAPIException
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,8 +54,7 @@ async def test_mindat_search(
     """Test Mindat API search functionality"""
     print( "Received search request:", ima)
     try:
-        geo_api = get_geomaterial_api()
-        
+        geo_api = GeomaterialAPI()
         # Create simple test params (you'll need to adjust based on your model)
         test_params = {"ima": ima}
         print("Using test params:", test_params)
