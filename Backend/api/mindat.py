@@ -7,7 +7,7 @@ class GeomaterialAPI:
     
     def __init__(self, client: Optional[MindatAPIClient] = None):
         self.client = client or get_mindat_client()
-        self.endpoint_key = "geomaterials"  # Use endpoint key instead of full URL
+        self.endpoint = "geomaterials"  # Use endpoint key instead of full URL
     
     def search_geomaterials_minerals(self, query_params: Dict) -> Dict:
         """Search geomaterials/minerals with given query parameters"""
@@ -24,7 +24,7 @@ class GeomaterialAPI:
             )
         
         try:
-            return self.client.get_data_from_api(self.endpoint_key, params)
+            return self.client.get_data_from_api(self.endpoint, params)
         except Exception as e:
             raise MindatAPIException(
                 message=f"Failed to search geomaterials: {str(e)}",

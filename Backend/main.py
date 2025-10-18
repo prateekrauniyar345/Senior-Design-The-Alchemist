@@ -49,21 +49,22 @@ async def terms_of_service(request: Request):
 
 @app.get("/api/mindat/geomaterials")
 async def test_mindat_search(
-    q: str = Query(..., description="Search query for minerals"),
-    limit: int = Query(10, ge=1, le=100, description="Number of results to return")
+    ima: str = Query(..., description="Search query for minerals"),
+    
 ):
     """Test Mindat API search functionality"""
+    print( "Received search request:", ima)
     try:
         geo_api = get_geomaterial_api()
         
         # Create simple test params (you'll need to adjust based on your model)
-        test_params = {"q": q, "limit": limit}
+        test_params = {"ima": ima}
+        print("Using test params:", test_params)
         response = geo_api.client.get_data_from_api(geo_api.endpoint, test_params)
         
         return {
             "success": True,
-            "query": q,
-            "limit": limit,
+            "query": ima,
             "total_results": response.get("count", 0),
             "results": response.get("results", [])
         }

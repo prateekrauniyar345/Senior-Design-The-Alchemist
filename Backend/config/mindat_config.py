@@ -85,7 +85,7 @@ class MindatAPIClient:
     def get_data_from_api(self, endpoint: str, params: Dict = None, timeout: int = 30) -> Dict:
         """Make GET request to API endpoint"""
         if endpoint:
-            url  = endpoint
+            url  = self.endpoints.get(endpoint)
         else : 
             raise MindatAPIException(
                 message="Mindat API key is missing.",
