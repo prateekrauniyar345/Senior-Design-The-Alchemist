@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from utils.helpers import check_sample_data_path, check_plots_path, get_endpoints, set_headers_for_mindat_api
-
+from config.mindat_config import MindatAPIClient
+from utils.custom_message import CustomErrorMessage
 
 class MindatGeoMaterialQuery(BaseModel):
     """
@@ -16,42 +17,20 @@ class MindatGeoMaterialQuery(BaseModel):
     expand: Optional[str] = Field(description="Expand the search scope, 'description','type_localities','locality','relations','minstats', leave blank if necessary")
 
 
-class MindatLocalityQuery(BaseModel):
+
+class GeomaterialAPI():
     """
-    Mindat Locality Input Parameters
+    Geomaterial API Client
     """
-    country: str = Field(description="The country name")
-    # txt: str = Field(description="The keywords to search for localities")
+    def __init__(self, client : MindatAPIClient):
+        self.client = client
+        self.endpoint = self.client.endpoints["geomaterials"]
 
-
-class MindatGeoMaterialCollectorInput(BaseModel):
-    query: MindatGeoMaterialQuery = Field(description="""Example dicts, all of the keys are optional, leave blank if necessary:
-                            {
-                                "ima": True,  # Only IMA-approved names
-                                "hardness_min": 1.0,  # Mohs hardness from 1
-                                "hardness_max": 10.0,  # Mohs hardness to 10
-                                "crystal_system": ["Hexagonal"],  # Hexagonal crystal system
-                                "el_inc": "Ag,H",  # Must include Gold (Ag) and Hxygen (H)
-                                "el_exc": "Fe"  # Exclude Iron (Fe)
-                            }
-                            """)
-
-
-
-def mindat_geo_material_collector_input_example(query : dict):
-    query = Dict(query)
-    if not query:
-        return
-    if 'expand' in query:
-        query.update({'page_size': 200})
-    filtered_query = { k: v for k, v in query.items() if v is not None }
-    print(f"Filtered query: {filtered_query}")
-
-    # get the geo material endpoints
-    endpoints = get_endpoints()
-    geomaterial_endpoint = endpoints.get("geomaterials")
-
-
-
-
-    
+    def search_geomaterials_minerals(self, query_params: MindatGeoMaterialQuery) -> Dict:
+        """
+        Search geomaterials/minerals with given query parameters
+        """
+        params = Dict(query_params)
+        if not params:
+            CustomErrorMessage("At least one query parameter must be provided for searching geomaterials.")
+        return self.client.get_data_from_api(self.endpoint, params)

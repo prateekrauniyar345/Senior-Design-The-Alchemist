@@ -103,13 +103,6 @@ class MindatAPIClient:
             print(f"❌ API request failed: {e}")
             raise
     
-    def search(self, endpoint: str, query: str, limit: int = 10) -> Dict:
-        """Search within an endpoint"""
-        params = {
-            'q': query,
-            'limit': limit
-        }
-        return self.get_data_from_api(endpoint, params)
     
 
 # Initialize the API client

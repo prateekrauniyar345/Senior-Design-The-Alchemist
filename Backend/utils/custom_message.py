@@ -1,20 +1,39 @@
-# Backend/utils/custom_message.py
-class CustomError(Exception):
-    """A custom exception with a detailed message."""
+from typing import Optional, Dict, Any
+from enum import Enum
+
+class ErrorSeverity(Enum):
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+class AlchemistException(Exception):
+    """Base exception for all Alchemist application errors"""
     
-    def __init__(self, message: str, code: int = None):
+    def __init__(
+        self, 
+        message: str, 
+        status_code: int = 400,
+        severity: ErrorSeverity = ErrorSeverity.ERROR,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(message)
         self.message = message
-        self.code = code
-        super().__init__(self.message)
+        self.status_code = status_code
+        self.severity = severity
+        self.details = details or {}
     
-    def __str__(self):
-        if self.code:
-            return f"[Error {self.code}] {self.message}"
-        return self.message
-    
-    def to_dict(self):
-        """Convert the error details to a dictionary."""
-        error_info = {"message": self.message}
-        if self.code:
-            error_info["code"] = self.code
-        return error_info
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "error": self.message,
+            "status_code": self.status_code,
+            "severity": self.severity.value,
+            "details": self.details
+        }
+
+class MindatAPIException(AlchemistException):
+    """Specific exception for Mindat API errors"""
+    pass
+
+class LLMException(AlchemistException):
+    """Specific exception for LLM-related errors"""
+    pass
