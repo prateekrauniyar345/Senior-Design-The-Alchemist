@@ -1,3 +1,6 @@
+# this module will help us collect the data from different endpoints of mindat.org
+
+
 from typing import Dict, Optional
 from ..config.mindat_config import MindatAPIClient
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
@@ -46,24 +49,7 @@ class GeomaterialAPI:
                 severity=ErrorSeverity.ERROR,
                 details={"mineral_id": mineral_id}
             )
-    
-    def test_connection(self) -> Dict:
-        """Test API connection with a simple request"""
-        try:
-            test_params = {"limit": 1}
-            response = self.client.get_data_from_api(self.endpoint, test_params)
-            return {
-                "status": "success",
-                "message": "Mindat API connection successful",
-                "data": response,
-                "count": len(response.get("results", []))
-            }
-        except Exception as e:
-            return {
-                "status": "error", 
-                "message": f"Mindat API connection failed: {str(e)}",
-                "data": None
-            }
+
 
 # Factory function
 def get_geomaterial_api() -> GeomaterialAPI:
