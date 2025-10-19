@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 # Import from our Backend package
 from .api import GeomaterialAPI
 from .utils import MindatAPIException
+from .models import MindatGeoMaterialQuery
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,7 +50,7 @@ async def terms_of_service(request: Request):
 
 @app.get("/api/mindat/geomaterials")
 async def test_mindat_search(
-    ima: str = Query(..., description="Search query for minerals")
+    ima: str = Query(..., description="Search query for minerals"), 
 ):
     """Test Mindat API search functionality"""
     print( "Received search request:", ima)
