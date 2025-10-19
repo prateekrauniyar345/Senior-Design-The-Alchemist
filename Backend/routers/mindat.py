@@ -1,0 +1,46 @@
+from fastapi import APIRouter, Query, HTTPException
+from ..services import get_geomaterial_api
+from ..utils import MindatAPIException
+
+# Create router instance
+router = APIRouter(prefix="/mindat", tags=["mindat"])
+
+@router.get("/geomaterials")
+async def search_geomaterials(
+    ima: str = Query(..., description="Search query for minerals"), 
+):
+    """Search Mindat API for geomaterials"""
+    try:
+        geo_api = get_geomaterial_api()
+        test_params = {"ima": ima}
+        response = geo_api.search_geomaterials_minerals(test_params)
+        
+        return {
+            "success": True,
+            "query": ima,
+            "total_results": response.get("count", 0),
+            "results": response.get("results", [])
+        }
+    except MindatAPIException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@router.get("/test-connection")
+async def test_connection():
+    """Test Mindat API connection"""
+    try:
+        geo_api = get_geomaterial_api()
+        result = geo_api.test_connection()
+        
+        if result["status"] == "success":
+            return {
+                "success": True,
+                "message": result["message"],
+                "sample_count": result["count"]
+            }
+        else:
+            raise HTTPException(status_code=500, detail=result["message"])
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")
