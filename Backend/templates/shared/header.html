@@ -1,72 +1,64 @@
-<div style="margin-top: 20px;">
-  <header
-    style="
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    "
-  >
-    <!-- Left: Logo + Title -->
-     <a href="/" style="text-decoration: none; color: inherit;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <img
-            src="{{ url_for('static', path='images/the-alchemist.png') }}"
-            alt="The Alchemist Logo"
-            style="height: 32px; width: 32px; object-fit: contain;"
-          >
-          <span style="font-size: 1.2rem; font-weight: 600;">The Alchemist</span>
-        </div>
-     </a>
-    
+<!-- shared/header.html (DoorDash-style top bar) -->
+<header class="dd-nav">
+  <a href="/" class="dd-brand" aria-label="Go to main page">
+    <img
+      src="{{ url_for('static', path='images/the-alchemist.png') }}"
+      alt=""
+      class="dd-logo"
+      loading="lazy"
+    />
+    <span class="dd-name">The Alchemist</span>
+  </a>
 
-    <!-- Middle: Navigation -->
-    <nav>
-      <ul
-        style="
-          list-style: none;
-          display: flex;
-          gap: 1.5rem;
-          margin: 0;
-          padding: 0;
-        "
-      >
-        <li><a href="/" style="text-decoration: none; color: inherit;">Home</a></li>
-        <li><a href="/dashboard" style="text-decoration: none; color: inherit;">Dashboard</a></li>
-      </ul>
-    </nav>
+  <nav class="dd-actions">
+    <a href="/login" class="dd-btn dd-btn--signin">Sign In</a>
+    <a href="/register" class="dd-btn dd-btn--signup">Sign Up</a>
+  </nav>
+</header>
 
-    <!-- Right: Auth buttons -->
-    <div style="display: flex; gap: 1rem;">
-      <a
-        href="/signin"
-        style="
-          text-decoration: none;
-          color: inherit;
-          border: 1px solid var(--primary-light5-color);
-          padding: 0.5rem 1rem;
-          border-radius: 6px;
-          transition: background 0.2s ease;
-        "
-        onmouseover="this.style.background='var(--primary-light5-color)'; this.style.color='black';"
-        onmouseout="this.style.background='transparent'; this.style.color='inherit';"
-      >
-        Sign In
-      </a>
-      <a
-        href="/signup"
-        style="
-          text-decoration: none;
-          color: inherit;
-          border: 1px solid var(--primary-light5-color);
-          padding: 0.5rem 1rem;
-          border-radius: 6px;
-          transition: background 0.2s ease;
-        "
-        onmouseover="this.style.background='var(--primary-light5-color)';this.style.color='black';"
-        onmouseout="this.style.background='transparent';this.style.color='inherit';"
-      >
-        Sign Up
-      </a>
-    </div>
-  </header>
-</div>
+<style>
+  .dd-nav{
+    margin-bottom: 100px; 
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 10px;
+    /*background:#eed9d6;   */        
+    color:#020000;
+    border-radius:10px;             /* optional: remove for full-bleed bar */
+  }
+
+  .dd-brand{
+    display:flex;align-items:center;gap:10px;
+    text-decoration:none;color:#180101;
+    font-weight:800;letter-spacing:.3px;font-size:1.15rem;
+  }
+  .dd-logo{width:22px;height:22px;object-fit:contain;}
+  .dd-name{line-height:1;}
+
+  .dd-actions{
+    display:flex;
+    gap:12px;
+  }
+  
+  .dd-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:8px 18px;border-radius:9999px;
+    text-decoration:none;font-weight:800;font-size:.95rem;
+    transition:filter .15s ease, transform .05s ease, background .15s ease;
+    border:1px solid transparent;
+  }
+  .dd-btn--signin{background:#d21e0e;color:#fff;}
+  .dd-btn--signin:hover{filter:saturate(1.05);}
+  .dd-btn--signup{background:#fff;color:#333;border-color:#ffffff;}
+  .dd-btn--signup:hover{background:#f1f1f1;}
+  .dd-btn:active{transform:translateY(1px);}
+
+  /* Responsive: stack buttons if needed */
+  @media (max-width:480px){
+    .dd-nav{padding:0 16px;}
+    .dd-name{font-size:1rem;}
+    .dd-btn{padding:8px 14px;}
+  }
+</style>

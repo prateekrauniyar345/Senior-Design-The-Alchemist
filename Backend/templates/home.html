@@ -1,12 +1,62 @@
-{% extends "root.html" %}
+ {% extends "root.html" %}  
 
 {% block title %}Home - LLM Driven Smart Agent{% endblock %}
 
 {% block content %}
-    <section class="home-section">
-        <div class="container">
-            <h1>Welcome to the LLM Driven Smart Agent</h1>
-            <p>Your intelligent assistant for automating tasks and enhancing productivity.</p>
-        </div>
-    </section>
+
+<style>
+  /* Background: subtle vignette, no blue glow */
+body{
+    background:
+        radial-gradient(900px 500px at 50% -200px, rgba(255,255,255,.04), transparent 60%),
+        radial-gradient(1200px 700px at 50% 120%, rgba(0,0,0,.35), transparent 60%),
+        var(--bg);
+    color:var(--text);
+    }
+
+    /* Home card */
+    .home-section { margin-top:80px; padding:80px 20px; display:flex; justify-content:center; }
+    .home-section .container{
+    max-width:700px; text-align:center;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:60px 40px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    }
+
+    /* Text */
+    .home-section h1{ color:var(--text); }
+    .home-section p{ color:var(--muted); }
+
+    /* CTA keeps a soft blue but neutralized */
+     .home-btn {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    background: linear-gradient(160deg, #7aa2ff, #a09bff);
+    color: #0a0f16;
+    text-decoration: none;
+    box-shadow: 0 10px 30px rgba(122,162,255,.25);
+    transition: all 0.2s ease;
+  }
+  .home-btn:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.05);
+    box-shadow: 0 12px 36px rgba(122,162,255,.32);
+  }
+</style>
+
+<section class="home-section">
+  <div class="container">
+    <h1>Welcome to the LLM Driven Smart Agent</h1>
+    <p>Your intelligent assistant for automating tasks and enhancing productivity.</p>
+
+    <!-- Optional CTA button -->
+    <a href="/dashboard" class="home-btn">Go to Dashboard</a>
+  </div>
+</section>
 {% endblock %}

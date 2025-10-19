@@ -1,41 +1,55 @@
-
 :root{
-    /* dark shades */
-    --primary-dark1-color : #3e3e42;
-    --primary-dark2-color : #2d2d30;
-    --primary-dark3-color : #252526;
-    --primary-dark4-color : #1e1e1e;
-    --primary-dark5-color : #000000;
+  /* dark shades */
+  --primary-dark1-color:#3e3e42;
+  --primary-dark2-color:#2d2d30;
+  --primary-dark3-color:#252526;
+  --primary-dark4-color:#1e1e1e;
+  --primary-dark5-color:#000000;
 
-    /* light shades */
-    --primary-light1-color : #E5E6E4;
-    --primary-light2-color : #ECECEB;
-    --primary-light3-color : #F2F3F2;
-    --primary-light4-color : #F9F9F8;
-    --primary-light5-color : #FFFFFF;
+  /* light shades */
+  --primary-light1-color:#E5E6E4;
+  --primary-light2-color:#ECECEB;
+  --primary-light3-color:#F2F3F2;
+  --primary-light4-color:#F9F9F8;
+  --primary-light5-color:#FFFFFF;
 }
 
-html{
-    font-size: 16px;
-    margin-left: 100px;
-    margin-right: 100px;
-}
+/* Global reset */
+html { font-size:16px; margin:0; }
+*,
+*::before,
+*::after { box-sizing:border-box; }
 
 body{
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-    box-sizing: border-box;
-    color: var(--primary-light5-color);
-    background-color: var(--primary-dark5-color);
-    min-height: 100vh;
-
-    
+  font-family: 'Times New Roman', Times, Helvetica, sans-serif;
+  margin:0;
+  padding:0;
+  color:var(--primary-light5-color);
+  background-color:var(--primary-dark5-color);
+  min-height:100vh;
 }
 
-*, 
-*::before,
-*::after{
-    box-sizing: border-box;
+/* Content container (use for pages, NOT for the header) */
+.container{
+  max-width:11100px;
+  margin:0 auto;     /* center page content */
+  padding:0 24px;    /* side breathing room */
 }
+
+/* Header (full width) */
+.dd-nav{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start; /* brand on left */
+  padding:100 90px;             /* side space for header */
+  width:100%;
+}
+
+.dd-actions{
+  margin-left:auto;           /* push buttons to far right */
+  display:flex;
+  gap:20px;
+}
+
+/* Optional: sticky nice navbar */
+.dd-nav{ position:sticky; top:0; z-index:100; background:transparent; }
