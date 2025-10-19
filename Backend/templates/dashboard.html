@@ -1,0 +1,9 @@
+{% include "shared/header.html" %}
+<main class="container" style="max-width:900px;margin:2rem auto;">
+  <h1>Dashboard (Protected)</h1>
+  <p>Signed in as <b>{{ user.email }}</b></p>
+  <a href="/logout">Logout</a>
+  <hr />
+  <!-- Put your agent UI here -->
+</main>
+{% include "shared/footer.html" %}
