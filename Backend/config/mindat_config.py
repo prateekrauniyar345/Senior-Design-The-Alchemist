@@ -4,7 +4,7 @@ import requests
 from urllib.parse import urljoin
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
 from .settings import settings
-from ..models.mindat_query_models import MindatGeoMaterialQuery
+
 
 
 
@@ -83,7 +83,7 @@ class MindatAPIClient:
                 "reference-isbn": "https://api.mindat.org/v1/reference-isbn/"
         }
     
-    def get_data_from_api(self, endpoint: str, params: MindatGeoMaterialQuery = None, timeout: int = 30) -> Dict:
+    def get_data_from_api(self, endpoint: str, params: dict = None, timeout: int = 30) -> Dict:
         """Make GET request to API endpoint"""
         if endpoint:
             url  = self.endpoints.get(endpoint)
