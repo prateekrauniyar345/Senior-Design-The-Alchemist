@@ -2,7 +2,7 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import AzureChatOpenAI
-from initialize_llm import initialize_llm
+from .initialize_llm import initialize_llm
 
 
 # initialize the llm
@@ -20,9 +20,10 @@ def create_agent(llm:AzureChatOpenAI, tools:list, system_message:str)->AgentExec
         llm=llm,
         tools=tools,
         prompt=prompt,
-        verbose=True,
-        max_iterations=3,
-        early_stopping_method="generate",
+        strict=False
+        # verbose=True,
+        # max_iterations=3,
+        # early_stopping_method="generate",
     )
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     return agent_executor

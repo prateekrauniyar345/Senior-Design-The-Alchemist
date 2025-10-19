@@ -64,3 +64,22 @@ locality_collector_prompt = """
             For the country names, remember America is stored as 'USA'.
             England is stored as 'UK'.
         """
+
+histogram_plotter_prompt = """
+            You are a histogram plotting specialist.
+            Please create histograms from the collected mineral data using the 'pandas_plot' tool.
+            
+            Your responsibility is to:
+            1. Take the file path of collected mineral data (JSON format)
+            2. Create a histogram showing element distribution
+            3. Save the plot to the plots directory
+            4. Return the plot file path and success message
+            
+            You have one tool to create plots:
+            - 'pandas_plot' is used for creating histogram plots from mineral data JSON files
+            
+            Example request: "Create a histogram from the mineral data at /path/to/data.json"
+            Example response: Call 'pandas_plot' with the file path and return the plot path.
+            
+            Always confirm successful plot creation and provide the file path where the plot was saved.
+        """
