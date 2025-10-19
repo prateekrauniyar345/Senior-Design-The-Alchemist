@@ -1,28 +1,37 @@
+# app/llm/factory.py
+from typing import Optional, Dict, Any
 from langchain_openai import AzureChatOpenAI
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from a .env file
-load_dotenv()
+from pydantic import ValidationError
+from config.settings import settings
+from utils.custom_message import LLMException
 
 
-AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
-AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")   
+DEFAULT_MODEL = "gpt-4o"
+DEFAULT_TEMPERATURE = 0.7
 
 
-# define the llm
 def initialize_llm() -> AzureChatOpenAI:
-    llm = AzureChatOpenAI(
-        api_version=AZURE_OPENAI_API_VERSION,
-        azure_endpoint=AZURE_OPENAI_API_ENDPOINT,
-        api_key=AZURE_OPENAI_API_KEY, 
-        azure_deployment=AZURE_DEPLOYMENT_NAME,
-        model="gpt-4o",
-        temperature=0.7,
-        max_tokens=None,
-        timeout=None,
-    )
-    return llm
+    """
+    Build an AzureChatOpenAI client using strongly-typed app settings.
+    Raises LLMException with structured details on failure.
+    """
+    try:
+        # Validate presence of required settings (fail fast, clear message)
+        api_version   = settings.azure_api_version
+        azure_endpoint=  settings.azure_endpoint
+        api_key       =  settings.azure_api_key
+        deployment    = settings.azure_deployment
 
+        # Construct LLM client
+        llm = AzureChatOpenAI(
+            api_version=api_version,
+            azure_endpoint=azure_endpoint,
+            api_key=api_key,
+            azure_deployment=deployment,
+            model=DEFAULT_MODEL,
+            temperature=DEFAULT_TEMPERATURE,
+        )
+
+        return llm 
+    except Exception as e:
+        print(f"Error initializing LLM: {e}")

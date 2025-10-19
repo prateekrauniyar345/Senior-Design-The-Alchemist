@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-
 class MindatGeoMaterialQuery(BaseModel):
     """
     Mindat Query Parameters
@@ -15,9 +14,4 @@ class MindatGeoMaterialQuery(BaseModel):
     expand: Optional[str] = Field(description="Expand the search scope, 'description','type_localities','locality','relations','minstats', leave blank if necessary")
 
 
-class MindatLocalityQuery(BaseModel):
-    """
-    Mindat Locality Input Parameters
-    """
-    country: str = Field(description="The country name")
-    # txt: str = Field(description="The keywords to search for localities")
+
