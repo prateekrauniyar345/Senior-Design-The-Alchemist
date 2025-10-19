@@ -1,8 +1,13 @@
 import pandas as pd
+# Set matplotlib to use non-interactive backend before importing pyplot
+# This is critical for running matplotlib in threads/async contexts
+import matplotlib
+matplotlib.use('Agg')  # Use Anti-Grain Geometry (AGG) backend - no GUI required
 import matplotlib.pyplot as plt
 from pathlib import Path
 import logging
 from typing import Optional
+import json
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -87,7 +92,7 @@ def pandas_plot_function(file_path: str, plot_title: Optional[str] = None) -> st
         error_msg = f"Failed: Data file not found at {file_path}"
         logger.error(error_msg)
         return error_msg
-    except pd.errors.JSONDecodeError:
+    except json.JSONDecodeError:
         error_msg = f"Failed: Invalid JSON format in {file_path}"
         logger.error(error_msg)
         return error_msg

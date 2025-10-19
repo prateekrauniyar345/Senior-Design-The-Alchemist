@@ -39,7 +39,7 @@
             padding: 20px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            background-color: #f9f9f9;
+            background-color: black;
         }
         
         .query-form {
@@ -147,9 +147,8 @@
                     
                     // If there's a plot file, display it
                     if (data.plot_file_path) {
-                        // Convert file path to serve via static files
-                        const plotUrl = data.plot_file_path.replace('/Users/prateekrauniyar/Documents/SeniorDeisgn The Alchemist/Backend/contents/', '/static/../contents/');
-                        plotContainer.innerHTML = `<img src="${plotUrl}" alt="Generated Plot" />`;
+                        // The backend now returns HTTP URLs directly (e.g., /contents/plots/file.png)
+                        plotContainer.innerHTML = `<img src="${data.plot_file_path}" alt="Generated Plot" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />`;
                     }
                 } else {
                     resultMessage.innerHTML = `<div class="error-message">Error: ${data.error || data.message}</div>`;
