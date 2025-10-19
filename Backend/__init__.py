@@ -6,8 +6,8 @@ This package contains all the backend functionality for The Alchemist applicatio
 including API clients, configurations, utilities, and agents.
 """
 
-from .api import GeomaterialAPI
-from .config import settings, get_mindat_client, MindatAPIClient
+from .services import GeomaterialAPI
+from .config import settings, MindatAPIClient
 from .utils import AlchemistException, MindatAPIException, LLMException, ErrorSeverity
 from .models import MindatGeoMaterialQuery
 
@@ -15,7 +15,6 @@ __version__ = "0.1.0"
 __all__ = [
     "GeomaterialAPI",
     "settings", 
-    "get_mindat_client", 
     "MindatAPIClient",
     "AlchemistException", 
     "MindatAPIException", 

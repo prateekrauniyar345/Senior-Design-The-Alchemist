@@ -122,8 +122,3 @@ class MindatAPIClient:
                 severity=ErrorSeverity.CRITICAL,
                 details={"error": str(req_err), "url": url, "params": params}
             )
-
-# Factory function to get a configured client instance
-def get_mindat_client() -> MindatAPIClient:
-    """Get a configured Mindat API client instance"""
-    return MindatAPIClient()

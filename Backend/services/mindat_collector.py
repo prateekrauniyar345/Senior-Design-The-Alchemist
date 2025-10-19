@@ -1,12 +1,14 @@
 from typing import Dict, Optional
-from ..config.mindat_config import MindatAPIClient, get_mindat_client
+from ..config.mindat_config import MindatAPIClient
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
+
+
 
 class GeomaterialAPI:
     """Geomaterial API Client for interacting with Mindat's geomaterial endpoint"""
     
     def __init__(self, client: Optional[MindatAPIClient] = None):
-        self.client = client or get_mindat_client()
+        self.client = client or MindatAPIClient()
         self.endpoint = "geomaterials"  # Use endpoint key instead of full URL
     
     def search_geomaterials_minerals(self, query_params: Dict) -> Dict:

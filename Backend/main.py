@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 # Import from our Backend package
-from .api import GeomaterialAPI
+from .services import GeomaterialAPI
 from .utils import MindatAPIException
 from .models import MindatGeoMaterialQuery
 
