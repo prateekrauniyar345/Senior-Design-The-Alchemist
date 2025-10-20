@@ -1,5 +1,3 @@
-# Config package - contains configuration and settings
-from .settings import settings
-from .mindat_config import MindatAPIClient
-
-__all__ = ["settings", "MindatAPIClient"]
+# Backend/config/__init__.py
+from .settings import Settings
+settings = Settings()

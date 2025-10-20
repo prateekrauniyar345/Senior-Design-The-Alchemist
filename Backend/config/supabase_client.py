@@ -1,15 +1,20 @@
 # Backend/config/supabase_client.py
 from typing import Optional
-from supabase import create_client, Client
-import os
+from pathlib import Path
 from dotenv import load_dotenv
+import os
 
-load_dotenv()  # loads Backend/.env
+# Load .env from the Backend folder explicitly
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-supabase: Optional[Client] = None
-if SUPABASE_URL and SUPABASE_ANON_KEY:
-    # Only create the client if both values exist
-    supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+supabase: Optional[object] = None
+try:
+    from supabase import create_client, Client
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+except ModuleNotFoundError:
+    supabase = None
