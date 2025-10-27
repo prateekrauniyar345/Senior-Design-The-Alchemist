@@ -34,3 +34,10 @@ build/
 
 # ignore the notebook files
 *.ipynb
+
+
+# ignore the node modules and build files
+node_modules/
+dist/
+build/
+
