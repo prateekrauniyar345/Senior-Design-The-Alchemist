@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     mindat_base_url: str = Field("https://api.mindat.org/v1/", validation_alias="MINDAT_HOST")
 
     # Azure OpenAI
-    azure_deployment_name: str = Field(..., validation_alias="AZURE_DEPLOYMENT_NAME")
+    azure_deployment: str = Field(..., validation_alias="AZURE_DEPLOYMENT_NAME")
     azure_api_version: str = Field(..., validation_alias="AZURE_OPENAI_API_VERSION")
     azure_endpoint: str = Field(..., validation_alias="AZURE_OPENAI_API_ENDPOINT")
     azure_api_key: str = Field(..., validation_alias="AZURE_OPENAI_API_KEY")
