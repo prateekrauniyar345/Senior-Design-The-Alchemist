@@ -2,8 +2,8 @@
 from typing import Optional, Dict, Any
 from langchain_openai import AzureChatOpenAI
 from pydantic import ValidationError
-from config.settings import settings
-from utils.custom_message import LLMException
+from ..config.settings import settings
+
 
 
 DEFAULT_MODEL = "gpt-4o"
@@ -20,7 +20,7 @@ def initialize_llm() -> AzureChatOpenAI:
         api_version   = settings.azure_api_version
         azure_endpoint=  settings.azure_endpoint
         api_key       =  settings.azure_api_key
-        deployment    = settings.azure_deployment
+        deployment    = settings.azure_deployment_name
 
         # Construct LLM client
         llm = AzureChatOpenAI(

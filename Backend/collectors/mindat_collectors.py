@@ -1,32 +1,63 @@
 from ..services import get_geomaterial_api
-from ..utils.custom_message import MindatAPIException, ErrorSeverity
 from pathlib import Path
-from ..utils.helpers import check_sample_data_path
 import json 
+import logging
+from typing import Union, Dict
+from ..models import MindatGeoMaterialQuery
 
-current_dir = Path.cwd() # Get the current working directory
-parent_dir = current_dir.parent # Navigate to the parent directory
-sample_data_path = parent_dir / "contents" / "sample_data" # Construct the path to contents/sample_data
+# Setup logging
+logger = logging.getLogger(__name__)
 
+# Get paths properly
+HERE = Path(__file__).resolve()
+ROOT = HERE.parents[1]  # Backend directory
+SAMPLE_DATA_DIR = ROOT / "contents" / "sample_data"
 
-def mindat_geomaterial_collector_function(query : dict) -> bool:
-    geomaterial_api = get_geomaterial_api()
-    response = geomaterial_api.search_geomaterials_minerals(query)
-    output_file_name = "mindat_geomaterial_response.json"
-    # Check if we have a valid response
-    if not response:
-        return False
-    # Prepare output file
-    output_file_name = "mindat_geomaterial_response.json"
+def mindat_geomaterial_collector_function(query: Union[MindatGeoMaterialQuery, Dict]) -> str:
+    """
+    Collect geomaterial data from Mindat API and save to JSON file
     
-    # Check if sample data directory exists
-    if check_sample_data_path():
-        output_file_path = sample_data_path / output_file_name
+    Args:
+        query: Either a MindatGeoMaterialQuery object or a dictionary with query parameters
+        
+    Returns:
+        str: Success/failure message with file path
+    """
+    try:
+        # Convert query to dict if it's a Pydantic model
+        if hasattr(query, 'model_dump'):
+            query_dict = query.model_dump(exclude_none=True)
+        else:
+            query_dict = query
+        
+        # Get API instance
+        geomaterial_api = get_geomaterial_api()
+        
+        # Make API call
+        response = geomaterial_api.search_geomaterials_minerals(query_dict)
+        
+        # Check if we have a valid response
+        if not response or not response.get('results'):
+            logger.error("Empty or invalid response from Mindat API")
+            return "Failed: No data received from Mindat API"
+        
         # Ensure directory exists
-        output_file_path.parent.mkdir(parents=True, exist_ok=True)
+        SAMPLE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Create output file path
+        output_file_path = SAMPLE_DATA_DIR / "mindat_geomaterial_response.json"
+        
         # Write response to file
         with open(output_file_path, 'w', encoding='utf-8') as f:
             json.dump(response, f, indent=4, ensure_ascii=False)
-        return True
-    return False
+        
+        result_count = len(response.get('results', []))
+        logger.info(f"Successfully saved {result_count} records to {output_file_path}")
+        
+        return f"Success: Collected {result_count} mineral records and saved to {output_file_path}"
+        
+    except Exception as e:
+        error_msg = f"Failed to collect data: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
   
