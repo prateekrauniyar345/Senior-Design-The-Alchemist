@@ -1,6 +1,6 @@
 from pathlib import Path
-from Backend.DataBase.database import SessionLocal
-from Backend.models.chat_models import Message, Session, AgentTask
+from ..dataBase import SessionLocal
+from ..models import Message, Session, AgentTask
 
 
 # check path for storing the samples files in directory folder

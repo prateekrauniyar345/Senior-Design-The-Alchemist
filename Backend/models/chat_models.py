@@ -3,7 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
-from Backend.DataBase.database import Base
+from ..dataBase import Base
+from .agent_models import AgentTask  
 
 
 class Session(Base):
