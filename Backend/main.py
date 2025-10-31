@@ -3,10 +3,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from Backend.DataBase.database import Base, engine
-from Backend.models.user_models import User
-from Backend.models.chat_models import Message, Session, AgentOutput
-from Backend.models.agent_models import AgentTask, DataArtifact, Visualization, AgentRun
+from .database import Base, engine
+from .models import User, Message, Session, AgentOutput, AgentTask, DataArtifact, Visualization, AgentRun
+from .routers import default_router, mindat_router, agent_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,27 +24,13 @@ app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), na
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 
-# default route
-@app.get("/")
-async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+# Include Routers
+app.include_router(default_router)
+app.include_router(mindat_router)
+app.include_router(agent_router)   
 
 
-# about route
-@app.get("/about", response_class=HTMLResponse)
-async def about(request: Request):
-    return templates.TemplateResponse("about.html", {"request": request})
 
-
-# privacy policy route
-@app.get("/privacy-policy", response_class=HTMLResponse)
-async def privacy_policy(request: Request):
-    return templates.TemplateResponse("privacy_policy.html", {"request": request})
-
-# terms of service route
-@app.get("/terms-of-service", response_class=HTMLResponse)
-async def terms_of_service(request: Request):
-    return templates.TemplateResponse("terms_of_service.html", {"request": request})
 
 if __name__ == "__main__":
     # uvicorn is used to run the FastAPI app

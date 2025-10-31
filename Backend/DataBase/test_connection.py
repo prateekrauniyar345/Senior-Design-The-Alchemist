@@ -1,4 +1,4 @@
-from Backend.DataBase.database import SessionLocal, engine
+from .database import  engine
 from sqlalchemy import text
 
 def test_connection():
