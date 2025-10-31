@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from ..core.config import get_templates
 
@@ -9,10 +9,18 @@ templates = get_templates()
 # Create router instance
 router = APIRouter(tags=["pages"])
 
-@router.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    """Home page"""
-    return templates.TemplateResponse("home.html", {"request": request})
+@router.get("/", tags=["Health"])
+def health_check():
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "Server is running correctly!",
+            "status": "healthy",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
+    )
+
 
 @router.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
