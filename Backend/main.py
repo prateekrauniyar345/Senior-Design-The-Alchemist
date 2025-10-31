@@ -24,9 +24,31 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 
 # default route
-@app.get("/")
+# @app.get("/")
+# async def root(request: Request):
+#     return ({
+#         "message": "Welcome to the LLM-Driven Smart Agents API!", 
+#         "documentation_url": "/docs", 
+#         "status": "API is running smoothly."
+        
+#         })
+@app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    html = f"""
+    <html>
+        <head>
+            <title>Service Status</title>
+        </head>
+        <body style="font-family:Arial,sans-serif ; background-color: black; color: white; text-align: center; padding: 50px;">
+            <h2>LLM-Driven Smart Agents API</h2>
+            <p style="color:green">Status: <strong>Running</strong></p>
+            <p>Version: {app.version}</p>
+            <p>Documentation: <a href="/docs">/docs</a></p>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
 
 
 # about route
