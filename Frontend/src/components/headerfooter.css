@@ -1,0 +1,80 @@
+/* Header (DoorDash-style) */
+.dd-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0px;
+  background: #101010;
+  border-bottom: 1px solid #1f1f1f;
+  color: #fff;
+}
+
+.dd-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .3px;
+  font-size: 1.05rem;
+}
+
+.dd-logo { width: 22px; height: 22px; object-fit: contain; }
+.dd-name { line-height: 1; }
+
+.dd-actions { display: flex; gap: 12px; }
+
+.dd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: .95rem;
+  transition: filter .15s ease, transform .05s ease, background .15s ease;
+  border: 1px solid transparent;
+}
+.dd-btn:active { transform: translateY(1px); }
+
+.dd-btn--signin { background: #d21e0e; color: #fff; }
+.dd-btn--signin:hover { filter: saturate(1.05); }
+
+.dd-btn--signup { background: #fff; color: #333; border-color: #ffffff; }
+.dd-btn--signup:hover { background: #f1f1f1; }
+
+@media (max-width: 480px) {
+  .dd-name { font-size: 1rem; }
+  .dd-btn { padding: 8px 14px; }
+}
+
+/* Footer */
+.dd-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1370px;
+  padding: 1rem 2rem;
+  border-top: 1px solid #1f1f1f;
+  font-size: 0.9rem;
+  color: #aaa;
+  background: #101010;
+  margin-top: 64px;
+}
+.dd-footer .m0 { margin: 0; }
+
+.dd-footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.dd-footer-links a {
+  color: inherit;
+  text-decoration: none;
+}
+.dd-footer-links a:hover { color: #fff; }
