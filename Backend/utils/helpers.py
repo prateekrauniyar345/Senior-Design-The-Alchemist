@@ -1,6 +1,6 @@
 from pathlib import Path
 from Backend.DataBase.database import SessionLocal
-from Backend.models.chat_models import Message
+from Backend.models.chat_models import Message, Session, AgentTask
 
 
 # check path for storing the samples files in directory folder
@@ -22,23 +22,77 @@ def check_plots_path() -> bool:
     return False
 
 def save_message(sender: str, content: str, output_type="text", session_id=None):
+    """
+    Saves a message (either from user or agent) to the database.
+    If no session_id is provided, it automatically creates a new chat session.
+    
+    Args:
+        sender (str): "user" or "agent" — identifies who sent the message.
+        content (str): The actual text of the message.
+        output_type (str): Type of output (default="text", can be "plot", "map", etc.).
+        session_id (UUID, optional): Existing session ID to link messages in the same chat.
+
+    Returns:
+        tuple: (session_id, message_id) after saving successfully.
+    """
+    
+    # Create a new SQLAlchemy session to interact with the database
     db = SessionLocal()
+    
     try:
+        # If no existing session is provided, create a new chat session
+        if session_id is None:
+            new_session = Session()      # Create a new Session object
+            db.add(new_session)           # Add it to the database session
+            db.commit()                   # Commit to save the new session to DB
+            db.refresh(new_session)       # Refresh to get the generated UUID
+            session_id = new_session.id   # Store the new session's ID
+            print(f"🆕 New session created: {session_id}")
+
+        # Create a new message record linked to the session
         msg = Message(
             sender=sender,
             content=content,
             output_type=output_type,
             session_id=session_id
         )
+
+        # Add the message to the database and commit the transaction
         db.add(msg)
         db.commit()
-        db.refresh(msg)
-        print(f"Message saved: {msg.id}")
-        return msg
+        db.refresh(msg)   # Get auto-generated fields like UUID and timestamps
+        print(f"Message saved: {msg.id} (Session: {session_id})")
+
+        # Return both the session ID and message ID for reference
+        return session_id, msg.id
+
     except Exception as e:
+        # Roll back any changes if an error occurs during the process
         db.rollback()
         print("Error saving message:", e)
+
     finally:
+        # Always close the database connection to prevent memory leaks
         db.close()
 
 
+def save_agent_task(agent_name, session_id, input_message_id=None, output_message_id=None, status="pending"):
+    db = SessionLocal()
+    try:
+        task = AgentTask(
+            agent_name=agent_name,
+            session_id=session_id,
+            input_message_id=input_message_id,
+            output_message_id=output_message_id,
+            status=status
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+        print(f"AgentTask saved: {agent_name} ({status}) in session {session_id}")
+        return task.id
+    except Exception as e:
+        db.rollback()
+        print("Error saving agent task:", e)
+    finally:
+        db.close()

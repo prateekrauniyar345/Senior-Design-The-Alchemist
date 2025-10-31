@@ -4,7 +4,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from Backend.DataBase.database import Base, engine
-from Backend.models.chat_models import Message
+from Backend.models.user_models import User
+from Backend.models.chat_models import Message, Session, AgentOutput
+from Backend.models.agent_models import AgentTask, DataArtifact, Visualization, AgentRun
 
 Base.metadata.create_all(bind=engine)
 
