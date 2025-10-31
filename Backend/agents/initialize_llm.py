@@ -1,9 +1,9 @@
 from typing import Optional, Dict, Any
 from langchain_openai import AzureChatOpenAI
 from pydantic import ValidationError
-from Backend.config.settings import settings
-from Backend.utils.custom_message import LLMException
-from Backend.utils.helpers import save_message, save_agent_task
+from ..config.settings import settings
+from ..utils.custom_message import LLMException
+from ..utils.helpers import save_message, save_agent_task
 
 
 
