@@ -1,0 +1,99 @@
+/* ---- global reset for full-height layout ---- */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* optional: if your header had a big bottom margin, kill it */
+.dd-nav { margin-bottom: 0; }
+
+/* escape any container constraints & grid columns */
+.page-full {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+/* auth wrapper */
+.auth-wrap {
+  /* span all columns if parent is a grid */
+  grid-column: 1 / -1;
+
+  min-height: 80dvh;        /* use the whole viewport */
+  display: flex;
+  align-items: center;        /* vertical center */
+  justify-content: center;    /* horizontal center */
+  background: #0f0f0f;
+  padding: 0px;
+}
+
+/* card */
+.auth-card {
+  width: min(92vw, 520px);
+  margin: 0 auto;
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 25px rgba(0,0,0,.3);
+  text-align: center;
+  animation: popIn .35s ease both;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* headings */
+.auth-card h2 {
+  font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.8rem);
+  font-weight: 800;
+  color: #f5f5f5;
+  margin-bottom: .6rem;
+}
+.auth-sub { color: #a9a9a9; margin: 0 0 1.2rem; }
+
+/* buttons */
+.microsoft-btn,
+.primary-btn {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #2f2f2f;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .06s ease, background .2s ease, box-shadow .2s ease;
+}
+.microsoft-btn { background: #232323; color: #fff; }
+.microsoft-btn:hover { background: #2b2b2b; }
+.primary-btn { background: #fff; color: #111; border: 0; margin-top: 10px; }
+.primary-btn:hover { background: #ececec; }
+.microsoft-btn:active,
+.primary-btn:active { transform: translateY(1px); }
+
+/* divider */
+.divider { color: #757575; font-size: .9rem; margin: 12px 0; }
+
+/* form */
+.form { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.label { font-size: .9rem; color: #c9c9c9; }
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #121212;
+  color: #fff;
+  font-size: .95rem;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.input:hover  { border-color: #3a3a3a; }
+.input:focus  { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
+
+.error { color: #ff7b7b; font-size: .92rem; margin-top: 8px; }
+.meta  { color: #8d8d8d; font-size: .8rem; margin-top: 14px; }
+.meta a { color: #7fb4ff; text-decoration: none; }
+
+@media (min-width: 1400px) {
+  .auth-card { transform: scale(.98); }
+}
