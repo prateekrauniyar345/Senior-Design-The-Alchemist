@@ -1,8 +1,9 @@
-# app/llm/factory.py
 from typing import Optional, Dict, Any
 from langchain_openai import AzureChatOpenAI
 from pydantic import ValidationError
-from ..config.settings import settings
+from Backend.config.settings import settings
+from Backend.utils.custom_message import LLMException
+from Backend.utils.helpers import save_message
 
 
 
@@ -35,3 +36,22 @@ def initialize_llm() -> AzureChatOpenAI:
         return llm 
     except Exception as e:
         print(f"Error initializing LLM: {e}")
+
+def handle_query(user_input: str):
+    """Run an LLM query and log both user and agent messages."""
+    try:
+        # Save user input
+        save_message(sender="user", content=user_input)
+
+        llm = initialize_llm()
+        response = llm.invoke(user_input)  # Run the LLM
+
+        # Save LLM response
+        save_message(sender="agent", content=response.content)
+
+        print("Query handled successfully.")
+        return response.content
+
+    except Exception as e:
+        print(f"Error handling query: {e}")
+        return f"Error: {e}"
