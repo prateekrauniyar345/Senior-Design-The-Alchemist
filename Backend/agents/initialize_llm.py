@@ -22,7 +22,7 @@ def initialize_llm() -> AzureChatOpenAI:
         api_version   = settings.azure_api_version
         azure_endpoint=  settings.azure_endpoint
         api_key       =  settings.azure_api_key
-        deployment    = settings.azure_deployment_name
+        deployment    = settings.azure_deployment
 
         # Construct LLM client
         llm = AzureChatOpenAI(
