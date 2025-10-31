@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
-from ..dataBase import Base
+from ..database import Base
 from .agent_models import AgentTask  
 
 

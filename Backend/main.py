@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from .dataBase import Base, engine
+from .database import Base, engine
 from .models import User, Message, Session, AgentOutput, AgentTask, DataArtifact, Visualization, AgentRun
 
 Base.metadata.create_all(bind=engine)

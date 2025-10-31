@@ -1,5 +1,5 @@
 from pathlib import Path
-from ..dataBase import SessionLocal
+from ..database import SessionLocal
 from ..models import Message, Session, AgentTask
 
 
