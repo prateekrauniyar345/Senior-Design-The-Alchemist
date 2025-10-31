@@ -1,12 +1,179 @@
 {% extends "root.html" %}
 
-{% block title %}Home - LLM Driven Smart Agent{% endblock %}
+{% block title %}Home - The Alchemist{% endblock %}
 
 {% block content %}
     <section class="home-section">
         <div class="container">
-            <h1>Welcome to the LLM Driven Smart Agent</h1>
-            <p>Your intelligent assistant for automating tasks and enhancing productivity.</p>
+            <h1>Welcome to The Alchemist</h1>
+            <p>Your intelligent assistant for mineral data analysis and visualization.</p>
+            
+            <!-- Agent Query Interface -->
+            <div class="agent-interface">
+                <h2>Ask Your Mineral Data Questions</h2>
+                <p>Try queries like: "Plot the histogram of elements distribution of IMA-approved mineral species with hardness between 3-5, in Hexagonal crystal system, must have Neodymium, but without sulfur"</p>
+                
+                <div class="query-form">
+                    <textarea id="user-query" placeholder="Enter your mineral data query here..." rows="4"></textarea>
+                    <button id="submit-query" onclick="submitQuery()">Submit Query</button>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div id="loading" style="display: none;">
+                    <p>🤖 Agent is working on your request...</p>
+                </div>
+                
+                <!-- Results section -->
+                <div id="results" style="display: none;">
+                    <h3>Results:</h3>
+                    <div id="result-message"></div>
+                    <div id="plot-container"></div>
+                </div>
+            </div>
         </div>
     </section>
+
+    <style>
+        .agent-interface {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: black;
+        }
+        
+        .query-form {
+            margin: 20px 0;
+        }
+        
+        #user-query {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        #submit-query {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        #submit-query:hover {
+            background-color: #0056b3;
+        }
+        
+        #submit-query:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        #loading {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        #plot-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .success-message {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        async function submitQuery() {
+            const query = document.getElementById('user-query').value.trim();
+            const submitBtn = document.getElementById('submit-query');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const resultMessage = document.getElementById('result-message');
+            const plotContainer = document.getElementById('plot-container');
+            
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/agent/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading
+                loading.style.display = 'none';
+                results.style.display = 'block';
+                
+                if (data.success) {
+                    resultMessage.innerHTML = `<div class="success-message">${data.message}</div>`;
+                    
+                    // If there's a plot file, display it
+                    if (data.plot_file_path) {
+                        // The backend now returns HTTP URLs directly (e.g., /contents/plots/file.png)
+                        plotContainer.innerHTML = `<img src="${data.plot_file_path}" alt="Generated Plot" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />`;
+                    }
+                } else {
+                    resultMessage.innerHTML = `<div class="error-message">Error: ${data.error || data.message}</div>`;
+                    plotContainer.innerHTML = '';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+                results.style.display = 'block';
+                resultMessage.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                plotContainer.innerHTML = '';
+            }
+            
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Query';
+        }
+        
+        // Allow Enter key to submit (Shift+Enter for new line)
+        document.getElementById('user-query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitQuery();
+            }
+        });
+    </script>
 {% endblock %}
