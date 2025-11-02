@@ -17,7 +17,7 @@ HERE = Path(__file__).resolve()
 ROOT = HERE.parents[1]  # Backend directory
 PLOTS_DIR = ROOT / "contents" / "plots"
 
-def pandas_plot_function(file_path: str, plot_title: Optional[str] = None) -> str:
+def pandas_hist_plot_function(file_path: str, plot_title: Optional[str] = None) -> str:
     """
     Create histogram plot from collected mineral data and save to plots directory
     
@@ -61,6 +61,7 @@ def pandas_plot_function(file_path: str, plot_title: Optional[str] = None) -> st
         
         # Create the plot
         plt.figure(figsize=(12, 8))
+        # plot the bar plot
         ax = top_elements.plot(kind='bar', color='skyblue', edgecolor='navy', alpha=0.7)
         
         # Customize the plot

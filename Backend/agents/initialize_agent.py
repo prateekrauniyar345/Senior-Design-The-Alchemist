@@ -1,17 +1,42 @@
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import AzureChatOpenAI
+from langchain.agents import create_agent
 from .initialize_llm import initialize_llm
+from langgraph.graph import StateGraph, MessagesState, START, END
+from ..utils.custom_prompts import system_prompt, geomaterial_collector_prompt, histogram_plotter_prompt
+from ..tools import mindat_geomaterial_collector_function, plotly_visualizing_function
+from typing import List, Dict, Any, TypedDict
 
+
+# get the llm initialized
 llm = initialize_llm()
 
-def create_agent(llm: AzureChatOpenAI, tools: list, system_message: str) -> AgentExecutor:
-    prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_message),
-        MessagesPlaceholder(variable_name="messages"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-    agent = create_openai_tools_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-    return agent_executor
+# create the agent with llm , tools, and 
+mindat_geo_material_agent = create_agent(
+    llm=llm, 
+    tools=mindat_geomaterial_collector_function, 
+    system_message = geomaterial_collector_prompt
+)
+
+
+historyogram_plotter_agent = create_agent(
+    llm=llm,
+    tools=plotly_visualizing_function,
+    system_message=histogram_plotter_prompt
+)   
+
+
+
+# create the langgraph agent graph
+class State(TypedDict):
+    messages: list[str]
+    result: str
+
+graph  = StateGraph(State)
+
+# add the nodes
+graph.add_node()
+
+
+
+
+
+
