@@ -1,3 +1,8 @@
+#################################################
+# define the Agents for the multio agent system
+# And define the graph structure
+#################################################
+
 from langchain.agents import create_agent
 from .initialize_llm import initialize_llm
 from langgraph.graph import StateGraph, MessagesState, START, END
@@ -12,30 +17,35 @@ llm = initialize_llm()
 # create the agent with llm , tools, and 
 mindat_geo_material_agent = create_agent(
     llm=llm, 
-    tools=mindat_geomaterial_collector_function, 
+    tools=[mindat_geomaterial_collector_function], 
     system_message = geomaterial_collector_prompt
 )
 
 
-historyogram_plotter_agent = create_agent(
+histogram_plotter_agent = create_agent(
     llm=llm,
-    tools=plotly_visualizing_function,
+    tools=[plotly_visualizing_function],
     system_message=histogram_plotter_prompt
 )   
 
+##############################
+# Define the Graph Structure
+##############################
 
+#  use built in MessagesState to manage the state of the agent
+graph = StateGraph(MessagesState)
 
-# create the langgraph agent graph
-class State(TypedDict):
-    messages: list[str]
-    result: str
+# Add nodes (name, runnable/callable)
+graph.add_node("collector", mindat_geo_material_agent)
+graph.add_node("plotter", histogram_plotter_agent)
 
-graph  = StateGraph(State)
+# Wire the flow: START -> collector -> plotter -> END
+graph.add_edge(START, "collector")
+graph.add_edge("collector", "plotter")
+graph.add_edge("plotter", END)
 
-# add the nodes
-graph.add_node()
-
-
+# Compile
+app = graph.compile()
 
 
 
