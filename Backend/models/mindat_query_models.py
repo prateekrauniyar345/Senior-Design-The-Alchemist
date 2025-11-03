@@ -233,12 +233,10 @@ class MindatLocalityQuery(BaseModel):
     )
     elements_exc: Optional[List[str]] = Field(
         None, 
-        alias="elements_exc", 
         description="Exclude chemical elements (e.g. 'Fe,Mg'), comma separated string."
     )
     elements_inc: Optional[List[str]] = Field(
         None, 
-        alias="elements_inc", 
         description="Include chemical elements (e.g. 'Au,Ag'), comma separated string."
     )
     
@@ -252,12 +250,13 @@ class MindatLocalityInput(BaseModel):
     Wrapper class for the Locality Query Model.
     This is used to encapsulate the query parameters for locality data collection.
     """
-    query: MindatLocalityQuery = Field(description="""
-        Example dicts, all of the keys are optional, leave blank if necessary:
-        {
-            "country": "Canada",  # Find localities within Canada
-            "description": "British Columbia", # Locality description containing this string
-            "elements_inc": ["Au", "Ag"],  # Must include Gold (Au) and Silver (Ag)
-            "elements_exc": ["Pb", "Zn"]   # Exclude Lead (Pb) and Zinc (Zn)
-        }
+    query: MindatLocalityQuery = Field(description=
+        """
+            Example dicts, all of the keys are optional, leave blank if necessary:
+            {
+                "country": "Canada",  # Find localities within Canada
+                "description": "British Columbia", # Locality description containing this string
+                "elements_inc": ["Au", "Ag"],  # Must include Gold (Au) and Silver (Ag)
+                "elements_exc": ["Pb", "Zn"]   # Exclude Lead (Pb) and Zinc (Zn)
+            }
         """)

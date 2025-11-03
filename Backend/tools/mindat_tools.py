@@ -1,23 +1,48 @@
 from langchain.tools import tool
 from ..models import (
-    MindatGeoMaterialQuery, 
-    MindatGeomaterialInput, 
-    MindatLocalityQuery, 
-    MindatLocalityInput
+    MindatGeoMaterialQuery,
+    MindatGeomaterialInput,
+    MindatLocalityQuery,
+    MindatLocalityInput,
 )
-import pathlib
-from typing import Union, Dict
+from pydantic import BaseModel
+from typing import Union, Dict, Any
+from pathlib import Path
 import json
 import logging
 from ..services.mindat_endpoints import get_geomaterial_api, get_locality_api
 from ..utils.custom_message import MindatAPIException
 
+logger = logging.getLogger(__name__)
 
-# get cwd
-PARENT_DIR = pathlib.Path(__file__).parent.resolve()
-# base directory for the data storage
-BASE_DATA_DIR=F"{PARENT_DIR.parent.parent}/contents"
+# Directories
+PARENT_DIR = Path(__file__).parent.resolve()
+BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
 
+def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
+    """
+    Convert a Pydantic model or dict into API-ready params:
+    - dump with aliases (if model)
+    - drop None
+    - convert lists to CSV strings
+    """
+    if isinstance(q, BaseModel):
+        params: Dict[str, Any] = q.model_dump(by_alias=True, exclude_none=True)
+    else:
+        # assume it's already a dict-like input; drop None values
+        params = {k: v for k, v in q.items() if v is not None}
+
+    for k, v in list(params.items()):
+        if isinstance(v, (list, tuple)):
+            params[k] = ",".join(map(str, v))
+        else:
+            params[k] = str(v) if not isinstance(v, (int, float, str)) else v  # ensure JSON-serializable scalars
+
+    return params  # type: ignore[return-value]
+
+#####################################
+# Geomaterial data collector tool
+#####################################
 @tool(
     name="mindat_geomaterial_data_collector_function",
     description=(
@@ -25,54 +50,92 @@ BASE_DATA_DIR=F"{PARENT_DIR.parent.parent}/contents"
         "Use this when the user asks to find minerals/geomaterials by properties "
         "(e.g., crystal system, hardness range, transparency, composition).\n\n"
         "Input: { query: MindatGeoMaterialQuery }\n"
-        "Output: JSON results from Mindat.\n\n"
-        "Examples:\n"
-        " - Find hexagonal, transparent minerals with Mohs 6-7 and include Ag, exclude Fe.\n"
-        " - IMA-approved vitreous minerals named 'Quartz'."
-    ), 
-    args_schema=MindatGeomaterialInput, 
-    return_direct=False, 
+        "Output: JSON results from Mindat."
+    ),
+    args_schema=MindatGeomaterialInput,
+    return_direct=False,
 )
-def mindat_geomaterial_data_collector_function(query: Union[MindatGeoMaterialQuery, Dict]) -> str:
-    """
-    Collect geomaterial data from Mindat API and save to JSON file
-    
-    Args:
-        query: Either a MindatGeoMaterialQuery object or a dictionary with query parameters
-        
-    Returns:
-        str: Success/failure message with file path
-    """
+def mindat_geomaterial_data_collector_function(
+    query: Union[MindatGeoMaterialQuery, Dict[str, Any]]
+) -> str:
     try:
-        # Convert query to dict if it's a Pydantic model
-        if hasattr(query, 'model_dump'):
-            query_dict = query.model_dump(exclude_none=True)
-        else:
-            query_dict = query
-        print("the query dict is", query_dict)
-        # Get API instance
+        query_dict = _to_params(query)
+        logger.debug("Geomaterial query params: %s", query_dict)
+
         geomaterial_api = get_geomaterial_api()
-        # Make API call
         response = geomaterial_api.search_geomaterials_minerals(query_dict)
-        # Check if we have a valid response
-        if not response or not response.get('results'):
+
+        if not isinstance(response, dict) or not response.get("results"):
             raise MindatAPIException(
                 message="Empty or invalid response from Mindat API for the Geomaterial endpoint",
                 status_code=500,
                 severity="ERROR",
-                details={"response": response}
+                details={"response": response},
             )
-        # Ensure directory exists
-        SAMPLE_DATA_DIR= pathlib.Path(f"{BASE_DATA_DIR}/sample_data")
-        SAMPLE_DATA_DIR.mkdir(parents=True, exist_ok=True)
-        # Create output file path
-        output_file_path = SAMPLE_DATA_DIR / "mindat_geomaterial_response.json"
-        # Write response to file
-        with open(output_file_path, 'w', encoding='utf-8') as f:
+
+        sample_dir = BASE_DATA_DIR / "sample_data"
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        output_file_path = sample_dir / "mindat_geomaterial_response.json"
+
+        with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4, ensure_ascii=False)
-        result_count = len(response.get('results', []))
+
+        result_count = len(response.get("results", []))
         return f"Success: Collected {result_count} mineral records and saved to {output_file_path}"
-        
+
     except Exception as e:
-        error_msg = f"Failed to collect data: {str(e)}"
-        return error_msg
+        logger.exception("Geomaterial collection failed")
+        return f"Failed to collect data: {e}"
+
+
+
+
+
+
+
+
+#####################################
+# Locality data collector tool
+#####################################
+@tool(
+    name="mindat_locality_data_collector_function",
+    description=(
+        "Search Mindat /v1/localities by structured filters "
+        "(country, description, include/exclude elements). "
+        "Use when the user asks for localities with certain elements or in a country/region. "
+        "Input: { query: MindatLocalityQuery }. Output: JSON."
+    ),
+    args_schema=MindatLocalityInput,  # <-- fixed
+    return_direct=False,
+)
+def mindat_locality_data_collector_function(
+    query: Union[MindatLocalityQuery, Dict[str, Any]]
+) -> str:
+    try:
+        query_dict = _to_params(query)
+        logger.debug("Locality query params: %s", query_dict)
+
+        locality_api = get_locality_api()
+        response = locality_api.search_localities(query_dict)
+
+        if not isinstance(response, dict) or not response.get("results"):
+            raise MindatAPIException(
+                message="Empty or invalid response from Mindat API for the Locality endpoint",
+                status_code=500,
+                severity="ERROR",
+                details={"response": response},
+            )
+
+        sample_dir = BASE_DATA_DIR / "sample_data"
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        output_file_path = sample_dir / "mindat_locality_response.json"
+
+        with open(output_file_path, "w", encoding="utf-8") as f:
+            json.dump(response, f, indent=4, ensure_ascii=False)
+
+        result_count = len(response.get("results", []))
+        return f"Success: Collected {result_count} locality records and saved to {output_file_path}"
+
+    except Exception as e:
+        logger.exception("Locality collection failed")
+        return f"Failed to collect data: {e}"
