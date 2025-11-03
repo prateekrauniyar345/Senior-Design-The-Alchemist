@@ -56,20 +56,11 @@ class MindatGeoMaterialQuery(BaseModel):
         description="Entry type. Multiple choice. Values: 0-mineral, 1-synonym, 7-rock, etc."
     ) 
 
-    # Field Selection
-    expand: Optional[List[str]] = Field(None, description="Select fields to expand (e.g., 'description', 'locality', 'relations').")
-    fields: Optional[str] = Field(None, description="Specify required fields by comma (e.g., 'id,name,mindat_formula').")
-    omit: Optional[str] = Field(None, description="Specify omitted fields by comma.")
-    
-    
     # Fracture
     fracturetype: Optional[List[Literal[
         "Conchoidal", "Fibrous", "Hackly", "Irregular/Uneven", 
         "Micaceous", "None observed", "Splintery", "Step-Like", "Sub-Conchoidal"
     ]]] = Field(None, description="Fracture: multiple choice (AND).")
-    
-    # Group ID
-    groupid: Optional[int] = Field(None, description="Mindat Group ID.")
     
     # Hardness (Mohs)
     # The API uses hmin for the max value and hmax for the min value in the query params.
@@ -106,22 +97,12 @@ class MindatGeoMaterialQuery(BaseModel):
         "Sub-Metallic", "Sub-Vitreous", "Vitreous", "Waxy"
     ]]] = Field(None, description="Lustretype: multiple choice (AND).")
     
-    # Meteoritical
-    meteoritical_code: Optional[str] = Field(
-        None, 
-        description="Meteoritical code. Text search supporting * and _ as wildcards."
-    )
-    meteoritical_code_exists: Optional[bool] = Field(
-        None, 
-        description="Meteoritical code exists. Include non-empty (true) / include empty only (false)."
-    )
-    
+
     # Name Search
     name: Optional[str] = Field(
         None, 
         description="Name. Text search supporting * and _ as wildcards, e.g. 'qu_rtz', 'bario*'."
     )
-    non_utf: Optional[bool] = Field(None, description="Include non-UTF mineral names?")
     
     # Optical Properties
     optical2v_max: Optional[str] = Field(None, description="2V upper range (optical2v_min - optical2v_max).")
@@ -133,26 +114,6 @@ class MindatGeoMaterialQuery(BaseModel):
         "Biaxial", "Isotropic", "Uniaxial"
     ]] = Field(None, description="Optical type: single choice (Biaxial, Isotropic, Uniaxial).")
 
-    # Ordering and Pagination
-    ordering: Optional[str] = Field(
-        None, 
-        description="Order the response by a field. Prepend '-' for descending order. Example: '-id'. Defaults include: 'name', 'id', 'updttime'."
-    )
-    page: Optional[int] = Field(None, description="A page number within the paginated result set.")
-    page_size: Optional[int] = Field(
-        None, 
-        alias="page-size", 
-        description="Number of results to return per page."
-    )
-    
-    # Relationships
-    polytypeof: Optional[int] = Field(None, description="Filter for polytypes of a geomaterial ID.")
-    synid: Optional[int] = Field(None, description="Filter for synonyms of a geomaterial ID.")
-    varietyof: Optional[int] = Field(None, description="Filter for varieties of a geomaterial ID.")
-
-    # General Query
-    q: Optional[str] = Field(None, description="A general search term.")
-    
     # Refractive Index
     ri_max: Optional[float] = Field(None, description="Refractive index, to (rimin<=).")
     ri_min: Optional[float] = Field(None, description="Refractive index, from (rimax>=).")
@@ -163,11 +124,7 @@ class MindatGeoMaterialQuery(BaseModel):
         "brittle", "elastic", "flexible", "fragile", 
         "malleable", "sectile", "very brittle", "waxy"
     ]]] = Field(None, description="Tenacity: multiple choice (AND).")
-    # Update Time
-    updated_at: Optional[str] = Field(
-        None, 
-        description="Last updated datetime in format %Y-%m-%d %H:%M:%S."
-    )
+
     class Config:
         """
         Configuration for the Pydantic model.
@@ -177,18 +134,42 @@ class MindatGeoMaterialQuery(BaseModel):
           is used via the `alias`.
         """
         allow_population_by_field_name = True
+
+
 class MindatGeomaterialInput(BaseModel):
-    query: MindatGeoMaterialQuery = Field(description="""Example dicts, all of the keys are optional, leave blank if necessary:
+    query: MindatGeoMaterialQuery = Field(description="""
+        Example dictionary including all possible keys (all keys are optional):
         {
-            "ima": True,  # Only IMA-approved names
-            "hardness_min": 1.0,  # Mohs hardness from 1
-            "hardness_max": 10.0,  # Mohs hardness to 10
-            "crystal_system": ["Hexagonal"],  # Hexagonal crystal system
-            "el_inc": "Ag,H",  # Must include Gold (Ag) and Hxygen (H)
-            "el_exc": "Fe",  # Exclude Iron (Fe)
+            "bi_max": "1.0",
+            "bi_min": "0.1",
+            "cleavagetype": ["Perfect", "Very Good"],
+            "colour": "Blue",
+            "crystal_system": ["Hexagonal"],
+            "density_max": 4.5,
+            "density_min": 2.5,
+            "diapheny": ["Transparent"],
+            "el_essential": True,
+            "el_exc": ["Cl", "S"],
+            "el_inc": ["Fe", "O", "Si"],
+            "entrytype": [0, 1],
+            "fracturetype": ["Conchoidal"],
+            "hardness_max": 7.0,
+            "hardness_min": 5.0,
+            "ima": True,
+            "ima_notes": [1, 2],
+            "ima_status": [1],
+            "lustretype": ["Vitreous"],
+            "name": "Quartz",
+            "optical2v_max": "90",
+            "optical2v_min": "10",
+            "opticalsign": "+",
+            "opticaltype": "Uniaxial",
+            "ri_max": 1.7,
+            "ri_min": 1.5,
+            "streak": "White",
+            "tenacity": ["brittle"],
         }
         """)
-
 
 
 
@@ -235,9 +216,9 @@ class MindatLocalityInput(BaseModel):
     query: MindatLocalityQuery = Field(description="""
         Example dicts, all of the keys are optional, leave blank if necessary:
         {
-            "country": "Canada",  # Localities in Canada
-            "txt": "Ontario",  # Locality name contains "Ontario"
-            "elements_inc": ["Au"],  # Must include Gold (Au)
-            "page_size": 50,  # Return 50 results per page
+            "country": "Canada",  # Find localities within Canada
+            "description": "British Columbia", # Locality description containing this string
+            "elements_inc": ["Au", "Ag"],  # Must include Gold (Au) and Silver (Ag)
+            "elements_exc": ["Pb", "Zn"]   # Exclude Lead (Pb) and Zinc (Zn)
         }
         """)

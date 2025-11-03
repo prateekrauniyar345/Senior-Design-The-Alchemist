@@ -15,6 +15,7 @@ class GeomaterialAPI:
     def search_geomaterials_minerals(self, query_params: Dict) -> Dict:
         """Search geomaterials/minerals with given query parameters"""
         params = query_params if query_params else {}
+        print("the query params are", params)
         
         if not params:
             raise MindatAPIException(
@@ -32,22 +33,6 @@ class GeomaterialAPI:
                 status_code=500,
                 severity=ErrorSeverity.ERROR,
                 details={"query_params": params}
-            )
-    
-    def get_mineral_by_id(self, mineral_id: int) -> Dict:
-        """Get specific mineral by ID"""
-        if not isinstance(mineral_id, int) or mineral_id <= 0:
-            raise ValueError("mineral_id must be a positive integer")
-        
-        try:
-            params = {"id": mineral_id}
-            return self.client.get_data_from_api(self.endpoint, params)
-        except Exception as e:
-            raise MindatAPIException(
-                message=f"Failed to get mineral {mineral_id}: {str(e)}",
-                status_code=500,
-                severity=ErrorSeverity.ERROR,
-                details={"mineral_id": mineral_id}
             )
 
 
