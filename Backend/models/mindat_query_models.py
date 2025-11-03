@@ -1,5 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Literal, Union
+
+
+
+
+
 
 
 ####################################
@@ -7,7 +12,39 @@ from typing import Optional, List, Literal, Union
 ####################################
 class MindatGeoMaterialQuery(BaseModel):
     """
-    Pydantic model for the query parameters of the Mindat API /v1/geomaterials/ endpoint.
+        Pydantic model for the query parameters of the Mindat API /v1/geomaterials/ endpoint.
+        This model encapsulates the parameters used to filter geomaterial data.
+        Example dictionary including all possible keys (all keys are optional):
+        {
+            "bi_max": "1.0",
+            "bi_min": "0.1",
+            "cleavagetype": ["Perfect", "Very Good"],
+            "colour": "Blue",
+            "crystal_system": ["Hexagonal"],
+            "density_max": 4.5,
+            "density_min": 2.5,
+            "diapheny": ["Transparent"],
+            "el_essential": True,
+            "el_exc": ["Cl", "S"],
+            "el_inc": ["Fe", "O", "Si"],
+            "entrytype": [0, 1],
+            "fracturetype": ["Conchoidal"],
+            "hardness_max": 7.0,
+            "hardness_min": 5.0,
+            "ima": True,
+            "ima_notes": [1, 2],
+            "ima_status": [1],
+            "lustretype": ["Vitreous"],
+            "name": "Quartz",
+            "optical2v_max": "90",
+            "optical2v_min": "10",
+            "opticalsign": "+",
+            "opticaltype": "Uniaxial",  
+            "ri_max": 1.7,
+            "ri_min": 1.5,
+            "streak": "White",
+            "tenacity": ["brittle"],
+        }
     """
     # Birifrigence
     bi_max: Optional[str] = Field(None, description="Birifrigence. Upper range (bi_min - bi_max). Calculated from refractive index as (rimax-rimin).")
@@ -125,15 +162,9 @@ class MindatGeoMaterialQuery(BaseModel):
         "malleable", "sectile", "very brittle", "waxy"
     ]]] = Field(None, description="Tenacity: multiple choice (AND).")
 
-    class Config:
-        """
-        Configuration for the Pydantic model.
-        - `allow_population_by_field_name = True` is important for passing 
-          data to Pydantic using the snake_case field names (like `page_size`), 
-          while the model ensures the correct API parameter name (`page-size`) 
-          is used via the `alias`.
-        """
-        allow_population_by_field_name = True
+    # Pydantic model configuration  for verison v2, it will allow population by field name and alias
+    # eg : ri_min can be populated using 'ri_min' or 'rimin'
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class MindatGeomaterialInput(BaseModel):
@@ -175,6 +206,14 @@ class MindatGeomaterialInput(BaseModel):
 
 
 
+
+
+
+
+
+
+
+
 ####################################
 # Locality query model
 ####################################
@@ -182,6 +221,7 @@ class MindatGeomaterialInput(BaseModel):
 class MindatLocalityQuery(BaseModel):
     """
     Pydantic model for the query parameters of the Mindat API /v1/localities/ endpoint.
+    This model encapsulates the parameters used to filter locality data.
     """
     country: Optional[str] = Field(
         None, 
@@ -201,17 +241,16 @@ class MindatLocalityQuery(BaseModel):
         alias="elements_inc", 
         description="Include chemical elements (e.g. 'Au,Ag'), comma separated string."
     )
-    class Config:
-        """
-        Configuration for the Pydantic model.
-        - `allow_population_by_field_name = True` is necessary for 
-          handling the `page-size` parameter using the `page_size` Python field.
-        """
-        allow_population_by_field_name = True
+    
+    # pydantic model configuration
+    # to allow population by field name and alias
+    # eg : elements_inc can be populated using 'elements_inc' or 'el_inc'
+    model_config = ConfigDict(populate_by_name=True)
 
 class MindatLocalityInput(BaseModel):
     """
     Wrapper class for the Locality Query Model.
+    This is used to encapsulate the query parameters for locality data collection.
     """
     query: MindatLocalityQuery = Field(description="""
         Example dicts, all of the keys are optional, leave blank if necessary:
