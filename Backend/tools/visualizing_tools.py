@@ -1,5 +1,4 @@
 
-from ..collectors.plot_visualizations import pandas_hist_plot_function
 from ..models.plot_visualization_model import PandasDFInput
 from langchain.tools import tool
 from typing import Optional
