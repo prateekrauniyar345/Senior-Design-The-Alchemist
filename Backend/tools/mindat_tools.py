@@ -6,14 +6,14 @@ from ..models import (
     MindatLocalityInput,
 )
 from pydantic import BaseModel
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Optional, List
 from pathlib import Path
 import json
 import logging
 from ..services.mindat_endpoints import get_geomaterial_api, get_locality_api
 from ..utils.custom_message import MindatAPIException
 
-logger = logging.getLogger(__name__)
+
 
 # Directories
 PARENT_DIR = Path(__file__).parent.resolve()
@@ -40,6 +40,10 @@ def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
 
     return params  # type: ignore[return-value]
 
+
+
+
+
 #####################################
 # Geomaterial data collector tool
 #####################################
@@ -60,8 +64,6 @@ def mindat_geomaterial_data_collector_function(
 ) -> str:
     try:
         query_dict = _to_params(query)
-        logger.debug("Geomaterial query params: %s", query_dict)
-
         geomaterial_api = get_geomaterial_api()
         response = geomaterial_api.search_geomaterials_minerals(query_dict)
 
@@ -84,7 +86,6 @@ def mindat_geomaterial_data_collector_function(
         return f"Success: Collected {result_count} mineral records and saved to {output_file_path}"
 
     except Exception as e:
-        logger.exception("Geomaterial collection failed")
         return f"Failed to collect data: {e}"
 
 
@@ -113,7 +114,6 @@ def mindat_locality_data_collector_function(
 ) -> str:
     try:
         query_dict = _to_params(query)
-        logger.debug("Locality query params: %s", query_dict)
 
         locality_api = get_locality_api()
         response = locality_api.search_localities(query_dict)
@@ -137,5 +137,4 @@ def mindat_locality_data_collector_function(
         return f"Success: Collected {result_count} locality records and saved to {output_file_path}"
 
     except Exception as e:
-        logger.exception("Locality collection failed")
         return f"Failed to collect data: {e}"
