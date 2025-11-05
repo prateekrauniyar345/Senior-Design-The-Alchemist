@@ -1,5 +1,10 @@
 # Models package - contains data models
-from .mindat_query_models import MindatGeoMaterialQuery, MindatGeomaterialInput
+from .mindat_query_models import (
+    MindatGeoMaterialQuery, 
+    MindatGeomaterialInput, 
+    MindatLocalityQuery, 
+    MindatLocalityInput
+)
 from .plot_visualization_model import PandasDFInput
 from .agent_models import AgentTask, AgentRun, DataArtifact, Visualization
 from .chat_models import Session, Message, AgentOutput
@@ -8,6 +13,8 @@ from .user_models import User
 __all__ = [
     "MindatGeoMaterialQuery", 
     "MindatGeomaterialInput", 
+    "MindatLocalityQuery", 
+    "MindatLocalityInput",
     "PandasDFInput"
     "AgentTask", 
     "AgentRun", 

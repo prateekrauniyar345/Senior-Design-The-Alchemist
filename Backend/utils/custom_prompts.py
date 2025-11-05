@@ -5,8 +5,9 @@ system_prompt = (
     Your options are: {options}.
 
     Routing Rules:
-    - If the user wants to collect mineral data, route to the 'collector'.
-    - If the user wants to plot a histogram and data has been collected, route to the 'histogram_plotter'.
+    - If the user wants to collect mineral data, route to the 'use_geomaterial_agent'.
+    - If the user wants to collect locality data, route to the 'use_locality_agent'.
+    - If the user wants to plot a histogram and data has been collected, route to the 'use_histogram_plotter_agent'.
     - If the user's request is fulfilled or they want to end the conversation, respond with 'FINISH'.
     - If the request is beyond the capabilities of the workers, respond with 'FINISH'.
     """

@@ -2,11 +2,12 @@
 Base Agent Factory - Scalable agent creation system
 """
 from typing import List, Dict, Any
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.agents import create_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import SystemMessage
 from langchain.tools import BaseTool
 from langchain_openai import AzureChatOpenAI
+from langchain_core.runnables import Runnable 
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ class AgentFactory:
         name: str,
         tools: List[BaseTool],
         system_prompt: str,
-        verbose: bool = True
-    ) -> AgentExecutor:
+        verbose: bool = False
+    ) -> Runnable: # return the runnable type so that it can be executed
         """
         Create a standardized agent executor
         
@@ -35,30 +36,28 @@ class AgentFactory:
             verbose: Whether to enable verbose logging
             
         Returns:
-            Configured AgentExecutor
+            Configured Agent (A LangChain Runnable object)
         """
-        prompt = ChatPromptTemplate.from_messages([
+        # Note: The LangChain utility `create_agent` accepts a SystemMessage 
+        # or string for the system_prompt argument, but its internal logic 
+        # is often easier to control with a simple prompt object like this:
+        
+        # We modify the prompt to ensure it's a ChatPromptTemplate 
+        # object as expected by LangChain agent utilities.
+        prompt_template = ChatPromptTemplate.from_messages([
             SystemMessage(content=system_prompt),
             MessagesPlaceholder(variable_name="messages"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
         
-        agent = create_openai_tools_agent(
+        agent = create_agent(
             llm=self.llm,
             tools=tools,
-            prompt=prompt
-        )
-        
-        executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=verbose,
-            handle_parsing_errors=True,
-            max_iterations=5
+            prompt=prompt_template, 
         )
         
         logger.info(f"Created agent: {name} with {len(tools)} tools")
-        return executor
+        return agent
 
 
 class AgentRegistry:
@@ -69,7 +68,7 @@ class AgentRegistry:
     
     def __init__(self, factory: AgentFactory):
         self.factory = factory
-        self._agents: Dict[str, AgentExecutor] = {}
+        self._agents: Dict[str, Runnable] = {} # ⬅returns Runnable type
     
     def register(
         self, 
@@ -82,7 +81,7 @@ class AgentRegistry:
         self._agents[name] = agent
         logger.info(f"Registered agent: {name}")
     
-    def get(self, name: str) -> AgentExecutor:
+    def get(self, name: str) -> Runnable:
         """Get an agent by name"""
         if name not in self._agents:
             raise ValueError(f"Agent '{name}' not registered")
