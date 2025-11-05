@@ -5,6 +5,7 @@ from typing import Optional
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+from ..models import PandasDFInput
 
 
 
@@ -25,7 +26,7 @@ BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
         "Input: { file_path: str, plot_title: Optional[str] }.\n"
         "Output: Success/failure message with plot file path."
     ),
-    args_schema=None,  # Using dynamic typing for simplicity
+    args_schema=PandasDFInput,  # using the predefined model : expects file_path and optional plot_title
     return_direct=False,
 )
 def pandas_hist_plot_function(file_path: str, plot_title: Optional[str] = None) -> str:
