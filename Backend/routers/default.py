@@ -9,20 +9,6 @@ templates = get_templates()
 # Create router instance
 router = APIRouter(tags=["pages"])
 
-@router.get("/", tags=["Health"])
-def health_check():
-    return JSONResponse(
-        status_code=200,
-        content={
-            "message": "Server is running correctly!",
-            "status": "healthy",
-            "docs": "/docs",
-            "redoc": "/redoc", 
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
-
-
 @router.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
     """About page"""
