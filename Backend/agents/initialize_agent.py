@@ -1,5 +1,5 @@
 #################################################
-# define the Agents for the multio agent system
+# define the Agents for the multi-agent system
 # And define the graph structure
 #################################################
 
@@ -38,7 +38,7 @@ from IPython.display import Image, display       # for visualizing the graph
 # get the llm initialized
 llm = initialize_llm()
 
-# create the agent with llm , tools, and 
+# create the agent with llm, tools, and prompts
 
 # ----------------------------------------------
 # Mindat Geomaterial Collector Agent
@@ -74,7 +74,7 @@ histogram_plotter = create_agent(
 # Define ControllerDecision schema
 class ControllerDecision(BaseModel):
     """Decision made by the controller about which agent to invoke next."""
-    action: Literal["mindat_geomaterial", "mindat_locality", "histogram_plotter", "FINISH"] = Field(
+    action: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "FINISH"] = Field(  # ✅ FIXED
         ...,
         description="Either 'FINISH' to end or the name of the agent to handle the query."
     )
@@ -85,7 +85,7 @@ class ControllerDecision(BaseModel):
 
 
 class State(TypedDict):
-    #The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
+    # The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
     messages: Annotated[List[AnyMessage], operator.add]    
     next: Optional[str]
 
@@ -128,7 +128,7 @@ def supervisor_node(state: State) -> dict:
 # Agent Wrapper Nodes
 # ----------------------------------------------
 
-def collector_node(state: State) -> dict:
+def geomaterial_collector_node(state: State) -> dict:
     """Wrapper for collector agent that returns to supervisor"""
     result = mindat_geomaterial.invoke(state)
     return {
@@ -136,7 +136,7 @@ def collector_node(state: State) -> dict:
         "next": "supervisor"  # Return control to supervisor
     }
 
-def locality_node(state: State) -> dict:
+def locality_collector_node(state: State) -> dict: 
     """Wrapper for locality collector agent"""
     result = mindat_locality.invoke(state)
     return {
@@ -144,7 +144,7 @@ def locality_node(state: State) -> dict:
         "next": "supervisor"
     }
 
-def plotter_node(state: State) -> dict:
+def histogram_plotter_node(state: State) -> dict:
     """Wrapper for plotter agent"""
     result = histogram_plotter.invoke(state)
     return {
@@ -155,7 +155,7 @@ def plotter_node(state: State) -> dict:
 def finish_node(state: State) -> dict:
     """Terminal node that ends the workflow"""
     return {
-        "messages": [AIMessage(content="✅ Workflow completed successfully!")],
+        "messages": [AIMessage(content="Workflow completed successfully!")],
         "next": "FINISH"
     }
 
@@ -168,9 +168,9 @@ graph = StateGraph(State)
 
 # Add all nodes
 graph.add_node("supervisor", supervisor_node)  
-graph.add_node("collector", collector_node)
-graph.add_node("locality_collector", locality_node)
-graph.add_node("plotter", plotter_node)
+graph.add_node("geomaterial_collector", geomaterial_collector_node)
+graph.add_node("locality_collector", locality_collector_node) 
+graph.add_node("histogram_plotter", histogram_plotter_node)
 graph.add_node("FINISH", finish_node)
 
 # Define the workflow edges
@@ -182,17 +182,17 @@ graph.add_conditional_edges(
     "supervisor",
     lambda state: state.get("next", "FINISH"),  # Route based on 'next' field
     {
-        "collector": "collector",
+        "geomaterial_collector": "geomaterial_collector",
         "locality_collector": "locality_collector",
-        "plotter": "plotter",
+        "histogram_plotter": "histogram_plotter",
         "FINISH": "FINISH"
     }
 )
 
 # All agents return to supervisor (removed direct agent->agent edges)
-graph.add_edge("collector", "supervisor")
+graph.add_edge("geomaterial_collector", "supervisor")
 graph.add_edge("locality_collector", "supervisor")
-graph.add_edge("plotter", "supervisor")
+graph.add_edge("histogram_plotter", "supervisor")
 
 # FINISH ends the workflow
 graph.add_edge("FINISH", END)
@@ -210,6 +210,7 @@ def display_graph():
     try:
         graph_image = app.get_graph().draw_mermaid_png()
         display(Image(graph_image))
+        print("Graph displayed successfully!")
         return True
     except Exception as e:
         print(f"Could not display graph: {e}")
@@ -218,13 +219,6 @@ def display_graph():
             with open("Backend/contents/agent_workflow_graph.png", "wb") as f:
                 f.write(graph_image)
             print("Graph saved to Backend/contents/agent_workflow_graph.png")
-        except:
-            pass
+        except Exception as save_error:
+            print(f"Could not save graph: {save_error}")
         return False
-
-
-# call the display_graph
-display_graph()
-
-
-
