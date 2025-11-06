@@ -28,6 +28,7 @@ class MindatGeoMaterialQuery(BaseModel):
             "el_exc": ["Cl", "S"],
             "el_inc": ["Fe", "O", "Si"],
             "entrytype": [0, 1],
+            "expand" : ["locality"]
             "fracturetype": ["Conchoidal"],
             "hardness_max": 7.0,
             "hardness_min": 5.0,
@@ -91,6 +92,20 @@ class MindatGeoMaterialQuery(BaseModel):
     entrytype: Optional[List[int]] = Field(
         None, 
         description="Entry type. Multiple choice. Values: 0-mineral, 1-synonym, 7-rock, etc."
+    ) 
+
+    # expand
+    expand: Optional[List[Literal[
+        "description",
+        "type_localities",
+        "locality",
+        "relations",
+        "minstats",
+        "~all",
+        "*"
+    ]]] = Field(
+        default=None,
+        description="Select fields to expand. For example, 'description' expands the short description field to a full description. '**~all**' expands all fields except the geomaterial's localities; '***' expands all fields including localities. Multiple fields can be separated by commas in the API call."
     ) 
 
     # Fracture
@@ -183,6 +198,7 @@ class MindatGeomaterialInput(BaseModel):
             "el_exc": ["Cl", "S"],
             "el_inc": ["Fe", "O", "Si"],
             "entrytype": [0, 1],
+            "expand" : ["locality"]
             "fracturetype": ["Conchoidal"],
             "hardness_max": 7.0,
             "hardness_min": 5.0,
