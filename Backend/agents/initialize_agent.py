@@ -16,9 +16,9 @@ from ..utils.custom_prompts import (
     locality_collector_prompt 
 )
 from ..tools import (
-    mindat_geomaterial_data_collector_function,
-    mindat_locality_data_collector_function,
-    pandas_hist_plot_function,
+    mindat_geomaterial_collector,
+    mindat_locality_collector,
+    pandas_hist_plot,
 )
 from ..models import (
     MindatGeoMaterialQuery, 
@@ -28,7 +28,7 @@ from ..models import (
     PandasDFInput
 )
 from typing import List, Dict, Any, TypedDict, Union, Optional
-from 
+from IPython.display import Image, display       # for visualizing the graph
 
 
 # get the llm initialized
@@ -39,27 +39,27 @@ llm = initialize_llm()
 # ----------------------------------------------
 # Mindat Geomaterial Collector Agent
 # ----------------------------------------------
-mindat_geo_material_collector_agent = create_agent(
+mindat_geomaterial = create_agent(
     llm=llm, 
-    tools=[mindat_geomaterial_data_collector_function], 
+    tools=[mindat_geomaterial_collector], 
     system_prompt=geomaterial_collector_prompt
 )
 
 # ----------------------------------------------
 # Mindat Locality Collector Agent
 # ----------------------------------------------
-mindat_locality_collector_agent = create_agent(
+mindat_locality = create_agent(
     llm=llm,
-    tools=[mindat_locality_data_collector_function],
+    tools=[mindat_locality_collector],
     system_prompt=locality_collector_prompt
 )
 
 # ----------------------------------------------
 # Histogram Plotter Agent
 # ----------------------------------------------
-histogram_plotter_agent = create_agent(
+histogram_plotter = create_agent(
     llm=llm,
-    tools=[pandas_hist_plot_function],
+    tools=[pandas_hist_plot],
     system_prompt=histogram_plotter_prompt
 )   
 
@@ -75,10 +75,18 @@ class State(TypedDict):
 # get the graph
 graph = StateGraph(State)
 
+
+# ----------------------------------------------
+# Define the supervisor agent node
+# ----------------------------------------------                 
+
+
+
+
 # Add nodes (name, runnable/callable)
-graph.add_node("collector", mindat_geo_material_collector_agent)
-graph.add_node("locality_collector", mindat_locality_collector_agent)
-graph.add_node("plotter", histogram_plotter_agent)
+graph.add_node("collector", mindat_geomaterial)
+graph.add_node("locality_collector", mindat_locality)
+graph.add_node("plotter", histogram_plotter)
 
 # Wire the flow: START -> collector -> plotter -> END
 graph.add_edge(START, "supervisor")

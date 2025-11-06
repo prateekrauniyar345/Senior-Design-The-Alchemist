@@ -1,15 +1,17 @@
 system_prompt = (
     """
-    You are a supervisor tasked with managing a conversation between the following workers: {members}.
-    Given the user's request, you must decide which worker should act next.
-    Your options are: {options}.
+    <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    You are a supervisor managing a conversation between the workers: {members}. \n
+    Or respond with FINISH if the request is fulfilled. \n
+    Case 1, "User: i want the copper mineral datasets", please go 1. mindat_geo_material_collector_agent, 2. FINISH \n
+    Case 2, "User: i want the histogram of iron mineral", please go 1. mindat_geo_material_collector_agent, 2. histogram_plotter_agent, 3. FINISH.\n
+    Case 3, "User: i want the locality informatino for united states", please go 1. mindat_locality_collector_agent, 2. FINISH.\n
+    Case 4, "User: I want to order a coffee", please go 1. FINISH, because such request is beyond our capability\n
 
-    Routing Rules:
-    - If the user wants to collect mineral data, route to the 'use_geomaterial_agent'.
-    - If the user wants to collect locality data, route to the 'use_locality_agent'.
-    - If the user wants to plot a histogram and data has been collected, route to the 'use_histogram_plotter_agent'.
-    - If the user's request is fulfilled or they want to end the conversation, respond with 'FINISH'.
-    - If the request is beyond the capabilities of the workers, respond with 'FINISH'.
+    Team members description:
+    - mindat_geo_material_collector_agent: the Mindat data collector agent, will collect comprehensive mineral data but without lat long info.\n
+    - mindat_locality_collector_agent: the locality data collector agent, will collect locality data with lat long info according to the country name in the request\n
+    - histogram_plotter_agent: the histogram plotter agent, cannot draw without the dataset of mindat_geo_material_collector_agent\n
     """
 )
 
@@ -17,7 +19,7 @@ system_prompt = (
 geomaterial_collector_prompt = """
             You are a mindat mineral data collector.
             
-            CRITICAL: You MUST use the 'mindat_collect' tool to collect data. Do NOT just describe what you would do.
+            CRITICAL: You MUST use the 'mindat_geomaterial_data_collector_function' tool to collect data. Do NOT just describe what you would do.
             
             Your job is to:
             1. Analyze the user's request to extract query parameters

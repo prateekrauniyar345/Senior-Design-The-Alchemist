@@ -20,7 +20,7 @@ BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
 # Histogram plotter tool
 #####################################
 @tool(
-    "pandas_hist_plot_function",
+    "pandas_hist_plot",
     description=(
         "Create histogram plot from collected mineral data and save to plots directory.\n"
         "Input: { file_path: str, plot_title: Optional[str] }.\n"
@@ -29,7 +29,7 @@ BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
     args_schema=PandasDFInput,  # using the predefined model : expects file_path and optional plot_title
     return_direct=False,
 )
-def pandas_hist_plot_function(file_path: str, plot_title: Optional[str] = None) -> str:
+def pandas_hist_plot(file_path: str, plot_title: Optional[str] = None) -> str:
     try:
         plots_dir = BASE_DATA_DIR / "plots"
         plots_dir.mkdir(parents=True, exist_ok=True)

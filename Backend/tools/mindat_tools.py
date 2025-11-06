@@ -48,7 +48,7 @@ def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
 # Geomaterial data collector tool
 #####################################
 @tool(
-    "mindat_geomaterial_data_collector_function",
+    "mindat_geomaterial_collector",
     description=(
         "Query Mindat /v1/geomaterials using a structured filter.\n"
         "Use this when the user asks to find minerals/geomaterials by properties "
@@ -59,7 +59,7 @@ def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
     args_schema=MindatGeomaterialInput,
     return_direct=False,
 )
-def mindat_geomaterial_data_collector_function(
+def mindat_geomaterial_collector(
     query: Union[MindatGeoMaterialQuery, Dict[str, Any]]
 ) -> str:
     try:
@@ -99,7 +99,7 @@ def mindat_geomaterial_data_collector_function(
 # Locality data collector tool
 #####################################
 @tool(
-    "mindat_locality_data_collector_function",
+    "mindat_locality_collector",
     description=(
         "Search Mindat /v1/localities by structured filters "
         "(country, description, include/exclude elements). "
@@ -109,7 +109,7 @@ def mindat_geomaterial_data_collector_function(
     args_schema=MindatLocalityInput,  # <-- fixed
     return_direct=False,
 )
-def mindat_locality_data_collector_function(
+def mindat_locality_collector(
     query: Union[MindatLocalityQuery, Dict[str, Any]]
 ) -> str:
     try:
