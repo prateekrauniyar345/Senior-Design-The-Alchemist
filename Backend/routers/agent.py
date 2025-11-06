@@ -2,15 +2,15 @@ from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
 import logging
 from pydantic import BaseModel
-
 from ..utils import MindatAPIException
 
-# Setup logging
-logger = logging.getLogger(__name__)
 
 # Create router instance
 router = APIRouter(prefix="/agent", tags=["agent"])
 
+# ------------------------------
+# Query and Response Models
+# ------------------------------
 class AgentQueryRequest(BaseModel):
     """Request model for agent queries"""
     query: str
@@ -23,6 +23,10 @@ class AgentQueryResponse(BaseModel):
     plot_file_path: str = None
     error: str = None
 
+
+# ------------------------------
+# Router Endpoints
+# ------------------------------
 @router.post("/chat", response_model=AgentQueryResponse)
 async def chat_with_agent(request: AgentQueryRequest):
     """
@@ -58,7 +62,10 @@ async def chat_with_agent(request: AgentQueryRequest):
     #         message="Failed to process query",
     #         error=str(e)
     #     )
-    return f"Plotting in progress for query: {request.query}"
+    return {
+        "success": True,
+        "message": "Agent query processing is currently disabled."
+    }
 
 
 
