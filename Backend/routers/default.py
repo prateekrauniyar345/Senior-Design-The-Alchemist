@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-
+from datetime import datetime
 from ..core.config import get_templates
 
 # Get templates instance
@@ -17,7 +17,8 @@ def health_check():
             "message": "Server is running correctly!",
             "status": "healthy",
             "docs": "/docs",
-            "redoc": "/redoc"
+            "redoc": "/redoc", 
+            "timestamp": datetime.utcnow().isoformat()
         }
     )
 
