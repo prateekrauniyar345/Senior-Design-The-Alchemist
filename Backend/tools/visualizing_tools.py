@@ -20,7 +20,7 @@ BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
 # Histogram plotter tool
 #####################################
 @tool(
-    name="pandas_hist_plot_function",
+    "pandas_hist_plot_function",
     description=(
         "Create histogram plot from collected mineral data and save to plots directory.\n"
         "Input: { file_path: str, plot_title: Optional[str] }.\n"
