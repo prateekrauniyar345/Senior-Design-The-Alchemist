@@ -17,7 +17,7 @@ from ..utils.custom_message import MindatAPIException
 
 # Directories
 PARENT_DIR = Path(__file__).parent.resolve()
-BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
+BASE_DATA_DIR = PARENT_DIR.parent / "contents"
 
 def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
     """
@@ -53,19 +53,23 @@ def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
         "Query Mindat /v1/geomaterials using a structured filter.\n"
         "Use this when the user asks to find minerals/geomaterials by properties "
         "(e.g., crystal system, hardness range, transparency, composition).\n\n"
-        "Input: { query: MindatGeoMaterialQuery }\n"
+        "Input: { query: MindatGeomaterialInput }\n"
         "Output: JSON results from Mindat."
     ),
     args_schema=MindatGeomaterialInput,
     return_direct=False,
 )
 def mindat_geomaterial_collector(
-    query: Union[MindatGeoMaterialQuery, Dict[str, Any]]
+    query: Union[MindatGeomaterialInput, Dict[str, Any]]
 ) -> str:
     try:
+        print("\n")
+        print("Mindat Geomaterial Collector called with query:", query)
         query_dict = _to_params(query)
         geomaterial_api = get_geomaterial_api()
         response = geomaterial_api.search_geomaterials_minerals(query_dict)
+        print("\n")
+        # print("Received response from Mindat Geomaterial API : ", response)
 
         if not isinstance(response, dict) or not response.get("results"):
             raise MindatAPIException(
@@ -78,6 +82,8 @@ def mindat_geomaterial_collector(
         sample_dir = BASE_DATA_DIR / "sample_data"
         sample_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = sample_dir / "mindat_geomaterial_response.json"
+        print("\n")
+        print("Saving response to file:", output_file_path)
 
         with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4, ensure_ascii=False)

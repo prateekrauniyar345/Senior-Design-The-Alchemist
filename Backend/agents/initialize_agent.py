@@ -44,7 +44,7 @@ llm = initialize_llm()
 # Mindat Geomaterial Collector Agent
 # ----------------------------------------------
 mindat_geomaterial = create_agent(
-    llm=llm, 
+    model=llm, 
     tools=[mindat_geomaterial_collector], 
     system_prompt=geomaterial_collector_prompt
 )
@@ -53,7 +53,7 @@ mindat_geomaterial = create_agent(
 # Mindat Locality Collector Agent
 # ----------------------------------------------
 mindat_locality = create_agent(
-    llm=llm,
+    model=llm,
     tools=[mindat_locality_collector],
     system_prompt=locality_collector_prompt
 )
@@ -62,7 +62,7 @@ mindat_locality = create_agent(
 # Histogram Plotter Agent
 # ----------------------------------------------
 histogram_plotter = create_agent(
-    llm=llm,
+    model=llm,
     tools=[pandas_hist_plot],
     system_prompt=histogram_plotter_prompt
 )   
@@ -164,21 +164,21 @@ def finish_node(state: State) -> dict:
 # ----------------------------------------------
 
 # Create the graph with State
-graph = StateGraph(State)
+workflow = StateGraph(State)
 
 # Add all nodes
-graph.add_node("supervisor", supervisor_node)  
-graph.add_node("geomaterial_collector", geomaterial_collector_node)
-graph.add_node("locality_collector", locality_collector_node) 
-graph.add_node("histogram_plotter", histogram_plotter_node)
-graph.add_node("FINISH", finish_node)
+workflow.add_node("supervisor", supervisor_node)  
+workflow.add_node("geomaterial_collector", geomaterial_collector_node)
+workflow.add_node("locality_collector", locality_collector_node) 
+workflow.add_node("histogram_plotter", histogram_plotter_node)
+workflow.add_node("FINISH", finish_node)
 
 # Define the workflow edges
 # START -> Supervisor
-graph.add_edge(START, "supervisor")
+workflow.add_edge(START, "supervisor")
 
 # Supervisor routes to agents based on decision
-graph.add_conditional_edges(
+workflow.add_conditional_edges(
     "supervisor",
     lambda state: state.get("next", "FINISH"),  # Route based on 'next' field
     {
@@ -190,15 +190,15 @@ graph.add_conditional_edges(
 )
 
 # All agents return to supervisor (removed direct agent->agent edges)
-graph.add_edge("geomaterial_collector", "supervisor")
-graph.add_edge("locality_collector", "supervisor")
-graph.add_edge("histogram_plotter", "supervisor")
+workflow.add_edge("geomaterial_collector", "supervisor")
+workflow.add_edge("locality_collector", "supervisor")
+workflow.add_edge("histogram_plotter", "supervisor")
 
 # FINISH ends the workflow
-graph.add_edge("FINISH", END)
+workflow.add_edge("FINISH", END)
 
 # Compile the graph
-app = graph.compile()
+agent_graph = workflow.compile()
 
 
 # ----------------------------------------------
@@ -208,7 +208,7 @@ app = graph.compile()
 def display_graph():
     """Display the compiled graph structure"""
     try:
-        graph_image = app.get_graph().draw_mermaid_png()
+        graph_image = agent_graph.get_graph().draw_mermaid_png()
         display(Image(graph_image))
         print("Graph displayed successfully!")
         return True

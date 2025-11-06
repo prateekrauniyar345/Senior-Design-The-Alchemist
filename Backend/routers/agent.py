@@ -1,12 +1,17 @@
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 import logging
+import re
 from pydantic import BaseModel
 from ..utils import MindatAPIException
-
+from ..agents import agent_graph, initialize_llm
+from datetime import datetime
+from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
+import time
 
 # Create router instance
-router = APIRouter(prefix="/agent", tags=["agent"])
+router = APIRouter(prefix="/api/agent", tags=["agent"])
+
 
 # ------------------------------
 # Query and Response Models
@@ -19,10 +24,60 @@ class AgentQueryResponse(BaseModel):
     """Response model for agent queries"""
     success: bool
     message: str
-    data_file_path: str = None
-    plot_file_path: str = None
-    error: str = None
+    data_file_path: Optional[str] = None
+    plot_file_path: Optional[str] = None
+    error: Optional[str] = None
 
+class AgentHealthResponse(BaseModel):
+    """Response model for agent health check"""
+    ok: bool
+    lat_ms: float
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+def extract_file_paths(messages: List[BaseMessage]) -> Dict[str, Optional[str]]:
+    """
+    Extract data and plot file paths from agent messages.
+    Looks for paths in success messages.
+    """
+    data_path = None
+    plot_path = None
+    
+    for msg in messages:
+        content = getattr(msg, "content", "")
+        
+        # Look for JSON data files
+        if "mindat_geomaterial_response.json" in content or "mindat_locality_response.json" in content:
+            json_match = re.search(r'([/\w\-. ]+\.json)', content)
+            if json_match:
+                data_path = json_match.group(1)
+        
+        # Look for PNG plot files
+        if "mineral_elements_histogram.png" in content or ".png" in content:
+            png_match = re.search(r'([/\w\-. ]+\.png)', content)
+            if png_match:
+                plot_path = png_match.group(1)
+    
+    return {
+        "data_file_path": data_path,
+        "plot_file_path": plot_path
+    }
+
+def convert_path_to_url(file_path: Optional[str]) -> Optional[str]:
+    """
+    Convert absolute file system path to relative HTTP URL.
+    Example: /Users/.../Backend/contents/plots/file.png -> /contents/plots/file.png
+    """
+    if not file_path:
+        return None
+    
+    # Find the /contents/ part and extract everything after it
+    if "/contents/" in file_path:
+        parts = file_path.split("/contents/")
+        return f"/contents/{parts[-1]}"
+    
+    return file_path
 
 # ------------------------------
 # Router Endpoints
@@ -30,62 +85,89 @@ class AgentQueryResponse(BaseModel):
 @router.post("/chat", response_model=AgentQueryResponse)
 async def chat_with_agent(request: AgentQueryRequest):
     """
-    Process user query through the agent workflow
+    Process user query through the agent workflow.
     
     This endpoint handles complex queries like:
-    "Plot the histogram of elements distribution of IMA-approved minerals with hardness 3-5"
+    - "Plot the histogram of elements distribution of IMA-approved minerals with hardness 3-5"
+    - "Get locality data for Korea"
+    - "Get minerals with Neodymium but without sulfur"
+    
+    The agent_graph will:
+    1. Route to supervisor
+    2. Supervisor decides which agent to use
+    3. Agent executes and returns to supervisor
+    4. Loop continues until FINISH
     """
-    # try:
-    #     logger.info(f"Processing agent query: {request.query}")
+    
+    try:
+        # Prepare initial state with user message
+        initial_state = {
+            "messages": [HumanMessage(content=request.query)],
+            "next": None
+        }
+        # Invoke the compiled graph asynchronously
+        result: Dict[str, Any] = await agent_graph.ainvoke(initial_state)
+        # Extract messages from result
+        messages: List[BaseMessage] = result.get("messages", [])
         
-    #     # Run the agent workflow
-    #     result = await run_agent_workflow(request.query)
+        if not messages:
+            raise HTTPException(
+                status_code=500,
+                detail="No messages returned from agent workflow"
+            )
         
-    #     if result.get("success", True):
-    #         return AgentQueryResponse(
-    #             success=True,
-    #             message=result.get("message", "Workflow completed successfully"),
-    #             data_file_path=result.get("data_file_path"),
-    #             plot_file_path=result.get("plot_file_path")
-    #         )
-    #     else:
-    #         return AgentQueryResponse(
-    #             success=False,
-    #             message="Workflow failed",
-    #             error=result.get("error", "Unknown error")
-    #         )
-            
-    # except Exception as e:
-    #     logger.error(f"Agent workflow error: {str(e)}")
-    #     return AgentQueryResponse(
-    #         success=False,
-    #         message="Failed to process query",
-    #         error=str(e)
-    #     )
-    return {
-        "success": True,
-        "message": "Agent query processing is currently disabled."
-    }
+        # Get the last message as the final response
+        last_message = messages[-1]
+        final_message = getattr(last_message, "content", "Task completed")
+ 
+        # Extract file paths from all messages
+        file_paths = extract_file_paths(messages)
+        
+        # Convert file system paths to HTTP URLs
+        data_url = convert_path_to_url(file_paths["data_file_path"])
+        plot_url = convert_path_to_url(file_paths["plot_file_path"])
+         
+        # Return success response
+        return AgentQueryResponse(
+            success=True,
+            message=final_message,
+            data_file_path=data_url,
+            plot_file_path=plot_url,
+            error=None
+        )
+    except Exception as e:
+        # Return error response
+        return AgentQueryResponse(
+            success=False,
+            message="Agent workflow failed",
+            data_file_path=None,
+            plot_file_path=None,
+            error=str(e)
+        )
 
 
-
-@router.get("/health")
+@router.get("/health", response_model=AgentHealthResponse)
 async def agent_health_check():
-    """Check if the agent system is working"""
-    # try:
-    #     # Simple test to ensure agents can be imported
-    #     from ..agents.agent_workflow import get_workflow
-    #     workflow = get_workflow()
+    """
+    Check if the agent system is working.
+    Tests LLM connectivity and response time.
+    """
+    try:
+        llm = initialize_llm()
+        start = time.perf_counter()
         
-    #     return {
-    #         "success": True,
-    #         "message": "Agent system is healthy",
-    #         "workflow_ready": workflow is not None
-    #     }
-    # except Exception as e:
-    #     logger.error(f"Agent health check failed: {str(e)}")
-    #     raise HTTPException(status_code=500, detail=f"Agent system unhealthy: {str(e)}")
-    return {
-        "success": True,
-        "message": "Agent system is healthy"
-    }
+        # Use ainvoke for async
+        msg = await llm.ainvoke([HumanMessage(content="Reply with: ok")])
+        
+        lat_ms = (time.perf_counter() - start) * 1000
+        healthy = (getattr(msg, "content", "").strip().lower() == "ok")
+
+        return AgentHealthResponse(
+            ok=healthy, 
+            lat_ms=round(lat_ms, 1)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Agent system is not healthy: {str(e)}"
+        )
