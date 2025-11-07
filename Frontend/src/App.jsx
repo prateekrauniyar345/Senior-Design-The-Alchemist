@@ -18,9 +18,6 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        {/* Header */}
-        <Header />
-
           {/* routes */}
           <Routes>
             <Route path="/" element={<Dashboard />} />

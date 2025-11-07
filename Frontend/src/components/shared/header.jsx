@@ -1,34 +1,36 @@
-import { Navbar, Nav, Container, Button, Image } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Navbar, Nav, Button, Image } from "react-bootstrap";
+import { LogIn, UserPlus } from 'lucide-react';
 
 export default function Header() {
-  return (
-    <Navbar className="ms-0 me-0">
-      <Container fluid className="px-5">  
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center cursor-pointer">
-          <Image
-            src="/images/the-alchemist.png" 
-            alt="The Alchemist Logo"
-            roundedCircle
-            width={32}
-            height={32}
-            className="me-2"
-          />
-          <span className="fw-semibold text-white fs-1">The Alchemist</span>
+  return(
+      <Navbar variant="dark" expand="lg" className="py-3">
+        <Navbar.Brand href="#home" className="d-flex align-items-center text-white">
+            <span className="fw-bold" style={{ fontSize: '2.1rem' }}>The Alchemist</span>
         </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="main-nav" />
-        <Navbar.Collapse id="main-nav">
-          <Nav className="ms-auto align-items-lg-center">
-            <Button as={Link} to="/signin" variant="outline-light" size="lg" className="me-2">
-              Sign In
-            </Button>
-            <Button as={Link} to="/signup" variant="primary" size="lg">
-              Sign Up
-            </Button>
-          </Nav>
+        
+        <Navbar.Toggle aria-controls="nav" />
+        <Navbar.Collapse id="nav">
+            <Nav className="ms-auto me-3 d-none d-lg-flex fs-4">
+                <Nav.Link href="/" className="text-white px-3">Dashboard</Nav.Link>
+                <Nav.Link href="/chat" className="text-secondary px-3">Chat</Nav.Link>
+                <Nav.Link href="/docs" className="text-secondary px-3">Docs</Nav.Link>
+            </Nav>
+            
+            <div className="d-flex align-items-center gap-4 mt-3 mt-lg-0">
+                <Button variant="link" className="text-white text-decoration-none p-0 d-flex align-items-center fs-5">
+                    <LogIn size={22} className="me-2" />
+                    <span>Sign In</span>
+                </Button>
+                <Button 
+                    variant="outline-light" 
+                    size="lg"
+                    className="d-flex align-items-center fs-5"
+                >
+                    <UserPlus size={22} className="me-2" />
+                    Sign Up
+                </Button>
+            </div>
         </Navbar.Collapse>
-      </Container>
     </Navbar>
   );
 }
