@@ -1,14 +1,17 @@
 #################################################
-# define the Agents for the multio agent system
+# define the Agents for the multi-agent system
 # And define the graph structure
 #################################################
 
 from langchain.agents import create_agent
 from .initialize_llm import initialize_llm
+from pydantic import BaseModel, Field
 from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import StateGraph, MessagesState, START, END
+from langchain.messages import AnyMessage
+import operator
 from ..utils.custom_prompts import (
     system_prompt,
     geomaterial_collector_prompt, 
@@ -16,9 +19,9 @@ from ..utils.custom_prompts import (
     locality_collector_prompt 
 )
 from ..tools import (
-    mindat_geomaterial_data_collector_function,
-    mindat_locality_data_collector_function,
-    pandas_hist_plot_function,
+    mindat_geomaterial_collector,
+    mindat_locality_collector,
+    pandas_hist_plot,
 )
 from ..models import (
     MindatGeoMaterialQuery, 
@@ -27,169 +30,195 @@ from ..models import (
     MindatLocalityInput, 
     PandasDFInput
 )
-from typing import List, Dict, Any, TypedDict, Union, Optional
+from typing_extensions import TypedDict, Annotated
+from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
+from IPython.display import Image, display       # for visualizing the graph
 
 
 # get the llm initialized
 llm = initialize_llm()
 
-# create the agent with llm , tools, and 
+# create the agent with llm, tools, and prompts
 
 # ----------------------------------------------
 # Mindat Geomaterial Collector Agent
 # ----------------------------------------------
-mindat_geo_material_collector_agent = create_agent(
-    llm=llm, 
-    tools=[mindat_geomaterial_data_collector_function], 
+mindat_geomaterial = create_agent(
+    model=llm, 
+    tools=[mindat_geomaterial_collector], 
     system_prompt=geomaterial_collector_prompt
 )
 
 # ----------------------------------------------
 # Mindat Locality Collector Agent
 # ----------------------------------------------
-mindat_locality_collector_agent = create_agent(
-    llm=llm,
-    tools=[mindat_locality_data_collector_function],
+mindat_locality = create_agent(
+    model=llm,
+    tools=[mindat_locality_collector],
     system_prompt=locality_collector_prompt
 )
 
 # ----------------------------------------------
 # Histogram Plotter Agent
 # ----------------------------------------------
-histogram_plotter_agent = create_agent(
-    llm=llm,
-    tools=[pandas_hist_plot_function],
+histogram_plotter = create_agent(
+    model=llm,
+    tools=[pandas_hist_plot],
     system_prompt=histogram_plotter_prompt
 )   
 
-##############################
+# ----------------------------------------------
 # Define the Graph Structure
-##############################
-
-#  use built in MessagesState to manage the state of the agent
-graph = StateGraph(MessagesState)
-
-# we will define the supervisor/controller 
-# supervisor agent that will manage the flow between the other agents
-# will take the system prompt and all tools
-
-
-# ----------------------------------------------
-# Define the tools for the Supervisor Agnet
 # ----------------------------------------------
 
-#tool uisng the geomaterial agent
-@tool(
-    name="use_geomaterial_agent",
-    description=(
-        "Delegate to the Geomaterial specialist agent. "
-        "Use for /v1/geomaterials queries (properties, composition, hardness, etc.). "
-        "Input: { query: MindatGeoMaterialQuery }"
-    ),
-    args_schema=MindatGeomaterialInput,
-    return_direct=False,
-)
-def use_geomaterial_agent(query: Union[MindatGeoMaterialQuery, Dict[str, Any]]) -> str:
-    # not using the alis
-    payload = query.model_dump(by_alias=False, exclude_none=True) if hasattr(query, "model_dump") else query
-    # force sub agent to use its own tools only
-    msg = HumanMessage(
-        content=(
-            "Handle this geomaterial request using YOUR tools only. "
-            "Return the string in this format : Used the Geomaterial Agent Successfully. Resault saved to  : file_path.\n\n"
-            f"QUERY_JSON:\n{payload}"
-        )
+# Define ControllerDecision schema
+class ControllerDecision(BaseModel):
+    """Decision made by the controller about which agent to invoke next."""
+    action: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "FINISH"] = Field(  # ✅ FIXED
+        ...,
+        description="Either 'FINISH' to end or the name of the agent to handle the query."
     )
-    out = mindat_geo_material_collector_agent.invoke({"messages": [msg]})
-    return out["messages"][-1].content
-
-
-# tool using the locality agent
-@tool(
-    name="use_locality_agent",
-    description=(
-        "Delegate to the Locality specialist agent. "
-        "Use for /v1/localities queries (country, description, include/exclude elements). "
-        "Input: { query: MindatLocalityQuery }"
-    ),
-    args_schema=MindatLocalityInput,
-    return_direct=False,
-)
-def use_locality_agent(query: Union[MindatLocalityQuery, Dict[str, Any]]) -> str:
-    payload = query.model_dump(by_alias=True, exclude_none=True) if hasattr(query, "model_dump") else query
-    msg = HumanMessage(
-        content=(
-            "Handle this locality request using YOUR tools only. "
-             "Return the string in this format : Used the Geomaterial Agent Successfully. Resault saved to  : file_path.\n\n"
-            f"QUERY_JSON:\n{payload}"
-        )
+    reasoning: Optional[str] = Field(
+        None,
+        description="Brief explanation of why this agent was selected."
     )
-    out = mindat_locality_collector_agent.invoke({"messages": [msg]})
-    return out["messages"][-1].content
 
 
-# tool using the histogram plotter agent
-@tool(
-    name="use_histogram_plotter_agent",
-    description=(
-        "Delegate to the Histogram Plotter agent. "
-        "Use to create histogram(s) from a JSON results file path produced by collectors. "
-        "Input: { file_path: str, plot_title?: str }"
-    ),
-    args_schema=PandasDFInput,   # expects file_path, which is str
-    return_direct=False,
-)
-def use_histogram_plotter_agent(file_path: str, plot_title: Optional[str] = None) -> str:
-    # Pass a compact directive to the plotting agent
-    directive = (
-        "Create a histogram using your plotting tool with the provided file path "
-        "and optional title. Return the plot file path."
-    )
-    msg = HumanMessage(content=f"{directive}\n\nfile_path={file_path}\nplot_title={plot_title or ''}")
-    out = histogram_plotter_agent.invoke({"messages": [msg]})
-    return out["messages"][-1].content
-
+class State(TypedDict):
+    # The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
+    messages: Annotated[List[AnyMessage], operator.add]    
+    next: Optional[str]
 
 
 # ----------------------------------------------
-# Supervisor / Controller Agent
+# Supervisor Node (AI-Powered)
 # ----------------------------------------------
-members = ["use_geomaterial_agent", "use_locality_agent", "use_histogram_plotter_agent"]
-options = members + ["FINISH"]
+def supervisor_node(state: State) -> dict:
+    """
+    AI-powered supervisor that decides which agent to route to next.
+    Uses LLM with structured output to make intelligent routing decisions.
+    """
+    messages = state["messages"]
+    
+    # Create LLM with structured output capability
+    decision_llm = llm.with_structured_output(ControllerDecision) 
+    
+    # Build the decision prompt
+    decision_prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="messages"),
+    ])
+    
+    # Create and invoke the chain
+    chain = decision_prompt | decision_llm
+    decision: ControllerDecision = chain.invoke({"messages": messages})
+    
+    # Log the decision
+    print(f"\nSupervisor Decision: {decision.action}")
+    if decision.reasoning:
+        print(f"   Reasoning: {decision.reasoning}")
+    
+    # Return state update with routing decision
+    return {
+        "next": decision.action,
+        "messages": [AIMessage(content=f"Supervisor routing to: {decision.action}")]
+    }
 
+# ----------------------------------------------
+# Agent Wrapper Nodes
+# ----------------------------------------------
 
-system_prompt_template = ChatPromptTemplate.from_template(system_prompt)
-rendered_system_prompt = system_prompt_template.format(
-    members=", ".join(members),
-    options=", ".join(options)
+def geomaterial_collector_node(state: State) -> dict:
+    """Wrapper for collector agent that returns to supervisor"""
+    result = mindat_geomaterial.invoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"  # Return control to supervisor
+    }
+
+def locality_collector_node(state: State) -> dict: 
+    """Wrapper for locality collector agent"""
+    result = mindat_locality.invoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"
+    }
+
+def histogram_plotter_node(state: State) -> dict:
+    """Wrapper for plotter agent"""
+    result = histogram_plotter.invoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"
+    }
+
+def finish_node(state: State) -> dict:
+    """Terminal node that ends the workflow"""
+    return {
+        "messages": [AIMessage(content="Workflow completed successfully!")],
+        "next": "FINISH"
+    }
+
+# ----------------------------------------------
+# Graph Construction
+# ----------------------------------------------
+
+# Create the graph with State
+workflow = StateGraph(State)
+
+# Add all nodes
+workflow.add_node("supervisor", supervisor_node)  
+workflow.add_node("geomaterial_collector", geomaterial_collector_node)
+workflow.add_node("locality_collector", locality_collector_node) 
+workflow.add_node("histogram_plotter", histogram_plotter_node)
+workflow.add_node("FINISH", finish_node)
+
+# Define the workflow edges
+# START -> Supervisor
+workflow.add_edge(START, "supervisor")
+
+# Supervisor routes to agents based on decision
+workflow.add_conditional_edges(
+    "supervisor",
+    lambda state: state.get("next", "FINISH"),  # Route based on 'next' field
+    {
+        "geomaterial_collector": "geomaterial_collector",
+        "locality_collector": "locality_collector",
+        "histogram_plotter": "histogram_plotter",
+        "FINISH": "FINISH"
+    }
 )
 
-supervisor = create_agent(
-    llm=llm, 
-    tools=[
-        use_geomaterial_agent, 
-        use_locality_agent, 
-        use_histogram_plotter_agent
-    ], 
-    system_prompt=rendered_system_prompt
-)
+# All agents return to supervisor (removed direct agent->agent edges)
+workflow.add_edge("geomaterial_collector", "supervisor")
+workflow.add_edge("locality_collector", "supervisor")
+workflow.add_edge("histogram_plotter", "supervisor")
+
+# FINISH ends the workflow
+workflow.add_edge("FINISH", END)
+
+# Compile the graph
+agent_graph = workflow.compile()
 
 
+# ----------------------------------------------
+# Visualization Helper
+# ----------------------------------------------
 
-# Add nodes (name, runnable/callable)
-graph.add_node("supervisor", supervisor)
-graph.add_node("collector", mindat_geo_material_collector_agent)
-graph.add_node("locality_collector", mindat_locality_collector_agent)
-graph.add_node("plotter", histogram_plotter_agent)
-
-# Wire the flow: START -> collector -> plotter -> END
-graph.add_edge(START, "supervisor")
-graph.add_edge("collector", "plotter")
-graph.add_edge("plotter", END)
-
-# Compile
-app = graph.compile()
-
-
-
-
+def display_graph():
+    """Display the compiled graph structure"""
+    try:
+        graph_image = agent_graph.get_graph().draw_mermaid_png()
+        display(Image(graph_image))
+        print("Graph displayed successfully!")
+        return True
+    except Exception as e:
+        print(f"Could not display graph: {e}")
+        # Save to file as fallback
+        try:
+            with open("Backend/contents/agent_workflow_graph.png", "wb") as f:
+                f.write(graph_image)
+            print("Graph saved to Backend/contents/agent_workflow_graph.png")
+        except Exception as save_error:
+            print(f"Could not save graph: {save_error}")
+        return False

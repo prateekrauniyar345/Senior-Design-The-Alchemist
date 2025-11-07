@@ -1,72 +1,112 @@
+import matplotlib
+matplotlib.use('Agg')
 
-from ..models.plot_visualization_model import PandasDFInput
-from langchain.tools import tool
-from typing import Optional
-from pathlib import Path
-import pandas as pd
 import matplotlib.pyplot as plt
-from ..models import PandasDFInput
+import pandas as pd
+import seaborn as sns
+from pathlib import Path
+from langchain.tools import tool
+from datetime import datetime
+from ..models.plot_visualization_model import PandasDFInput
+import json  
 
+# Set style
+sns.set_style("whitegrid")
+plt.rcParams['figure.facecolor'] = 'white'
 
+# Define directories
+ROOT = Path(__file__).resolve().parents[1]
+PLOTS_DIR = ROOT / "contents" / "plots"
+PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# Directories
-PARENT_DIR = Path(__file__).parent.resolve()
-BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
-
-
-
-#####################################
-# Histogram plotter tool
-#####################################
-@tool(
-    name="pandas_hist_plot_function",
-    description=(
-        "Create histogram plot from collected mineral data and save to plots directory.\n"
-        "Input: { file_path: str, plot_title: Optional[str] }.\n"
-        "Output: Success/failure message with plot file path."
-    ),
-    args_schema=PandasDFInput,  # using the predefined model : expects file_path and optional plot_title
-    return_direct=False,
-)
-def pandas_hist_plot_function(file_path: str, plot_title: Optional[str] = None) -> str:
+@tool
+def pandas_hist_plot(file_path: str, plot_title: str = None) -> str:
+    """
+    Creates a histogram plot showing element distribution from mineral data.
+    
+    Args:
+        file_path: Path to the JSON file containing mineral data
+        plot_title: Optional custom title for the plot
+        
+    Returns:
+        Success message with plot file path or error message
+    """
     try:
-        plots_dir = BASE_DATA_DIR / "plots"
-        plots_dir.mkdir(parents=True, exist_ok=True)
-
-        df = pd.read_json(file_path)
-
-        if 'results' not in df.columns or df['results'].empty:
-            return "Failed: No 'results' data found in the JSON file"
-
-        df_normalized = pd.json_normalize(df['results'])
-
-        if 'elements' not in df_normalized.columns:
-            return "Failed: No 'elements' data found in the mineral records"
-
-        df_exploded = df_normalized.explode('elements')
-        df_exploded = df_exploded.dropna(subset=['elements'])
-
-        if df_exploded.empty:
-            return "Failed: No element data to plot"
-
-        element_counts = df_exploded['elements'].value_counts()
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        
+        # Check if 'results' key exists
+        if 'results' not in data:
+            return f"Error: 'results' key not found in {file_path}"
+        
+        # Create DataFrame from the 'results' array
+        df = pd.DataFrame(data['results'])
+        
+        if df.empty:
+            return "Error: The data file is empty."
+        
+        # Check if 'elements' column exists
+        if 'elements' not in df.columns:
+            return f"Error: 'elements' column not found in data. Available columns: {list(df.columns)}"
+        
+        # Flatten the list of elements and count occurrences
+        all_elements = []
+        for elements_list in df['elements']:
+            if isinstance(elements_list, list):
+                all_elements.extend(elements_list)
+        
+        if not all_elements:
+            return "Error: No elements found in the data."
+        
+        # Count element frequencies
+        element_counts = pd.Series(all_elements).value_counts()
+        
+        # Take top 20 elements
         top_elements = element_counts.head(20)
-
+        
+        # Create the plot
         plt.figure(figsize=(12, 8))
-        ax = top_elements.plot(kind='bar', color='skyblue', edgecolor='navy', alpha=0.7)
-
-        ax.set_title(plot_title or "Top 20 Mineral Elements", fontsize=16)
-        ax.set_xlabel("Elements", fontsize=14)
-        ax.set_ylabel("Frequency", fontsize=14)
-        plt.xticks(rotation=45)
+        bars = plt.bar(range(len(top_elements)), top_elements.values, 
+                      color='steelblue', edgecolor='black')
+        
+        # Customize the plot
+        plt.xlabel('Elements', fontsize=14, fontweight='bold')
+        plt.ylabel('Frequency', fontsize=14, fontweight='bold')
+        
+        # Set title
+        if plot_title:
+            plt.title(plot_title, fontsize=16, fontweight='bold', pad=20)
+        else:
+            plt.title('Top 20 Elements Distribution in Mineral Dataset', 
+                     fontsize=16, fontweight='bold', pad=20)
+        
+        plt.xticks(range(len(top_elements)), top_elements.index, 
+                  rotation=45, ha='right')
+        plt.grid(axis='y', alpha=0.3)
+        
+        # Add value labels on top of bars
+        for i, bar in enumerate(bars):
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{int(height)}',
+                    ha='center', va='bottom', fontsize=10)
+        
         plt.tight_layout()
-
-        plot_file_path = plots_dir / "mineral_elements_histogram.png"
-        plt.savefig(plot_file_path)
+        
+        # Generate unique filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        plot_filename = f"mineral_elements_histogram_{timestamp}.png"
+        plot_path = PLOTS_DIR / plot_filename
+        
+        # Save the plot
+        plt.savefig(plot_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close()
-
-        return f"Success: Plot saved to {plot_file_path}"
-
+        
+        return f"Success: Histogram created and saved to {plot_path}"
+        
+    except FileNotFoundError:
+        return f"Error: File not found at {file_path}"
+    except json.JSONDecodeError as e:
+        return f"Error: Invalid JSON format in {file_path}: {str(e)}"
     except Exception as e:
-        return f"Failed to create histogram plot: {e}"
+        return f"Error creating histogram: {str(e)}"
