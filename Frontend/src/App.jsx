@@ -1,40 +1,31 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
 
-// import hedare and footer
-import Header from "./components/shared/header.jsx";
 import Footer from "./components/shared/footer.jsx";
  
-
-// import pages
 import Dashboard from "./pages/Dashboard.jsx";
-
-// import auth pages
 import SignIn from "./components/auth/SignIn.jsx";
 import SignUp from "./components/auth/Signup.jsx";
-
-// import the chat
 import Chat from "./pages/Chat.jsx";
-
 
 function App() {
   return (
-    <>
-      <BrowserRouter>
-          {/* routes */}
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/chat" element={<Chat />} /> {/* No footer here */}
+      </Routes>
 
-          {/* Footer */}
-          <Footer />
-      </BrowserRouter>
-
-      
-    </>
+      {/* Only show footer on non-chat routes */}
+      <Routes>
+        <Route path="/" element={<Footer />} />
+        <Route path="/signin" element={null} />
+        <Route path="/signup" element={null} />
+        <Route path="/chat" element={null} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
