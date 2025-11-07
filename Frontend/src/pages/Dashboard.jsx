@@ -117,40 +117,60 @@ const Dashboard = () => {
                         </Row>
                     </div>
                     
-                    {/* Traces Table */}
+                    {/* Agent Capabilities/Tools Showcase */}
                     <div className="mb-5 pb-5">
-                        <h2 className="fw-semibold text-white mb-4" style={{ fontSize: '2.5rem' }}>
-                            Recent Traces
+                        <h2 className="fw-semibold text-white mb-4 text-center" style={{ fontSize: '2.5rem' }}>
+                            Powerful AI Agent Toolkit
                         </h2>
-                        <Card className="border-0" style={{ backgroundColor: '#1a1a1a', borderRadius: '12px' }}>
-                            <Card.Body className="p-4">
-                                <Table borderless hover variant="dark">
-                                    <thead>
-                                        <tr className="text-muted fs-5">
-                                            <th className="px-3 py-3">Query</th>
-                                            <th className="px-3 py-3">Agent</th>
-                                            <th className="px-3 py-3">Duration</th>
-                                            <th className="px-3 py-3">Status</th>
-                                            <th className="px-3 py-3">ID</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="fs-5">
-                                        {traceData.map((trace, i) => (
-                                            <tr key={i} className="text-white">
-                                                <td className="px-3 py-3">{trace.summary}</td>
-                                                <td className="px-3 py-3" style={{ color: '#06b6d4' }}>{trace.agent}</td>
-                                                <td className="px-3 py-3 text-secondary">{trace.duration}</td>
-                                                <td className="px-3 py-3">
-                                                    <Badge bg={trace.statusColor} className="fs-6 px-3 py-2">{trace.status}</Badge>
-                                                </td>
-                                                <td className="px-3 py-3 text-info">{trace.traceId}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            </Card.Body>
-                        </Card>
+                        <Row className="g-4 justify-content-center">
+                            <Col md={4}>
+                                <Card className="border-0 h-100 p-3" style={{ backgroundColor: '#1a1a1a', borderRadius: '12px' }}>
+                                    <Card.Body>
+                                        <div className="d-flex align-items-center mb-3">
+                                            <Zap size={28} style={{ color: '#06b6d4' }} className="me-3"/>
+                                            <h4 className="fw-bold text-white mb-0">Visualization Tools</h4>
+                                        </div>
+                                        <p className="text-secondary fs-5">
+                                            Generate custom **histograms, scatter plots, and heatmaps** of mineral data, distribution, and composition.
+                                        </p>
+                                        <Badge bg="info" className="fs-6 px-3 py-2 me-2">Plotter_Agent</Badge>
+                                        <Badge bg="info" className="fs-6 px-3 py-2">Geo_Viz_Tool</Badge>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                            <Col md={4}>
+                                <Card className="border-0 h-100 p-3" style={{ backgroundColor: '#1a1a1a', borderRadius: '12px' }}>
+                                    <Card.Body>
+                                        <div className="d-flex align-items-center mb-3">
+                                            <Activity size={28} style={{ color: '#ff1493' }} className="me-3"/>
+                                            <h4 className="fw-bold text-white mb-0">Mineralogical Analysis</h4>
+                                        </div>
+                                        <p className="text-secondary fs-5">
+                                            Run advanced analyses on **chemical formulas, crystal systems, and associated minerals** from Mindat.
+                                        </p>
+                                        <Badge bg="danger" className="fs-6 px-3 py-2 me-2">Mindat_Query_Engine</Badge>
+                                        <Badge bg="danger" className="fs-6 px-3 py-2">Chem_Analyzer</Badge>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                            <Col md={4}>
+                                <Card className="border-0 h-100 p-3" style={{ backgroundColor: '#1a1a1a', borderRadius: '12px' }}>
+                                    <Card.Body>
+                                        <div className="d-flex align-items-center mb-3">
+                                            <CheckCircle size={28} style={{ color: '#90EE90' }} className="me-3"/>
+                                            <h4 className="fw-bold text-white mb-0">Locality & Occurrence</h4>
+                                        </div>
+                                        <p className="text-secondary fs-5">
+                                            Find and map the **geographic localities** of specific minerals and trace element occurrences globally.
+                                        </p>
+                                        <Badge bg="success" className="fs-6 px-3 py-2 me-2">Location_Mapper</Badge>
+                                        <Badge bg="success" className="fs-6 px-3 py-2">GeoJSON_Converter</Badge>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
                     </div>
+
                 </Container>
             </div>
         </div>
