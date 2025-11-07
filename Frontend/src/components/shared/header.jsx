@@ -1,23 +1,34 @@
+import { Navbar, Nav, Container, Button, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import "./HeaderFooter.css";
 
 export default function Header() {
   return (
-    <header className="dd-nav">
-      <Link to="/" className="dd-brand" aria-label="Go to main page">
-        <img
-          src="/images/the-alchemist.png"
-          alt=""
-          className="dd-logo"
-          loading="lazy"
-        />
-        <span className="dd-name">The Alchemist</span>
-      </Link>
+    <Navbar className="ms-0 me-0">
+      <Container fluid className="px-5">  
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <Image
+            src="/images/the-alchemist.png" 
+            alt="The Alchemist Logo"
+            roundedCircle
+            width={32}
+            height={32}
+            className="me-2"
+          />
+          <span className="fw-semibold text-white fs-1">The Alchemist</span>
+        </Navbar.Brand>
 
-      <nav className="dd-actions">
-        <Link to="/login" className="dd-btn dd-btn--signin">Sign In</Link>
-        <Link to="/signup" className="dd-btn dd-btn--signup">Sign Up</Link>
-      </nav>
-    </header>
+        <Navbar.Toggle aria-controls="main-nav" />
+        <Navbar.Collapse id="main-nav">
+          <Nav className="ms-auto align-items-lg-center">
+            <Button as={Link} to="/signin" variant="outline-light" size="lg" className="me-2">
+              Sign In
+            </Button>
+            <Button as={Link} to="/signup" variant="primary" size="lg">
+              Sign Up
+            </Button>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 }

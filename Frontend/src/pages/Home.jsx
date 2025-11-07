@@ -1,8 +1,13 @@
+import { Container } from "react-bootstrap";
+
 export default function Home() {
   return (
-    <main className="page">
-      <h1>Welcome 👋</h1>
-      <p>This is your React Home page. Use the nav to try Login and Sign up.</p>
-    </main>
+    <Container
+      fluid
+      className="px-0 d-flex flex-column min-vh-100 justify-content-center align-items-center text-white"
+    >
+      <h1>Welcome to The Alchemist</h1>
+      <p>This is the home page.</p>
+    </Container>
   );
 }

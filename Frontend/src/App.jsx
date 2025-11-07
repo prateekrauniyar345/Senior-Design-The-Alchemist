@@ -1,36 +1,32 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Header from "./components/header.jsx";
-import Footer from "./components/footer.jsx";
-import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";
-import Signup from "./pages/Signup.jsx";
-import Chat from "./pages/Chat.jsx";
-import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import './App.css';
 
-function AppLayout() {
-  const location = useLocation();
-  const hideChrome = location.pathname.startsWith("/chat");
+// import hedare and footer
+import Header from "./components/shared/header.jsx";
+import Footer from "./components/shared/footer.jsx";
+ 
 
+// import pages
+import Home from "./pages/Home";
+function App() {
   return (
-    <div className="app-shell">
-      {!hideChrome && <Header />}
-      <main className="app-main">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/chat" element={<Chat />} />
-        </Routes>
-      </main>
-      {!hideChrome && <Footer />}
-    </div>
+    <>
+      <BrowserRouter>
+        {/* Header */}
+        <Header />
+
+          {/* routes */}
+          <Routes>
+            <Route path="/" element={<Home />} />
+          </Routes>
+
+          {/* Footer */}
+          <Footer />
+      </BrowserRouter>
+
+      
+    </>
   );
 }
 
-export default function App() {
-  return (
-    <Router>
-      <AppLayout />
-    </Router>
-  );
-}
+export default App;

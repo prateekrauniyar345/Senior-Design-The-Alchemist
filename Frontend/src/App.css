@@ -1,43 +1,20 @@
-:root { color-scheme: dark; }
+:root { 
+  color-scheme: dark; 
+  font-size: 12px;
+}
 
 body {
-  margin: 0;
-  background: #0f0f0f;
-  color: #eaeaea;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  background: #0f0f0f !important;
+  color: white !important;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
 }
 
-#root {
-  flex: 1;
-  display: flex;
+*, 
+::after, 
+::before {
+  box-sizing: border-box !important;
 }
 
-.app-shell {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.nav {
-  position: sticky; top: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px;
-  background: #101010;
-  border-bottom: 1px solid #1f1f1f;
-}
-
-.brand { color: #fff; text-decoration: none; font-weight: 800; letter-spacing: .2px; }
-.nav-actions { display: flex; gap: 12px; align-items: center; }
-.nav-link { color: #cfcfcf; text-decoration: none; }
-.nav-btn { color: #111; background: #fff; padding: 8px 14px; border-radius: 10px; text-decoration: none; font-weight: 700; }
-
-.page { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
