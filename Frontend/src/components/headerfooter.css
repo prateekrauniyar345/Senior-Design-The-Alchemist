@@ -65,7 +65,8 @@
   font-size: 0.9rem;
   color: #aaa;
   background: #101010;
-  margin-top: 64px;
+  margin-top: 0;
+  width: 100%;
 }
 .dd-footer .m0 { margin: 0; }
 
