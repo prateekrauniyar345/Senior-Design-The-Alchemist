@@ -7,7 +7,13 @@ import Footer from "./components/shared/footer.jsx";
  
 
 // import pages
-import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard.jsx";
+
+// import auth pages
+import SignIn from "./components/auth/SignIn.jsx";
+import SignUp from "./components/auth/Signup.jsx";
+
+
 function App() {
   return (
     <>
@@ -17,7 +23,9 @@ function App() {
 
           {/* routes */}
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
           </Routes>
 
           {/* Footer */}

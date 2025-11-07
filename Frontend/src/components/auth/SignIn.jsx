@@ -4,7 +4,7 @@ import "./auth.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-export default function Login() {
+export default function SignIn() {
   const nav = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

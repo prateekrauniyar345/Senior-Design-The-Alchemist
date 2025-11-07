@@ -5,7 +5,7 @@ export default function Header() {
   return (
     <Navbar className="ms-0 me-0">
       <Container fluid className="px-5">  
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center cursor-pointer">
           <Image
             src="/images/the-alchemist.png" 
             alt="The Alchemist Logo"
