@@ -1,7 +1,6 @@
 import React from "react";
 import { Plus, User, Settings, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import teamLogo from "../../../../Backend/static/images/the-alchemist.png";
 import "./Sidebar.css";
 
 const Sidebar = ({
@@ -25,7 +24,7 @@ const Sidebar = ({
       <div className="d-flex align-items-center justify-content-between px-4 py-4 sidebar-header">
         <div className="d-flex align-items-center gap-3">
           <img
-            src={teamLogo}
+            src="/images/the-alchemist.png"
             alt="The Alchemist logo"
             className="rounded object-fit-cover p-1"
             style={{ height: '3rem', width: '3rem', backgroundColor: 'rgba(0,0,0,0.2)' }}
