@@ -16,7 +16,7 @@ const Sidebar = ({
 
   return (
     <aside
-      className="flex flex-col h-full bg-[#1c1e26] text-gray-100 w-full max-w-sm"
+      className="flex flex-col h-full bg-[#161618] text-gray-100 w-full max-w-sm"
       aria-label="Sidebar"
       aria-hidden={!isOpen}
     >
@@ -63,7 +63,7 @@ const Sidebar = ({
         {chatList.map((chat) => (
           <button
             key={chat.id}
-            className="w-full text-left px-4 py-3 text-base rounded-lg hover:bg-[#2f313b] transition font-medium text-gray-200"
+            className="w-full text-left px-4 py-3 text-base rounded-lg bg-[#1f1f1f] text-gray-200 border border-gray-800/70 hover:bg-[#27272b] transition font-medium"
           >
             {chat.title}
           </button>

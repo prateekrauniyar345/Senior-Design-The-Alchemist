@@ -36,7 +36,7 @@ const ChatWindow = ({ messages, isLoading = false }) => {
   return (
     <div 
       ref={containerRef}
-      className="h-full p-4 md:p-6 overflow-y-auto bg-[#343541] text-gray-100" 
+      className="h-full p-4 md:p-6 overflow-y-auto bg-[#1c1c1e] text-gray-100" 
       role="log" 
       aria-live="polite"
     >

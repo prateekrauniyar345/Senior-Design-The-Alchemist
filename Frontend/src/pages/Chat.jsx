@@ -104,7 +104,7 @@ const Chat = () => {
 
       {isSidebarOpen && <div className="w-[1px] bg-gray-800/80" aria-hidden="true" />}
 
-      <section className="flex flex-col flex-1 min-h-0 bg-[#343541]">
+      <section className="flex flex-col flex-1 min-h-0 bg-[#1c1c1e]">
         <header className="border-b border-gray-800/70 px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -122,16 +122,6 @@ const Chat = () => {
                 {conversationTitle || `Conversation ${conversationNumber}`}
               </p>
             </div>
-            {isSidebarOpen && (
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white transition"
-                aria-label="Hide sidebar"
-              >
-                <IconMenu className="h-4 w-4" />
-              </button>
-            )}
           </div>
           <p className="text-sm text-gray-400 mt-1">{statusLine}</p>
         </header>
