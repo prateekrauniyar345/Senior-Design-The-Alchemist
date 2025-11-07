@@ -7,45 +7,55 @@ const MessageBubble = React.memo(({ message }) => {
   const isUser = sender === 'user';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div className={`d-flex ${isUser ? 'justify-content-end' : 'justify-content-start'} mb-4`}>
       <div
-        className={`
-          flex items-start gap-3
-          max-w-xs md:max-w-md lg:max-w-2xl
-          ${isUser ? 'flex-row-reverse' : 'flex-row'}
-        `}
+        className={`d-flex align-items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+        style={{ maxWidth: '48rem' }}
       >
         {/* Avatar */}
         <div 
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center"
+          className="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            backgroundColor: '#374151' 
+          }}
           aria-hidden="true"
         >
           {isUser ? (
-            <IconUser className="w-5 h-5 text-gray-300" />
+            <IconUser style={{ width: '20px', height: '20px', color: '#d1d5db' }} />
           ) : (
-            <IconBot className="w-5 h-5 text-blue-400" />
+            <IconBot style={{ width: '20px', height: '20px', color: '#60a5fa' }} />
           )}
         </div>
         
         {/* Message Content */}
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+        <div className={`d-flex flex-column ${isUser ? 'align-items-end' : 'align-items-start'}`}>
           <div
-            className={`
-              p-3 rounded-lg
-              ${isUser 
-                ? 'bg-blue-600 text-white rounded-br-sm' 
-                : 'bg-gray-700 text-gray-200 rounded-bl-sm'
-              }
-            `}
+            className="p-3 rounded"
+            style={{
+              backgroundColor: isUser ? '#2563eb' : '#374151',
+              color: isUser ? '#ffffff' : '#e5e7eb',
+              borderBottomRightRadius: isUser ? '0.125rem' : undefined,
+              borderBottomLeftRadius: !isUser ? '0.125rem' : undefined
+            }}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            <p className="mb-0" style={{ 
+              fontSize: '0.875rem', 
+              lineHeight: '1.625', 
+              whiteSpace: 'pre-wrap', 
+              wordBreak: 'break-word' 
+            }}>
               {text}
             </p>
           </div>
           
           {/* Timestamp */}
           {timestamp && (
-            <span className={`text-xs text-gray-500 mt-1 px-1 ${isUser ? 'text-right' : 'text-left'}`}>
+            <span 
+              className={`mt-1 px-1 ${isUser ? 'text-end' : 'text-start'}`}
+              style={{ fontSize: '0.75rem', color: '#6b7280' }}
+            >
               {new Date(timestamp).toLocaleTimeString([], { 
                 hour: '2-digit', 
                 minute: '2-digit' 

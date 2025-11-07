@@ -13,6 +13,9 @@ import Dashboard from "./pages/Dashboard.jsx";
 import SignIn from "./components/auth/SignIn.jsx";
 import SignUp from "./components/auth/Signup.jsx";
 
+// import the chat
+import Chat from "./pages/Chat.jsx";
+
 
 function App() {
   return (
@@ -23,6 +26,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/chat" element={<Chat />} />
           </Routes>
 
           {/* Footer */}

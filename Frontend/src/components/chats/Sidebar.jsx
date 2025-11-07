@@ -1,7 +1,8 @@
 import React from "react";
-import { Plus, User, Settings, X } from "lucide-react"; // npm install lucide-react
+import { Plus, User, Settings, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import teamLogo from "../../../../Backend/static/images/the-alchemist.png";
+import "./Sidebar.css";
 
 const Sidebar = ({
   onStartNewChat = () => {},
@@ -16,30 +17,31 @@ const Sidebar = ({
 
   return (
     <aside
-      className="flex flex-col h-full bg-[#161618] text-gray-100 w-full max-w-sm"
+      className="d-flex flex-column h-100 text-white sidebar"
       aria-label="Sidebar"
       aria-hidden={!isOpen}
     >
       {/* Logo + Toggle */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-700">
-        <div className="flex items-center gap-4">
+      <div className="d-flex align-items-center justify-content-between px-4 py-4 sidebar-header">
+        <div className="d-flex align-items-center gap-3">
           <img
             src={teamLogo}
             alt="The Alchemist logo"
-            className="h-12 w-12 rounded-xl object-cover bg-black/20 p-1"
+            className="rounded object-fit-cover p-1"
+            style={{ height: '3rem', width: '3rem', backgroundColor: 'rgba(0,0,0,0.2)' }}
             loading="lazy"
           />
-          <div className="flex flex-col leading-tight">
-            <span className="text-base font-semibold uppercase tracking-[0.25em] text-gray-100">
+          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+            <span className="text-uppercase fw-semibold fs-6 sidebar-logo-text">
               The Alchemist
             </span>
-            <span className="text-sm text-gray-400">AI Research Crew</span>
+            <span className="small sidebar-logo-subtext">AI Research Crew</span>
           </div>
         </div>
         <button
           type="button"
           onClick={() => onToggleSidebar(false)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white transition"
+          className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded p-2 sidebar-toggle-btn"
           aria-label="Close sidebar"
         >
           <X size={16} />
@@ -47,9 +49,9 @@ const Sidebar = ({
       </div>
 
       {/* New Chat */}
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-4 sidebar-header">
         <button
-          className="flex items-center gap-3 bg-[#2a2c34] hover:bg-[#32343d] text-base font-semibold w-full py-3 px-4 rounded-lg transition"
+          className="btn w-100 d-flex align-items-center gap-3 fw-semibold py-3 px-4 rounded new-chat-btn"
           onClick={onStartNewChat}
           type="button"
         >
@@ -59,25 +61,36 @@ const Sidebar = ({
       </div>
 
       {/* Chat List */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
-        {chatList.map((chat) => (
-          <button
-            key={chat.id}
-            className="w-full text-left px-4 py-3 text-base rounded-lg bg-[#1f1f1f] text-gray-200 border border-gray-800/70 hover:bg-[#27272b] transition font-medium"
-          >
-            {chat.title}
-          </button>
-        ))}
+      <nav className="flex-fill overflow-auto p-4">
+        <div className="d-flex flex-column gap-2">
+          {chatList.map((chat) => (
+            <button
+              key={chat.id}
+              className="btn w-100 text-start px-4 py-3 rounded fw-medium border chat-list-btn"
+            >
+              {chat.title}
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* Bottom buttons */}
-      <div className="border-t border-gray-700 p-4 flex items-center justify-between">
-        <Link to="#" className="text-sm text-gray-400 hover:text-white font-medium">
+      <div className="p-4 d-flex align-items-center justify-content-between sidebar-footer">
+        <Link
+          to="#"
+          className="text-decoration-none fw-medium small sidebar-footer-link"
+        >
           Dashboard
         </Link>
-        <div className="flex gap-3">
-          <User className="cursor-pointer hover:text-white text-gray-400" size={20} />
-          <Settings className="cursor-pointer hover:text-white text-gray-400" size={20} />
+        <div className="d-flex gap-3">
+          <User
+            size={20}
+            className="sidebar-footer-icon"
+          />
+          <Settings
+            size={20}
+            className="sidebar-footer-icon"
+          />
         </div>
       </div>
     </aside>

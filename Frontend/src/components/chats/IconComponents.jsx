@@ -1,6 +1,6 @@
 import React from "react";
 
-export const IconSend = ({ className }) => (
+export const IconSend = ({ className, style }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -10,13 +10,14 @@ export const IconSend = ({ className }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    style={style}
   >
     <line x1="22" y1="2" x2="11" y2="13" />
     <polygon points="22 2 15 22 11 13 2 9 22 2" />
   </svg>
 );
 
-export const IconMenu = ({ className }) => (
+export const IconMenu = ({ className, style }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -26,6 +27,7 @@ export const IconMenu = ({ className }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    style={style}
   >
     <line x1="3" y1="12" x2="21" y2="12" />
     <line x1="3" y1="6" x2="21" y2="6" />
@@ -33,7 +35,7 @@ export const IconMenu = ({ className }) => (
   </svg>
 );
 
-export const IconPlus = ({ className }) => (
+export const IconPlus = ({ className, style }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -43,13 +45,14 @@ export const IconPlus = ({ className }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    style={style}
   >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
-export const IconUser = ({ className }) => (
+export const IconUser = ({ className, style }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -59,13 +62,14 @@ export const IconUser = ({ className }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    style={style}
   >
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
   </svg>
 );
 
-export const IconBot = ({ className }) => (
+export const IconBot = ({ className, style }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -75,6 +79,7 @@ export const IconBot = ({ className }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    style={style}
   >
     <path d="M12 8V4H8" />
     <rect x="2" y="6" width="20" height="12" rx="2" />

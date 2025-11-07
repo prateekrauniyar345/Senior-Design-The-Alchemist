@@ -1,0 +1,69 @@
+.sidebar {
+  background-color: #161618;
+  width: 100%;
+}
+
+.sidebar-header {
+  border-bottom: 1px solid #374151;
+}
+
+.sidebar-logo-text {
+  letter-spacing: 0.25em;
+  color: #f3f4f6;
+}
+
+.sidebar-logo-subtext {
+  color: #9ca3af;
+}
+
+.sidebar-toggle-btn {
+  border-color: #374151;
+  color: #d1d5db;
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: #374151;
+  color: #ffffff;
+}
+
+.new-chat-btn {
+  background-color: #2a2c34;
+  color: #ffffff;
+  transition: background-color 0.15s;
+}
+
+.new-chat-btn:hover {
+  background-color: #32343d;
+}
+
+.chat-list-btn {
+  background-color: #1f1f1f;
+  color: #e5e7eb;
+  border-color: rgba(31, 41, 55, 0.7);
+  transition: background-color 0.15s;
+}
+
+.chat-list-btn:hover {
+  background-color: #27272b;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #374151;
+}
+
+.sidebar-footer-link {
+  color: #9ca3af;
+}
+
+.sidebar-footer-link:hover {
+  color: #ffffff;
+}
+
+.sidebar-footer-icon {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.sidebar-footer-icon:hover {
+  color: #ffffff;
+}

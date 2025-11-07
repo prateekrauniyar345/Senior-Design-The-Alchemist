@@ -1,0 +1,32 @@
+
+.chat-container {
+  background-color: #202123;
+  color: #ececec;
+}
+
+.sidebar-container {
+  width: 280px;
+  transition: width 0.3s ease;
+}
+
+.sidebar-container.collapsed {
+  width: 0;
+}
+
+.chat-main {
+  background-color: #1c1c1e;
+}
+
+.chat-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-window-wrapper {
+  overflow-y: auto;
+}
+
+.error-banner {
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}

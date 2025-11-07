@@ -4,6 +4,7 @@ import ChatWindow from "../components/chats/ChatWindow";
 import ChatInput from "../components/chats/ChatInput";
 import { IconMenu } from "../components/chats/IconComponents.jsx";
 import chatService from "../services/chatService";
+import "./Chat.css";
 
 const createWelcomeMessage = () => ({
   id: `welcome-${Date.now()}`,
@@ -83,64 +84,55 @@ const Chat = () => {
   })();
 
   return (
-    <div className="flex flex-1 min-h-0 w-full bg-[#202123] text-gray-200">
+    <div className="d-flex vh-100 chat-container">
       <div
-        className={`relative h-full flex-shrink-0 overflow-hidden transition-[width] duration-300 ${
-          isSidebarOpen ? "w-80" : "w-0"
-        }`}
+        className={`sidebar-container ${isSidebarOpen ? "" : "collapsed"}`}
       >
-        <div
-          className={`absolute inset-0 transform transition-transform duration-300 ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <Sidebar
-            onStartNewChat={handleStartNewChat}
-            onToggleSidebar={() => setIsSidebarOpen(false)}
-            isOpen={isSidebarOpen}
-          />
-        </div>
+        <Sidebar
+          onStartNewChat={handleStartNewChat}
+          onToggleSidebar={() => setIsSidebarOpen(false)}
+          isOpen={isSidebarOpen}
+        />
       </div>
 
-      {isSidebarOpen && <div className="w-[1px] bg-gray-800/80" aria-hidden="true" />}
+      {isSidebarOpen && <div className="w-auto" style={{width: "1px", backgroundColor: "rgba(255, 255, 255, 0.1)"}} aria-hidden="true" />}
 
-      <section className="flex flex-col flex-1 min-h-0 bg-[#1c1c1e]">
-        <header className="border-b border-gray-800/70 px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+      <section className="d-flex flex-column flex-grow-1 chat-main">
+        <header className="p-3 chat-header">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-3">
               {!isSidebarOpen && (
                 <button
                   type="button"
                   onClick={() => setIsSidebarOpen(true)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white transition"
+                  className="btn btn-outline-secondary"
                   aria-label="Show sidebar"
                 >
-                  <IconMenu className="h-4 w-4" />
+                  <IconMenu style={{width: "20px", height: "20px"}} />
                 </button>
               )}
-              <p className="text-lg font-semibold text-white">
+              <p className="h5 mb-0 text-white">
                 {conversationTitle || `Conversation ${conversationNumber}`}
               </p>
             </div>
           </div>
-          <p className="text-sm text-gray-400 mt-1">{statusLine}</p>
+          <p className="text-muted small mb-0 mt-1">{statusLine}</p>
         </header>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-grow-1 chat-window-wrapper">
           <ChatWindow messages={messages} isLoading={isLoading} />
         </div>
 
         {error && (
-          <div className="px-6 pt-2">
-            <div className="max-w-3xl mx-auto w-full rounded-lg border border-red-500/40 bg-red-500/10 text-sm text-red-200 px-4 py-2 flex items-center justify-between gap-4">
+          <div className="px-4 pt-2">
+            <div className="alert alert-danger error-banner d-flex justify-content-between align-items-center">
               <span>{error}</span>
               <button
                 type="button"
                 onClick={() => setError(null)}
-                className="text-xs font-medium underline-offset-2 hover:underline"
-              >
-                Dismiss
-              </button>
+                className="btn-close"
+                aria-label="Dismiss"
+              ></button>
             </div>
           </div>
         )}

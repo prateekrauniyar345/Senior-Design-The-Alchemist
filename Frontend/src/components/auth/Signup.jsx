@@ -55,7 +55,7 @@ export default function SignUp() {
         </form>
 
         <p className="meta">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/signin">Sign in</Link>
         </p>
         <p className="meta">
           By signing up, you agree to our <a href="/terms-of-service">Terms</a> and <a href="/privacy-policy">Privacy</a>.

@@ -35,8 +35,8 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
   };
 
   return (
-    <div className="w-full p-4 md:p-6 bg-[#343541] border-t border-gray-700">
-      <div className="max-w-3xl mx-auto flex items-end gap-3">
+    <div className="w-100 p-4 p-md-5 border-top" style={{ backgroundColor: '#343541', borderColor: '#4b5563' }}>
+      <div className="mx-auto d-flex align-items-end gap-3" style={{ maxWidth: '768px' }}>
         <textarea
           ref={textareaRef}
           value={inputValue}
@@ -46,39 +46,34 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
           rows="1"
           disabled={disabled}
           aria-label="Chat message input"
-          className="
-            flex-1 p-3
-            bg-[#40414f] text-gray-100 placeholder-gray-500
-            rounded-lg resize-none
-            border border-gray-600
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            disabled:opacity-50 disabled:cursor-not-allowed
-            text-sm leading-6
-          "
+          className="flex-fill p-3 rounded border text-white"
           style={{ 
+            backgroundColor: '#40414f',
+            borderColor: '#6b7280',
+            resize: 'none',
             minHeight: '44px',
-            maxHeight: '160px'
+            maxHeight: '160px',
+            fontSize: '0.875rem',
+            lineHeight: '1.5rem'
           }}
+          onFocus={(e) => e.target.style.outline = '2px solid #3b82f6'}
+          onBlur={(e) => e.target.style.outline = 'none'}
         />
         <button
           onClick={handleSubmit}
           disabled={!inputValue.trim() || disabled}
           aria-label="Send message"
-          className="
-            flex-shrink-0
-            p-3 bg-blue-600 rounded-lg
-            text-white
-            disabled:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed
-            hover:bg-blue-700 active:bg-blue-800
-            transition-colors duration-150
-            flex items-center justify-center
-          "
+          className="btn btn-primary d-flex align-items-center justify-content-center flex-shrink-0"
           style={{ 
             minWidth: '44px',
-            minHeight: '44px'
+            minHeight: '44px',
+            backgroundColor: disabled || !inputValue.trim() ? '#6c757d' : '#0d6efd',
+            borderColor: disabled || !inputValue.trim() ? '#6c757d' : '#0d6efd',
+            opacity: disabled || !inputValue.trim() ? 0.5 : 1,
+            cursor: disabled || !inputValue.trim() ? 'not-allowed' : 'pointer'
           }}
         >
-          <IconSend className="w-5 h-5" />
+          <IconSend style={{ width: '20px', height: '20px' }} />
         </button>
       </div>
     </div>
