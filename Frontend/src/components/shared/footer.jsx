@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer role="contentinfo" className="border-top mt-auto">
+    <footer role="contentinfo" className="border-top border-gray mt-auto">
       <Container fluid className="px-5 py-4">
         {/* First line: full-width links */}
         <div className="w-100">

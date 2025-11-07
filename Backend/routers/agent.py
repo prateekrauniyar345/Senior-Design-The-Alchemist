@@ -10,7 +10,7 @@ from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
 import time
 
 # Create router instance
-router = APIRouter(prefix="/api/agent", tags=["agent"])
+router = APIRouter(prefix="/agent", tags=["agent"])
 
 
 # ------------------------------

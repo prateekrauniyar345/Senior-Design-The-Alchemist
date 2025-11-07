@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from .database import Base, engine
 from .models import User, Message, Session, AgentOutput, AgentTask, DataArtifact, Visualization, AgentRun
 from .routers import default_router, mindat_router, agent_router
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,9 +26,19 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 
 # Include Routers
-app.include_router(default_router)
-app.include_router(mindat_router)
-app.include_router(agent_router)   
+app.include_router(default_router, prefix="/api")
+app.include_router(mindat_router, prefix="/api")
+app.include_router(agent_router, prefix="/api")   
+
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allowing all origins for now. 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 
