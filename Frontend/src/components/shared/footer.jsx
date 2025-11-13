@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-      <footer className="border-top py-5 mt-5" style={{ borderColor: '#1a1a1a' }}>
+      <footer className="py-5 mt-5" style={{ borderColor: '#1a1a1a' }}>
         <Container fluid className="px-5">
             <Row className="g-4">
                 <Col md={6}>

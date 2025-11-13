@@ -64,3 +64,6 @@ dist-ssr
 *.sw?
 
 
+# ignore the datas in the contents folder
+Backend/contents/plots/
+Backend/contents/sample_data/
