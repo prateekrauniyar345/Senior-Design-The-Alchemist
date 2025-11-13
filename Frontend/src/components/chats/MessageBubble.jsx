@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconUser, IconBot } from './IconComponents.jsx';
+import { IconUser } from './IconComponents.jsx';
 
 // --- Component: MessageBubble ---
 const MessageBubble = React.memo(({ message }) => {
@@ -18,14 +18,18 @@ const MessageBubble = React.memo(({ message }) => {
           style={{ 
             width: '32px', 
             height: '32px', 
-            backgroundColor: '#374151' 
+            backgroundColor: isUser ? '#374151' : 'transparent'
           }}
           aria-hidden="true"
         >
           {isUser ? (
             <IconUser style={{ width: '20px', height: '20px', color: '#d1d5db' }} />
           ) : (
-            <IconBot style={{ width: '20px', height: '20px', color: '#60a5fa' }} />
+            <img
+              src="/images/the-alchemist.png"
+              alt="The Alchemist logo"
+              style={{ width: '32px', height: '32px' }}
+            />
           )}
         </div>
         
@@ -34,7 +38,6 @@ const MessageBubble = React.memo(({ message }) => {
           <div
             className="p-3 rounded"
             style={{
-              backgroundColor: isUser ? '#2563eb' : '#374151',
               color: isUser ? '#ffffff' : '#e5e7eb',
               borderBottomRightRadius: isUser ? '0.125rem' : undefined,
               borderBottomLeftRadius: !isUser ? '0.125rem' : undefined
