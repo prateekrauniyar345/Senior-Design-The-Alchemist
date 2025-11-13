@@ -48,20 +48,23 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
           rows="1"
           disabled={disabled}
           aria-label="Chat message input"
-          className="flex-fill p-3 rounded border text-white"
+          className="flex-fill p-3 rounded border text-white rounded-4 bg-dark"
           style={{ 
             resize: 'none',
             minHeight: '44px',
             maxHeight: '160px',
             fontSize: '0.875rem',
-            lineHeight: '1.5rem'
+            lineHeight: '1.5rem', 
+            outline: 'none',        
+            boxShadow: 'none',     
+            borderColor: '#495057'  
           }}
         />
         <button
           onClick={handleSubmit}
           disabled={!inputValue.trim() || disabled}
           aria-label="Send message"
-          className="btn btn-primary d-flex align-items-center justify-content-center flex-shrink-0"
+          className="btn btn-primary d-flex align-items-center justify-content-center flex-shrink-0 rounded rounded-4"
           style={{ 
             minWidth: '44px',
             minHeight: '44px',
