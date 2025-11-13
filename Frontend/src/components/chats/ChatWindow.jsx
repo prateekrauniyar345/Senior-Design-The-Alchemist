@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
-import { IconBot } from './IconComponents.jsx';
+// import { IconBot } from './IconComponents.jsx';
 import './ChatWindow.css';
 
 // --- Component: TypingIndicator ---
@@ -12,12 +12,20 @@ const TypingIndicator = () => (
         style={{
           width: '32px',
           height: '32px',
-          backgroundColor: '#374151'
+          backgroundColor: '#161618'
         }}
       >
-        <IconBot style={{ width: '20px', height: '20px', color: '#60a5fa' }} />
+        <img
+            src="/images/the-alchemist.png"
+            alt="The Alchemist logo"
+            className="rounded object-fit-cover p-1"
+            style={{ height: '3rem', width: '3rem', backgroundColor: 'rgba(0,0,0,0.2)' }}
+            loading="lazy"
+          />
       </div>
-      <div className="p-3 rounded" style={{ backgroundColor: '#374151', color: '#e5e7eb' }}>
+      <div className="p-3 rounded" 
+        style={{ color: '#e5e7eb' }}
+      >
         <div className="d-flex gap-2">
           <div className="typing-indicator-dot"></div>
           <div className="typing-indicator-dot" style={{ animationDelay: '0.2s' }}></div>

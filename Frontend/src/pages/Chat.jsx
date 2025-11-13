@@ -100,23 +100,31 @@ const Chat = () => {
       <section className="d-flex flex-column flex-grow-1 chat-main">
         <header className="p-3 chat-header">
           <div className="d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center gap-3">
+            <div className="d-flex align-items-center gap-3 justify-content-start align-self-start border-primary">
               {!isSidebarOpen && (
-                <button
-                  type="button"
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="btn btn-outline-secondary"
-                  aria-label="Show sidebar"
-                >
-                  <IconMenu style={{width: "20px", height: "20px"}} />
-                </button>
+                <div className="d-flex align-items-center justify-content-center w-100 border-primary">
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="btn btn-outline-secondary"
+                    aria-label="Show sidebar"
+                  >
+                    <IconMenu style={{width: "20px", height: "20px"}} />
+                  </button>
+                </div>
+                
               )}
-              <p className="h5 mb-0 text-white">
-                {conversationTitle || `Conversation ${conversationNumber}`}
-              </p>
+              <div>
+                <p 
+                  className="w-100 h5 mb-0 text-white"
+                >
+                  {conversationTitle || `Conversation ${conversationNumber}`}
+                </p>
+              </div>
+              
             </div>
           </div>
-          <p className="text-muted small mb-0 mt-1">{statusLine}</p>
+          <p className="text-white small mb-0 mt-1">{statusLine}</p>
         </header>
 
         <div className="flex-grow-1 chat-window-wrapper">

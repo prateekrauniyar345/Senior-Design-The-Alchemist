@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconUser, IconBot } from './IconComponents.jsx';
+import { IconUser} from './IconComponents.jsx';
 
 // --- Component: MessageBubble ---
 const MessageBubble = React.memo(({ message }) => {
@@ -18,14 +18,20 @@ const MessageBubble = React.memo(({ message }) => {
           style={{ 
             width: '32px', 
             height: '32px', 
-            backgroundColor: '#374151' 
+            backgroundColor: '#161618' 
           }}
           aria-hidden="true"
         >
           {isUser ? (
             <IconUser style={{ width: '20px', height: '20px', color: '#d1d5db' }} />
           ) : (
-            <IconBot style={{ width: '20px', height: '20px', color: '#60a5fa' }} />
+            <img
+              src="/images/the-alchemist.png"
+              alt="The Alchemist logo"
+              className="rounded object-fit-cover p-1"
+              style={{ height: '3rem', width: '3rem' }}
+              loading="lazy"
+            />
           )}
         </div>
         
@@ -34,14 +40,13 @@ const MessageBubble = React.memo(({ message }) => {
           <div
             className="p-3 rounded"
             style={{
-              backgroundColor: isUser ? '#2563eb' : '#374151',
               color: isUser ? '#ffffff' : '#e5e7eb',
               borderBottomRightRadius: isUser ? '0.125rem' : undefined,
               borderBottomLeftRadius: !isUser ? '0.125rem' : undefined
             }}
           >
             <p className="mb-0" style={{ 
-              fontSize: '0.875rem', 
+              fontSize: '1rem', 
               lineHeight: '1.625', 
               whiteSpace: 'pre-wrap', 
               wordBreak: 'break-word' 
