@@ -86,11 +86,12 @@ const Chat = () => {
   return (
     <div className="d-flex vh-100 chat-container">
       <div
-        className={`sidebar-container ${isSidebarOpen ? "" : "collapsed"}`}
+        className="sidebar-container"
+        style={{ width: isSidebarOpen ? '280px' : '80px', flexShrink: 0, transition: 'width 0.3s ease' }}
       >
         <Sidebar
           onStartNewChat={handleStartNewChat}
-          onToggleSidebar={() => setIsSidebarOpen(false)}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           isOpen={isSidebarOpen}
         />
       </div>

@@ -4,13 +4,6 @@
   color: white;
   transition: width 0.3s ease;
   flex-shrink: 0; /* prevent sidebar from shrinking below its width */
-  min-width: 280px; 
-}
-
-
-.sidebar-collapsed {
-  width: 80px;
-  min-width: 80px; 
 }
 
 .sidebar-header {
@@ -20,6 +13,7 @@
 .sidebar-logo-text {
   letter-spacing: 0.25em;
   color: white;
+  font-size: 12px !important;
 }
 
 

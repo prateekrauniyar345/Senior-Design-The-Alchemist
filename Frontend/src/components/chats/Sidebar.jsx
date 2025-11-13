@@ -16,7 +16,7 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`d-flex flex-column h-100 text-white sidebar ${!isOpen ? 'sidebar-collapsed' : ''}`}
+      className={`d-flex flex-column h-100 text-white sidebar`}
       aria-label="Sidebar"
       aria-hidden={!isOpen}
     >
@@ -30,13 +30,13 @@ const Sidebar = ({
                 alt="The Alchemist logo"
                 className="rounded object-fit-cover p-1"
                 style={{ height: '3rem', width: '3rem', backgroundColor: 'rgba(0,0,0,0.2)' }}
-                loading="lazy"
+                // loading="lazy"
               />
               <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
                 <span className="text-uppercase fw-semibold fs-6 sidebar-logo-text">
                   The Alchemist
                 </span>
-                <span className="small">AI Research Crew</span>
+                <span className="">AI Research Crew</span>
               </div>
             </div>
             <button
@@ -102,7 +102,7 @@ const Sidebar = ({
           <button
             type="button"
             onClick={() => onToggleSidebar(true)}
-            className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded p-2 sidebar-toggle-btn"
+            className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded-4 p-2 sidebar-toggle-btn"
             aria-label="Open sidebar"
             title="Open sidebar"
           >
@@ -120,7 +120,7 @@ const Sidebar = ({
             <img
               src="/images/the-alchemist.png"
               alt="The Alchemist logo"
-              className="rounded object-fit-cover p-1"
+              className="rounded-4 object-fit-cover p-1"
               style={{ 
                 height: '2.5rem', 
                 width: '2.5rem', 
@@ -133,7 +133,7 @@ const Sidebar = ({
 
           {/* New Chat button - just icon */}
           <button
-            className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded p-2"
+            className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded-4 p-2"
             onClick={onStartNewChat}
             type="button"
             aria-label="New chat"
