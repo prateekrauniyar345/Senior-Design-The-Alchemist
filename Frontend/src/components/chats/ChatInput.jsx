@@ -35,7 +35,9 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
   };
 
   return (
-    <div className="w-100 p-4 p-md-5 border-top" style={{ backgroundColor: '#343541', borderColor: '#4b5563' }}>
+    <div 
+      className="w-100 p-4 p-md-5" 
+    >
       <div className="mx-auto d-flex align-items-end gap-3" style={{ maxWidth: '768px' }}>
         <textarea
           ref={textareaRef}
@@ -48,16 +50,12 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
           aria-label="Chat message input"
           className="flex-fill p-3 rounded border text-white"
           style={{ 
-            backgroundColor: '#40414f',
-            borderColor: '#6b7280',
             resize: 'none',
             minHeight: '44px',
             maxHeight: '160px',
             fontSize: '0.875rem',
             lineHeight: '1.5rem'
           }}
-          onFocus={(e) => e.target.style.outline = '2px solid #3b82f6'}
-          onBlur={(e) => e.target.style.outline = 'none'}
         />
         <button
           onClick={handleSubmit}
