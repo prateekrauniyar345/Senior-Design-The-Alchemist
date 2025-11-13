@@ -1,6 +1,7 @@
 .sidebar {
   background-color: #161618;
   width: 100%;
+  color: white;
 }
 
 .sidebar-header {
@@ -9,12 +10,9 @@
 
 .sidebar-logo-text {
   letter-spacing: 0.25em;
-  color: #f3f4f6;
+  color: white;
 }
 
-.sidebar-logo-subtext {
-  color: #9ca3af;
-}
 
 .sidebar-toggle-btn {
   border-color: #374151;
@@ -22,30 +20,21 @@
 }
 
 .sidebar-toggle-btn:hover {
-  background-color: #374151;
+  background-color: #0b3e90;
   color: #ffffff;
 }
 
 .new-chat-btn {
-  background-color: #2a2c34;
-  color: #ffffff;
-  transition: background-color 0.15s;
+  background-color: #2a2c34 !important;
+  color: #ffffff !important;
+  transition: background-color 0.15s !important;
 }
 
 .new-chat-btn:hover {
   background-color: #32343d;
+  color: white !important;
 }
 
-.chat-list-btn {
-  background-color: #1f1f1f;
-  color: #e5e7eb;
-  border-color: rgba(31, 41, 55, 0.7);
-  transition: background-color 0.15s;
-}
-
-.chat-list-btn:hover {
-  background-color: #27272b;
-}
 
 .sidebar-footer {
   border-top: 1px solid #374151;
@@ -66,4 +55,34 @@
 
 .sidebar-footer-icon:hover {
   color: #ffffff;
+}
+
+
+.chat-list-btn {
+  background-color: transparent;
+  border: none;
+  color: white !important;
+  transition: background-color 120ms ease-in-out;
+  border-radius: 16px;
+}
+
+/* hover / focus background for chat list items */
+.chat-list-btn:hover,
+.chat-list-btn:focus-visible {
+  background-color: #2b2c33!important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  outline: 2px solid transparent; /* accessible focus ring alternative */
+  box-shadow: none;
+
+}
+
+/* Remove Bootstrap active/focus states */
+.chat-list-btn:active,
+.chat-list-btn:focus {
+  background-color: #1c1c1e !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: none;
+  border-radius: 16px;
 }

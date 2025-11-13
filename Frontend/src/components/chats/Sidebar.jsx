@@ -34,7 +34,7 @@ const Sidebar = ({
             <span className="text-uppercase fw-semibold fs-6 sidebar-logo-text">
               The Alchemist
             </span>
-            <span className="small sidebar-logo-subtext">AI Research Crew</span>
+            <span className="small">AI Research Crew</span>
           </div>
         </div>
         <button
@@ -50,7 +50,7 @@ const Sidebar = ({
       {/* New Chat */}
       <div className="p-4 sidebar-header">
         <button
-          className="btn w-100 d-flex align-items-center gap-3 fw-semibold py-3 px-4 rounded new-chat-btn"
+          className="btn w-100 d-flex align-items-center gap-3 fw-semibold py-3 px-4 rounded new-chat-btn text-white rounded-4"
           onClick={onStartNewChat}
           type="button"
         >
@@ -65,7 +65,7 @@ const Sidebar = ({
           {chatList.map((chat) => (
             <button
               key={chat.id}
-              className="btn w-100 text-start px-4 py-3 rounded fw-medium border chat-list-btn"
+              className="btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
             >
               {chat.title}
             </button>

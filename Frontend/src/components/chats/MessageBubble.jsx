@@ -46,7 +46,7 @@ const MessageBubble = React.memo(({ message }) => {
             }}
           >
             <p className="mb-0" style={{ 
-              fontSize: '1rem', 
+              fontSize: '14px', 
               lineHeight: '1.625', 
               whiteSpace: 'pre-wrap', 
               wordBreak: 'break-word' 
