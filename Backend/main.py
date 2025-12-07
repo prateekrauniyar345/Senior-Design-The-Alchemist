@@ -14,8 +14,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = create_app()
 
-# templates directory for rendering HTML files
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # CORS Middleware
 app.add_middleware(

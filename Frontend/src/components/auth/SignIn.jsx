@@ -25,19 +25,18 @@ async function handleSubmit(e) {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",     // crucial for cookies
+      credentials: "include",
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const data = await res.json();
+    
     if (res.ok) {
-  // Full page redirect to FastAPI dashboard
-  window.location.href = `${API_URL}/dashboard`;
-}
-
-
-    // 🔁 Jump to the backend dashboard (full page load on :8000)
-    window.location.href = `${API_URL}/dashboard`;
+      // Redirect to chat page after successful login
+      nav("/chat");
+    } else {
+      setError(data.message || "Login failed");
+    }
   } catch (err) {
     setError(err.message || "Login failed");
   } finally {

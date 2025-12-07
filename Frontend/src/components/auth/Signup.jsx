@@ -12,17 +12,29 @@ export default function SignUp() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    const fd = new FormData(e.target); // name, email, password
+    const fd = new FormData(e.target);
+    
+    const payload = {
+      name: fd.get("name"),
+      email: fd.get("email"),
+      password: fd.get("password"),
+    };
+    
     try {
-      const res = await fetch(`${API_URL}/register`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify(payload),
       });
-      if (res.redirected || res.ok) {
-        nav("/login");
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Redirect to chat page after successful registration
+        nav("/chat");
       } else {
-        setError(await res.text());
+        setError(data.message || "Registration failed");
       }
     } catch (err) {
       setError(err.message);
