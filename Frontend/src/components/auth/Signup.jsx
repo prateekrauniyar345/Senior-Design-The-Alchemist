@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import "./auth.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -60,7 +61,22 @@ export default function SignUp() {
         <p className="meta">
           By signing up, you agree to our <a href="/terms-of-service">Terms</a> and <a href="/privacy-policy">Privacy</a>.
         </p>
+
+        <div className="d-flex justify-content-center align-item-center">
+          {/* Back to Home */}
+            <button
+              onClick={() => nav("/")}
+              className="btn btn-link text-light d-flex align-items-center gap-2 mt-3"
+              style={{ textDecoration: "none" }}
+              aria-label="Back to home"
+            >
+              <ArrowLeft size={18} />
+              <span>Go home</span>
+            </button>
+        </div>
       </div>
+
+      
     </div>
   );
 }

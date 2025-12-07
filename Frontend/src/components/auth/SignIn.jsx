@@ -1,5 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import "./auth.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -87,13 +88,28 @@ async function handleSubmit(e) {
         </form>
 
         <p className="meta">
-          Don’t have an account? <Link to="/signup">Sign up</Link>
+          Don't have an account? <Link to="/signup">Sign up</Link>
         </p>
         <p className="meta">
           By signing in, you agree to our <a href="/terms-of-service">Terms</a> and{" "}
           <a href="/privacy-policy">Privacy</a>.
         </p>
+
+        <div className="d-flex justify-content-center align-item-center">
+          {/* Back to Home */}
+          <button
+            onClick={() => nav("/")}
+            className="btn btn-link text-light d-flex align-items-center gap-2 mt-3"
+            style={{ textDecoration: "none" }}
+            aria-label="Back to home"
+          >
+            <ArrowLeft size={18} />
+            <span>Go home</span>
+          </button>
+        </div>
       </div>
+
+      
     </div>
   );
 }
