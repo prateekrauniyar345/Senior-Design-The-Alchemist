@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Plus, User, Settings, X, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
+import ProfileModal from "./ProfileModal";
+import SettingsModal from "./SettingsModal";
 import "./Sidebar.css";
 
 const Sidebar = ({
@@ -8,6 +10,8 @@ const Sidebar = ({
   onToggleSidebar = () => {},
   isOpen = true,
 }) => {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const chatList = [
     { id: 1, title: "Project brainstorm" },
     { id: 2, title: "Math help session" },
@@ -84,14 +88,22 @@ const Sidebar = ({
               Dashboard
             </Link>
             <div className="d-flex gap-3">
-              <User
-                size={20}
-                className="sidebar-footer-icon"
-              />
-              <Settings
-                size={20}
-                className="sidebar-footer-icon"
-              />
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="icon-btn"
+                aria-label="Profile"
+                title="Profile"
+              >
+                <User size={20} className="sidebar-footer-icon" />
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="icon-btn"
+                aria-label="Settings"
+                title="Settings"
+              >
+                <Settings size={20} className="sidebar-footer-icon" />
+              </button>
             </div>
           </div>
         </>
@@ -149,6 +161,10 @@ const Sidebar = ({
           </button>
         </div>
       )}
+
+      {/* Modals */}
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </aside>
   );
 };
