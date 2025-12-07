@@ -4,7 +4,7 @@ import { LogIn, UserPlus } from 'lucide-react';
 export default function Header() {
   return(
       <Navbar variant="dark" expand="lg" className="py-3">
-        <Navbar.Brand href="#home" className="d-flex align-items-center text-white">
+        <Navbar.Brand href="/" className="d-flex align-items-center text-white">
             <span className="fw-bold" style={{ fontSize: '2.1rem' }}>The Alchemist</span>
         </Navbar.Brand>
         
