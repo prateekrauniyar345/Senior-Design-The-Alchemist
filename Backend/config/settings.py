@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     azure_endpoint: str = Field(..., validation_alias="AZURE_OPENAI_API_ENDPOINT")
     azure_api_key: str = Field(..., validation_alias="AZURE_OPENAI_API_KEY")
 
+    # Supabase
+    supabase_url: str = Field(..., validation_alias="SUPABASE_URL")
+    supabase_key: str = Field(..., validation_alias="SUPABASE_KEY")
+    database_url: str = Field(..., validation_alias="DATABASE_URL")
+
     # Application
     debug: bool = Field(False, validation_alias="DEBUG")
 

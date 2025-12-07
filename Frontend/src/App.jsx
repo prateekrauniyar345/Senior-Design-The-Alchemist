@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
 
 import Footer from "./components/shared/footer.jsx";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
  
 import Dashboard from "./pages/Dashboard.jsx";
 import SignIn from "./components/auth/SignIn.jsx";
@@ -10,7 +11,8 @@ import Chat from "./pages/Chat.jsx";
 
 function App() {
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/signin" element={<SignIn />} />
@@ -26,6 +28,7 @@ function App() {
         <Route path="/chat" element={null} />
       </Routes>
     </BrowserRouter>
+    </AuthProvider>
   );
 }
 

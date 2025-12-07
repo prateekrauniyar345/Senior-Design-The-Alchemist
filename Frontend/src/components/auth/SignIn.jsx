@@ -1,48 +1,36 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 import "./auth.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function SignIn() {
   const nav = useNavigate();
+  const { login } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-async function handleSubmit(e) {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  const fd = new FormData(e.target);
-  const payload = {
-    email: fd.get("email"),
-    password: fd.get("password"),
-  };
+    const fd = new FormData(e.target);
 
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-    
-    if (res.ok) {
+    try {
+      await login(
+        fd.get("email"),
+        fd.get("password")
+      );
+      
       // Redirect to chat page after successful login
       nav("/chat");
-    } else {
-      setError(data.message || "Login failed");
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError(err.message || "Login failed");
-  } finally {
-    setLoading(false);
   }
-}
 
 
   return (

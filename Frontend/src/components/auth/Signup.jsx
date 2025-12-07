@@ -1,43 +1,35 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 import "./auth.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function SignUp() {
   const nav = useNavigate();
+  const { register } = useAuth();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setLoading(true);
+    
     const fd = new FormData(e.target);
     
-    const payload = {
-      name: fd.get("name"),
-      email: fd.get("email"),
-      password: fd.get("password"),
-    };
-    
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      await register(
+        fd.get("name"),
+        fd.get("email"),
+        fd.get("password")
+      );
       
-      const data = await res.json();
-      
-      if (res.ok) {
-        // Redirect to chat page after successful registration
-        nav("/chat");
-      } else {
-        setError(data.message || "Registration failed");
-      }
+      // Redirect to signin page after successful registration
+      nav("/signin");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -64,7 +56,9 @@ export default function SignUp() {
           <label className="label">Password</label>
           <input className="input" name="password" type="password" placeholder="••••••••" required />
 
-          <button className="primary-btn" type="submit">Create account</button>
+          <button className="primary-btn" type="submit" disabled={loading}>
+            {loading ? "Creating account..." : "Create account"}
+          </button>
         </form>
 
         <p className="meta">

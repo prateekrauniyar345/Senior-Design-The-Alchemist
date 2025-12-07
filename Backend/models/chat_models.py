@@ -34,8 +34,11 @@ class Message(Base):
     meta_data = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Relationships
     session = relationship("Session", back_populates="messages")
     user = relationship("User", back_populates="messages")
+    input_tasks = relationship("AgentTask", back_populates="input_message", foreign_keys="AgentTask.input_message_id")
+    output_tasks = relationship("AgentTask", back_populates="output_message", foreign_keys="AgentTask.output_message_id")
 
 
 class AgentOutput(Base):
@@ -47,7 +50,4 @@ class AgentOutput(Base):
     output_data = Column(Text, nullable=False)  # could store JSON or serialized output
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
-    input_tasks = relationship("AgentTask", back_populates="input_message", foreign_keys="AgentTask.input_message_id")
-    output_tasks = relationship("AgentTask", back_populates="output_message", foreign_keys="AgentTask.output_message_id")
 

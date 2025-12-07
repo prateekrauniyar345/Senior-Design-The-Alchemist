@@ -15,10 +15,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = create_app()
 
 
-# CORS Middleware
+# CORS Middleware - Fix for credentials mode
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allowing all origins for now. 
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+    ],  # Specific origins required when using credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
