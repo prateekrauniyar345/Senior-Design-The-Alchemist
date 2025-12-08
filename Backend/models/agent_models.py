@@ -10,7 +10,7 @@ class AgentTask(Base):
     __tablename__ = "agent_tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # ✅ link task to user
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link task to user
     session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id", ondelete="CASCADE"))
     agent_name = Column(String(100), nullable=False)
     input_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
@@ -28,7 +28,7 @@ class AgentRun(Base):
     __tablename__ = "agent_runs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # ✅ link run to user
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link run to user
     agent_name = Column(String(100), nullable=False)       # e.g., "Collector", "Plotter"
     session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
     status = Column(String(50), default="running")          # running, success, failed
@@ -45,7 +45,7 @@ class DataArtifact(Base):
     __tablename__ = "data_artifacts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # ✅ link artifact to user
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link artifact to user
     run_id = Column(UUID(as_uuid=True), ForeignKey("agent_runs.id"))
     artifact_type = Column(String(50))  # e.g., 'json', 'plot', 'map'
     file_path = Column(String(255))
@@ -63,7 +63,7 @@ class Visualization(Base):
     __tablename__ = "visualizations"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # ✅ link visualization to user
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link visualization to user
     artifact_id = Column(UUID(as_uuid=True), ForeignKey("data_artifacts.id"))
     viz_type = Column(String(50))  # e.g. 'histogram', 'heatmap', 'network'
     title = Column(String(120))

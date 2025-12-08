@@ -20,7 +20,7 @@ try:
     cursor = connection.cursor()
     cursor.execute("SELECT NOW();")
     result = cursor.fetchone()
-    print("🕒 Current Time from Supabase:", result)
+    print("Current Time from Supabase:", result)
 
     cursor.close()
     connection.close()
