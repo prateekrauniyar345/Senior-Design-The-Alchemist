@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import SignIn from "./components/auth/SignIn.jsx";
 import SignUp from "./components/auth/Signup.jsx";
 import Chat from "./pages/Chat.jsx";
+import Logout from "./pages/Logout.jsx";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/chat" element={<Chat />} /> {/* No footer here */}
+        <Route path="/logout" element={<Logout />} />
       </Routes>
 
       {/* Only show footer on non-chat routes */}
@@ -26,6 +28,7 @@ function App() {
         <Route path="/signin" element={null} />
         <Route path="/signup" element={null} />
         <Route path="/chat" element={null} />
+        <Route path="/logout" element={null} />
       </Routes>
     </BrowserRouter>
     </AuthProvider>

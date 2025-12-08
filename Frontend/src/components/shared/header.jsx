@@ -9,7 +9,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/logout');
   };
 
   return(
