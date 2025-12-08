@@ -48,16 +48,22 @@ def extract_file_paths(messages: List[BaseMessage]) -> Dict[str, Optional[str]]:
         content = getattr(msg, "content", "")
         
         # Look for JSON data files
-        if "mindat_geomaterial_response.json" in content or "mindat_locality_response.json" in content:
+        if "mindat_geomaterial_response.json" in content or "mindat_locality_response.json" in content or "mindat_locality.json" in content:
             json_match = re.search(r'([/\w\-. ]+\.json)', content)
             if json_match:
                 data_path = json_match.group(1)
         
-        # Look for PNG plot files
-        if "mineral_elements_histogram.png" in content or ".png" in content:
+        # Look for plot files (PNG, HTML)
+        if ".png" in content or ".html" in content:
+            # Try PNG first
             png_match = re.search(r'([/\w\-. ]+\.png)', content)
             if png_match:
                 plot_path = png_match.group(1)
+            else:
+                # Try HTML (for heatmaps)
+                html_match = re.search(r'([/\w\-. ]+\.html)', content)
+                if html_match:
+                    plot_path = html_match.group(1)
     
     return {
         "data_file_path": data_path,

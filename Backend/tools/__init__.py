@@ -4,11 +4,15 @@ from .mindat_tools import (
     
 )
 from .visualizing_tools import (
-    pandas_hist_plot
+    pandas_hist_plot,
+    network_plot,
+    heatmap_plot
 )
 
 __all__ = [
     "mindat_geomaterial_collector",
     "mindat_locality_collector",
     "pandas_hist_plot",
+    "network_plot",
+    "heatmap_plot",
 ]

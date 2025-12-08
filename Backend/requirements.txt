@@ -1,7 +1,9 @@
+aiosmtplib==5.0.0
 annotated-types==0.7.0
 anyio==4.11.0
 asttokens==3.0.0
 async-timeout==4.0.3
+branca==0.8.2
 certifi==2025.10.5
 cffi==2.0.0
 charset-normalizer==3.4.4
@@ -19,6 +21,7 @@ executing==2.2.1
 fastapi==0.119.0
 fastapi-cli==0.0.13
 fastapi-cloud-cli==0.3.1
+folium==0.20.0
 fonttools==4.60.1
 graphviz==0.21
 h11==0.16.0
@@ -51,6 +54,7 @@ matplotlib==3.10.7
 matplotlib-inline==0.2.1
 mdurl==0.1.2
 multidict==6.7.0
+networkx==3.6
 numpy==2.3.4
 openai==2.3.0
 orjson==3.11.3
@@ -80,11 +84,13 @@ pytz==2025.2
 PyYAML==6.0.3
 realtime==2.22.0
 regex==2025.9.18
+reportlab==4.4.5
 requests==2.32.5
 requests-toolbelt==1.0.0
 rich==14.2.0
 rich-toolkit==0.15.1
 rignore==0.7.1
+seaborn==0.13.2
 sentry-sdk==2.42.0
 shellingham==1.5.4
 six==1.17.0
@@ -113,5 +119,6 @@ watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
 xxhash==3.6.0
+xyzservices==2025.11.0
 yarl==1.22.0
 zstandard==0.25.0

@@ -16,12 +16,16 @@ from ..utils.custom_prompts import (
     system_prompt,
     geomaterial_collector_prompt, 
     histogram_plotter_prompt,
-    locality_collector_prompt 
+    locality_collector_prompt,
+    network_plotter_prompt,
+    heatmap_plotter_prompt
 )
 from ..tools import (
     mindat_geomaterial_collector,
     mindat_locality_collector,
     pandas_hist_plot,
+    network_plot,
+    heatmap_plot,
 )
 from ..models import (
     MindatGeoMaterialQuery, 
@@ -65,6 +69,24 @@ histogram_plotter = create_agent(
     model=llm,
     tools=[pandas_hist_plot],
     system_prompt=histogram_plotter_prompt
+)
+
+# ----------------------------------------------
+# Network Plotter Agent
+# ----------------------------------------------
+network_plotter = create_agent(
+    model=llm,
+    tools=[network_plot],
+    system_prompt=network_plotter_prompt
+)
+
+# ----------------------------------------------
+# Heatmap Plotter Agent
+# ----------------------------------------------
+heatmap_plotter = create_agent(
+    model=llm,
+    tools=[heatmap_plot],
+    system_prompt=heatmap_plotter_prompt
 )   
 
 # ----------------------------------------------
@@ -74,7 +96,7 @@ histogram_plotter = create_agent(
 # Define ControllerDecision schema
 class ControllerDecision(BaseModel):
     """Decision made by the controller about which agent to invoke next."""
-    action: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "FINISH"] = Field(  # ✅ FIXED
+    action: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "network_plotter", "heatmap_plotter", "FINISH"] = Field(
         ...,
         description="Either 'FINISH' to end or the name of the agent to handle the query."
     )
@@ -145,8 +167,24 @@ def locality_collector_node(state: State) -> dict:
     }
 
 def histogram_plotter_node(state: State) -> dict:
-    """Wrapper for plotter agent"""
+    """Wrapper for histogram plotter agent"""
     result = histogram_plotter.invoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"
+    }
+
+def network_plotter_node(state: State) -> dict:
+    """Wrapper for network plotter agent"""
+    result = network_plotter.invoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"
+    }
+
+def heatmap_plotter_node(state: State) -> dict:
+    """Wrapper for heatmap plotter agent"""
+    result = heatmap_plotter.invoke(state)
     return {
         "messages": result["messages"],
         "next": "supervisor"
@@ -171,6 +209,8 @@ workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("geomaterial_collector", geomaterial_collector_node)
 workflow.add_node("locality_collector", locality_collector_node) 
 workflow.add_node("histogram_plotter", histogram_plotter_node)
+workflow.add_node("network_plotter", network_plotter_node)
+workflow.add_node("heatmap_plotter", heatmap_plotter_node)
 workflow.add_node("FINISH", finish_node)
 
 # Define the workflow edges
@@ -180,19 +220,23 @@ workflow.add_edge(START, "supervisor")
 # Supervisor routes to agents based on decision
 workflow.add_conditional_edges(
     "supervisor",
-    lambda state: state.get("next", "FINISH"),  # Route based on 'next' field
+    lambda state: state.get("next", "FINISH"),
     {
         "geomaterial_collector": "geomaterial_collector",
         "locality_collector": "locality_collector",
         "histogram_plotter": "histogram_plotter",
+        "network_plotter": "network_plotter",
+        "heatmap_plotter": "heatmap_plotter",
         "FINISH": "FINISH"
     }
 )
 
-# All agents return to supervisor (removed direct agent->agent edges)
+# All agents return to supervisor
 workflow.add_edge("geomaterial_collector", "supervisor")
 workflow.add_edge("locality_collector", "supervisor")
 workflow.add_edge("histogram_plotter", "supervisor")
+workflow.add_edge("network_plotter", "supervisor")
+workflow.add_edge("heatmap_plotter", "supervisor")
 
 # FINISH ends the workflow
 workflow.add_edge("FINISH", END)
