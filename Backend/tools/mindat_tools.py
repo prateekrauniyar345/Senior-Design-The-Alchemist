@@ -13,12 +13,17 @@ import logging
 from ..services.mindat_endpoints import get_geomaterial_api, get_locality_api
 from ..utils.custom_message import MindatAPIException
 
+# langsmith logging setup
+from langsmith import traceable
+
 
 
 # Directories
 PARENT_DIR = Path(__file__).parent.resolve()
 BASE_DATA_DIR = PARENT_DIR.parent / "contents"
 
+
+@traceable(name="convert_params_to_api_format")
 def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
     """
     Convert a Pydantic model or dict into API-ready params:

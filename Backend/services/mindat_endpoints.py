@@ -2,6 +2,7 @@
 from typing import Dict, Optional
 from ..config.mindat_config import MindatAPIClient
 from ..utils.custom_message import MindatAPIException, ErrorSeverity
+from langsmith import traceable
 
 
 #####################################
@@ -14,6 +15,7 @@ class GeomaterialAPI:
         self.client = client or MindatAPIClient()
         self.endpoint = "geomaterials"
     
+    @traceable(run_type="retriever", name="mindat_api_geomaterial_search")
     def search_geomaterials_minerals(self, query_params: Dict) -> Dict:
         """Search geomaterials/minerals with given query parameters"""
         params = query_params if query_params else {}
@@ -57,6 +59,7 @@ class LocalityAPI:
         self.client = client or MindatAPIClient()
         self.endpoint = "localities"
     
+    @traceable(run_type="retriever", name="mindat_api_locality_search")
     def search_localities(self, query_params: Dict) -> Dict:
         """Search localities with given query parameters"""
         params = query_params if query_params else {}

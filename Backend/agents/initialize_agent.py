@@ -5,6 +5,7 @@
 
 from langchain.agents import create_agent
 from .initialize_llm import initialize_llm
+from langsmith import traceable
 from pydantic import BaseModel, Field
 from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
@@ -115,6 +116,7 @@ class State(TypedDict):
 # ----------------------------------------------
 # Supervisor Node (AI-Powered)
 # ----------------------------------------------
+@traceable(run_type="chain", name="supervisor_decision")
 def supervisor_node(state: State) -> dict:
     """
     AI-powered supervisor that decides which agent to route to next.
@@ -150,6 +152,7 @@ def supervisor_node(state: State) -> dict:
 # Agent Wrapper Nodes
 # ----------------------------------------------
 
+@traceable(run_type="chain", name="geomaterial_collector_agent")
 def geomaterial_collector_node(state: State) -> dict:
     """Wrapper for collector agent that returns to supervisor"""
     result = mindat_geomaterial.invoke(state)
@@ -158,6 +161,7 @@ def geomaterial_collector_node(state: State) -> dict:
         "next": "supervisor"  # Return control to supervisor
     }
 
+@traceable(run_type="chain", name="locality_collector_agent")
 def locality_collector_node(state: State) -> dict: 
     """Wrapper for locality collector agent"""
     result = mindat_locality.invoke(state)
@@ -166,6 +170,7 @@ def locality_collector_node(state: State) -> dict:
         "next": "supervisor"
     }
 
+@traceable(run_type="chain", name="histogram_plotter_agent")
 def histogram_plotter_node(state: State) -> dict:
     """Wrapper for histogram plotter agent"""
     result = histogram_plotter.invoke(state)
@@ -174,6 +179,7 @@ def histogram_plotter_node(state: State) -> dict:
         "next": "supervisor"
     }
 
+@traceable(run_type="chain", name="network_plotter_agent")
 def network_plotter_node(state: State) -> dict:
     """Wrapper for network plotter agent"""
     result = network_plotter.invoke(state)
@@ -182,6 +188,7 @@ def network_plotter_node(state: State) -> dict:
         "next": "supervisor"
     }
 
+@traceable(run_type="chain", name="heatmap_plotter_agent")
 def heatmap_plotter_node(state: State) -> dict:
     """Wrapper for heatmap plotter agent"""
     result = heatmap_plotter.invoke(state)
