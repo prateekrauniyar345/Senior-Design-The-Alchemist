@@ -11,7 +11,7 @@ from pathlib import Path
 import json
 import logging
 from ..services.mindat_endpoints import get_geomaterial_api, get_locality_api
-from ..utils.custom_message import MindatAPIException
+from ..config.custom_message import MindatAPIException
 
 # langsmith logging setup
 from langsmith import traceable
