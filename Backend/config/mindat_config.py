@@ -2,11 +2,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import requests
 from urllib.parse import urljoin
-from ..utils.custom_message import MindatAPIException, ErrorSeverity
+from .custom_message import MindatAPIException, ErrorSeverity
 from .settings import settings
-
-
-
 
 
 class MindatAuth:
