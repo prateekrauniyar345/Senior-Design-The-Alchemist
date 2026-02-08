@@ -1,7 +1,7 @@
 from .geomaterial import collect_geomaterials
-from .locality import collect_locality
+from .locality import collect_localities
 from .visualizing import (
-    pandas_hist_plot,
+    histogram_plot,
     network_plot,
     heatmap_plot
 )
@@ -9,7 +9,7 @@ from .visualizing import (
 __all__ = [
     "collect_geomaterials",
     "collect_localities",
-    "pandas_hist_plot",
+    "histogram_plot",
     "network_plot",
     "heatmap_plot",
 ]

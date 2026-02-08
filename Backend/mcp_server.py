@@ -1,28 +1,29 @@
-# server.py
+# Backend/mcp_server.py
 from fastmcp import FastMCP
 from langsmith import traceable
+from tools import collect_geomaterials, collect_localities, network_plot, histogram_plot, heatmap_plot
 
-# Import your clean functions
-from tools import collect_geomaterials, collect_localities, pandas_hist_plot, network_plot, heatmap_plot
-# from tools.visualization import generate_visualization  # Future import
 
-# 1. Initialize the Server
+# Initialize the Server
 mcp = FastMCP("Mindat Master Server")
 
-# 2. Add Tracing (Optional but recommended for debugging)
+# Adding Tracing 
 # Wrap the tool functions with langsmith tracing before adding them if desired
 # collect_geomaterials = traceable(collect_geomaterials) 
 # collect_localities = traceable(collect_localities)
+# network_plot = traceable(network_plot)
+# histogram_plot = traceable(histogram_plot)
+# heatmap_plot = traceable(heatmap_plot)
 
-# 3. Register the Tools
-# FastMCP automatically reads the docstrings and type hints!
-mcp.add_tool(collect_geomaterials)
-mcp.add_tool(collect_localities)
-mcp.add_tool(network_plot)
-mcp.add_tool(pandas_hist_plot)
-mcp.add_tool(heatmap_plot)
 
-# 4. Run the Server
+# Register the Tools
+mcp.tool(collect_geomaterials)
+mcp.tool(collect_localities)
+mcp.tool(network_plot.func)
+mcp.tool(histogram_plot.func)
+mcp.tool(heatmap_plot.func)
+
+# Run the Server
 if __name__ == "__main__":
     mcp.run(
         transport="http", 

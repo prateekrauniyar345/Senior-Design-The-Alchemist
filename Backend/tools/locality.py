@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 from typing import Union, Dict, Any
 
-from ..models import MindatLocalityInput
-from ..services.mindat_endpoints import get_locality_api
-from ..utils import to_params
+from models import MindatLocalityInput
+from services.mindat_endpoints import get_locality_api
+from utils import to_params
 
 # Directories
 PARENT_DIR = Path(__file__).parent.resolve()

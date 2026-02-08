@@ -1,6 +1,6 @@
 from pathlib import Path
-from ..database import SessionLocal
-from ..models import Message, Session, AgentTask
+from database import SessionLocal
+from models import Message, Session, AgentTask
 from pydantic import BaseModel
 from typing import Any, Dict, Optional, Union
 
@@ -25,7 +25,7 @@ def check_plots_path() -> bool:
 
 # utility function to convert pydantic models to API params, handling aliases, 
 # None values, and list serialization
-def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
+def to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
     """
     Convert a Pydantic model or dict into API-ready params:
     - dump with aliases (if model)
