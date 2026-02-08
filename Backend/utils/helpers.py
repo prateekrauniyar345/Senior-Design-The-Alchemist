@@ -1,6 +1,8 @@
 from pathlib import Path
 from ..database import SessionLocal
 from ..models import Message, Session, AgentTask
+from pydantic import BaseModel
+from typing import Any, Dict, Optional, Union
 
 
 # check path for storing the samples files in directory folder
@@ -20,6 +22,31 @@ def check_plots_path() -> bool:
     if plots_path.exists():
         return True
     return False
+
+# utility function to convert pydantic models to API params, handling aliases, 
+# None values, and list serialization
+def _to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
+    """
+    Convert a Pydantic model or dict into API-ready params:
+    - dump with aliases (if model)
+    - drop None
+    - convert lists to CSV strings
+    """
+    if isinstance(q, BaseModel):
+        params: Dict[str, Any] = q.model_dump(by_alias=True, exclude_none=True)
+    else:
+        # assume it's already a dict-like input; drop None values
+        params = {k: v for k, v in q.items() if v is not None}
+
+    for k, v in list(params.items()):
+        if isinstance(v, (list, tuple)):
+            params[k] = ",".join(map(str, v))
+        else:
+            params[k] = str(v) if not isinstance(v, (int, float, str)) else v  # ensure JSON-serializable scalars
+
+    return params  # type: ignore[return-value]
+
+
 
 def save_message(sender: str, content: str, output_type="text", session_id=None):
     """
