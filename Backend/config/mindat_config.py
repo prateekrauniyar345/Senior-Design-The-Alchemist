@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import requests
 from urllib.parse import urljoin
-from .custom_message import MindatAPIException, ErrorSeverity
+from ..utils.custom_message import MindatAPIException, ErrorSeverity
 from .settings import settings
 
 

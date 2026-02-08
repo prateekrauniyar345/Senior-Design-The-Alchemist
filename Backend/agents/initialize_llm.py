@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any
 from langchain_openai import AzureChatOpenAI
 from pydantic import ValidationError
 from ..config.settings import settings
-from ..config.custom_message import LLMException
+from ..utils.custom_message import LLMException
 from ..utils.helpers import save_message, save_agent_task
 
 
