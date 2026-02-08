@@ -4,7 +4,7 @@
 #################################################
 
 from langchain.agents import create_agent
-from .initialize_llm import initialize_llm
+from Backend.agents.initialize_llm import initialize_llm
 from langsmith import traceable
 from pydantic import BaseModel, Field
 from langchain.tools import tool
@@ -13,7 +13,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langchain.messages import AnyMessage
 import operator
-from ..utils.custom_prompts import (
+from Backend.utils.custom_prompts import (
     system_prompt,
     geomaterial_collector_prompt, 
     histogram_plotter_prompt,
@@ -21,14 +21,14 @@ from ..utils.custom_prompts import (
     network_plotter_prompt,
     heatmap_plotter_prompt
 )
-from ..tools import (
-    mindat_geomaterial_collector,
-    mindat_locality_collector,
-    pandas_hist_plot,
+from Backend.tools import (
+    collect_geomaterials,
+    collect_localities,
+    histogram_plot,
     network_plot,
     heatmap_plot,
 )
-from ..models import (
+from Backend.models import (
     MindatGeoMaterialQuery, 
     MindatGeomaterialInput, 
     MindatLocalityQuery, 
@@ -50,7 +50,7 @@ llm = initialize_llm()
 # ----------------------------------------------
 mindat_geomaterial = create_agent(
     model=llm, 
-    tools=[mindat_geomaterial_collector], 
+    tools=[collect_geomaterials], 
     system_prompt=geomaterial_collector_prompt
 )
 
@@ -59,7 +59,7 @@ mindat_geomaterial = create_agent(
 # ----------------------------------------------
 mindat_locality = create_agent(
     model=llm,
-    tools=[mindat_locality_collector],
+    tools=[collect_localities],
     system_prompt=locality_collector_prompt
 )
 
@@ -68,7 +68,7 @@ mindat_locality = create_agent(
 # ----------------------------------------------
 histogram_plotter = create_agent(
     model=llm,
-    tools=[pandas_hist_plot],
+    tools=[histogram_plot],
     system_prompt=histogram_plotter_prompt
 )
 

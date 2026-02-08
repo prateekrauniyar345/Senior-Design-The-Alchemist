@@ -1,7 +1,7 @@
 # this module will help us collect the data from different endpoints of mindat.org
 from typing import Dict, Optional
-from config.mindat_config import MindatAPIClient
-from utils.custom_message import MindatAPIException, ErrorSeverity
+from Backend.config.mindat_config import MindatAPIClient
+from Backend.utils.custom_message import MindatAPIException, ErrorSeverity
 from langsmith import traceable
 
 

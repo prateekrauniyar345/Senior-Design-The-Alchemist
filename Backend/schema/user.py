@@ -1,9 +1,8 @@
-
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from Backend.database import Base
 from sqlalchemy.orm import relationship
+from Backend.database.database import Base
 import uuid
 
 

@@ -2,8 +2,10 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from ..routers import default_router, mindat_router, agent_router, auth_router, plots_router
-from ..utils import MindatAPIException
+from Backend.routers import( 
+    default_router, 
+    )
+from Backend.utils import MindatAPIException
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI app"""
@@ -23,10 +25,10 @@ def create_app() -> FastAPI:
     
     # Include routers
     app.include_router(default_router)
-    app.include_router(auth_router)  # Authentication endpoints
-    app.include_router(mindat_router, prefix="/api")
-    app.include_router(agent_router, prefix="/api")
-    app.include_router(plots_router, prefix="/api")  # Plot download and email endpoints
+    # app.include_router(auth_router) 
+    # app.include_router(mindat_router, prefix="/api")
+    # app.include_router(agent_router, prefix="/api")
+    # app.include_router(plots_router, prefix="/api")  
     
     # Exception handlers
     @app.exception_handler(MindatAPIException)

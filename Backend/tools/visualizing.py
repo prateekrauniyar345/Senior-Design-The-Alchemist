@@ -8,7 +8,7 @@ from pathlib import Path
 from langchain.tools import tool
 from datetime import datetime
 from langsmith import traceable
-from models.plot_visualization_model import PandasDFInput
+from Backend.models import PandasDFInput
 import json
 import math
 import networkx as nx

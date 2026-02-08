@@ -2,34 +2,18 @@ from fastapi import APIRouter, HTTPException, Response, status, Depends
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from sqlalchemy.orm import Session as DBSession
-from ..database import get_db
-from ..models import User
-from supabase import create_client, Client
-from ..config import settings
+from Backend.database import get_db
+from Backend.schema import User
+from Backend.config import settings
 import uuid
+from Backend.models import LoginRequest, RegisterRequest, AuthResponse
+from supabase import create_client, Client
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 # Initialize Supabase client
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class RegisterRequest(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-
-
-class AuthResponse(BaseModel):
-    success: bool
-    message: str
-    user: Optional[dict] = None
-    session: Optional[dict] = None
 
 
 @router.post("/login", response_model=AuthResponse)

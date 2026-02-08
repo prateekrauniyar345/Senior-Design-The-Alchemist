@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
 from Backend.database import Base
-from Backend.models.agent_models import AgentTask  
+from Backend.schema.agent import AgentTask  
 
 
 class Session(Base):

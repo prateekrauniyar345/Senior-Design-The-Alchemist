@@ -1,11 +1,6 @@
 import os
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from database import Base, engine
-from models import User, Message, Session, AgentOutput, AgentTask, DataArtifact, Visualization, AgentRun
-from core import create_app
+from Backend.database import Base, engine
+from Backend.core import create_app
 from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)

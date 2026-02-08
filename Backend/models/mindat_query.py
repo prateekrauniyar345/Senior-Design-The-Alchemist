@@ -2,11 +2,6 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Literal, Union
 
 
-
-
-
-
-
 ####################################
 # geomaterial query model
 ####################################

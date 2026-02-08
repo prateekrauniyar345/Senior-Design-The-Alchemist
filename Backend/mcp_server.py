@@ -1,19 +1,16 @@
 # Backend/mcp_server.py
+import sys
+import os
+
+# Add the parent directory to sys.path to allow imports from the Backend package
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from fastmcp import FastMCP
-from langsmith import traceable
-from tools import collect_geomaterials, collect_localities, network_plot, histogram_plot, heatmap_plot
+from Backend.tools import collect_geomaterials, collect_localities, network_plot, histogram_plot, heatmap_plot
 
 
 # Initialize the Server
 mcp = FastMCP("Mindat Master Server")
-
-# Adding Tracing 
-# Wrap the tool functions with langsmith tracing before adding them if desired
-# collect_geomaterials = traceable(collect_geomaterials) 
-# collect_localities = traceable(collect_localities)
-# network_plot = traceable(network_plot)
-# histogram_plot = traceable(histogram_plot)
-# heatmap_plot = traceable(heatmap_plot)
 
 
 # Register the Tools

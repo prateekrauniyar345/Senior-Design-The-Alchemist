@@ -1,6 +1,6 @@
 from pathlib import Path
-from database import SessionLocal
-from models import Message, Session, AgentTask
+from Backend.database import SessionLocal
+from Backend.schema import Message, Session, AgentTask
 from pydantic import BaseModel
 from typing import Any, Dict, Optional, Union
 

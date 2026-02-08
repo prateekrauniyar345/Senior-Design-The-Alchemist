@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Query, HTTPException
-from ..services import get_geomaterial_api
-from ..utils import MindatAPIException
+from Backend.services import get_geomaterial_api
+from Backend.utils.custom_message import MindatAPIException
+
+# Models
+from Backend.models import MindatGeomaterialInput
 
 # Create router instance
 router = APIRouter(prefix="/mindat", tags=["mindat"])

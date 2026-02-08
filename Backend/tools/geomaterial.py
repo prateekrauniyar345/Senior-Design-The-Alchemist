@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 from typing import Union, Dict, Any
 
-from models import MindatGeomaterialInput
-from services.mindat_endpoints import get_geomaterial_api
-from utils import to_params
+from Backend.models import MindatGeomaterialInput
+from Backend.services import get_geomaterial_api
+from Backend.utils import to_params
 
 
 
