@@ -14,7 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
-from ..config.settings import settings
+from Backend.config.settings import settings
 
 router = APIRouter(prefix="/plots", tags=["plots"])
 

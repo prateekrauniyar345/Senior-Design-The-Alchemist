@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Union, Dict, Any
 
-from Backend.models import MindatGeomaterialInput
+from Backend.models import MindatGeoMaterialQuery
 from Backend.services import get_geomaterial_api
 from Backend.utils import to_params
 
@@ -13,7 +13,7 @@ from Backend.utils import to_params
 PARENT_DIR = Path(__file__).parent.resolve()
 BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents" # Adjusted for tool/ subdir
 
-def collect_geomaterials(query: MindatGeomaterialInput) -> str:
+def collect_geomaterials(query: MindatGeoMaterialQuery) -> str:
     """
     Query Mindat /v1/geomaterials using a structured filter.
     
@@ -21,7 +21,11 @@ def collect_geomaterials(query: MindatGeomaterialInput) -> str:
     (e.g., crystal system, hardness range, transparency, composition).
     """
     try:
-        print(f"Geomaterial Tool called with: {query}")
+        print(f"\n{'='*60}")
+        print(f"[TOOL CALLED] collect_geomaterials")
+        print(f"[TOOL INPUT] Query type: {type(query)}")
+        print(f"[TOOL INPUT] Query data: {query}")
+        print(f"{'='*60}\n")
         
         # Convert Pydantic model directly to API params
         query_dict = to_params(query)

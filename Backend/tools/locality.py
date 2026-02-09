@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Union, Dict, Any
 
-from Backend.models import MindatLocalityInput
+from Backend.models import MindatLocalityQuery
 from Backend.services.mindat_endpoints import get_locality_api
 from Backend.utils import to_params
 
@@ -11,7 +11,7 @@ from Backend.utils import to_params
 PARENT_DIR = Path(__file__).parent.resolve()
 BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
 
-def collect_localities(query: MindatLocalityInput) -> str:
+def collect_localities(query: MindatLocalityQuery) -> str:
     """
     Query Mindat /v1/localities using a structured filter.
     

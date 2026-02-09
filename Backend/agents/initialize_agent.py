@@ -2,7 +2,8 @@
 # define the Agents for the multi-agent system
 # And define the graph structure
 #################################################
-
+import asyncio
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
 from Backend.agents.initialize_llm import initialize_llm
 from langsmith import traceable
@@ -21,20 +22,6 @@ from Backend.utils.custom_prompts import (
     network_plotter_prompt,
     heatmap_plotter_prompt
 )
-from Backend.tools import (
-    collect_geomaterials,
-    collect_localities,
-    histogram_plot,
-    network_plot,
-    heatmap_plot,
-)
-from Backend.models import (
-    MindatGeoMaterialQuery, 
-    MindatGeomaterialInput, 
-    MindatLocalityQuery, 
-    MindatLocalityInput, 
-    PandasDFInput
-)
 from typing_extensions import TypedDict, Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
 from IPython.display import Image, display       # for visualizing the graph
@@ -43,52 +30,99 @@ from IPython.display import Image, display       # for visualizing the graph
 # get the llm initialized
 llm = initialize_llm()
 
-# create the agent with llm, tools, and prompts
+
 
 # ----------------------------------------------
-# Mindat Geomaterial Collector Agent
+# Load the tools from the MCP servers
 # ----------------------------------------------
-mindat_geomaterial = create_agent(
-    model=llm, 
-    tools=[collect_geomaterials], 
-    system_prompt=geomaterial_collector_prompt
-)
+async def load_mcp_tools():
+    """Asynchronously load tools from the MCP servers"""
+    try:
+        client = MultiServerMCPClient({
+            "mindat": {
+                "url": "http://localhost:8005/mcp",
+                "transport": "http"  
+            }
+        })
+        tools = await client.get_tools()
+        print(f"Successfully loaded {len(tools)} MCP tools")
+        return tools
+    except Exception as e:
+        print(f"Failed to load MCP tools: {e}")
+        print(f"   Error type: {type(e).__name__}")
 
-# ----------------------------------------------
-# Mindat Locality Collector Agent
-# ----------------------------------------------
-mindat_locality = create_agent(
-    model=llm,
-    tools=[collect_localities],
-    system_prompt=locality_collector_prompt
-)
 
-# ----------------------------------------------
-# Histogram Plotter Agent
-# ----------------------------------------------
-histogram_plotter = create_agent(
-    model=llm,
-    tools=[histogram_plot],
-    system_prompt=histogram_plotter_prompt
-)
 
-# ----------------------------------------------
-# Network Plotter Agent
-# ----------------------------------------------
-network_plotter = create_agent(
-    model=llm,
-    tools=[network_plot],
-    system_prompt=network_plotter_prompt
-)
 
-# ----------------------------------------------
-# Heatmap Plotter Agent
-# ----------------------------------------------
-heatmap_plotter = create_agent(
-    model=llm,
-    tools=[heatmap_plot],
-    system_prompt=heatmap_plotter_prompt
-)   
+@traceable(run_type="chain", name="load_mcp_tools")
+async def get_mcp_tools():
+    """Load MCP tools for all agents."""
+    return await load_mcp_tools()
+
+
+# Global variables - will be initialized lazily
+mcp_tools = None
+mindat_geomaterial = None
+mindat_locality = None
+histogram_plotter = None
+network_plotter = None
+heatmap_plotter = None
+
+
+async def initialize_agents():
+    """Initialize all agents with MCP tools. Must be called before using the graph."""
+    global mcp_tools, mindat_geomaterial, mindat_locality, histogram_plotter, network_plotter, heatmap_plotter
+    
+    if mcp_tools is not None:
+        return  # Already initialized
+    
+    # Load MCP tools once
+    mcp_tools = await get_mcp_tools()
+    
+    # ----------------------------------------------
+    # Mindat Geomaterial Collector Agent
+    # ----------------------------------------------
+    mindat_geomaterial = create_agent(
+        model=llm, 
+        tools=mcp_tools,
+        system_prompt=geomaterial_collector_prompt
+    )
+
+    # ----------------------------------------------
+    # Mindat Locality Collector Agent
+    # ----------------------------------------------
+    mindat_locality = create_agent(
+        model=llm,
+        tools=mcp_tools,
+        system_prompt=locality_collector_prompt
+    )
+
+    # ----------------------------------------------
+    # Histogram Plotter Agent
+    # ----------------------------------------------
+    histogram_plotter = create_agent(
+        model=llm,
+        tools=mcp_tools,
+        system_prompt=histogram_plotter_prompt
+    )
+
+    # ----------------------------------------------
+    # Network Plotter Agent
+    # ----------------------------------------------
+    network_plotter = create_agent(
+        model=llm,
+        tools=mcp_tools,
+        system_prompt=network_plotter_prompt
+    )
+
+    # ----------------------------------------------
+    # Heatmap Plotter Agent
+    # ----------------------------------------------
+    heatmap_plotter = create_agent(
+        model=llm,
+        tools=mcp_tools,
+        system_prompt=heatmap_plotter_prompt
+    )   
 
 # ----------------------------------------------
 # Define the Graph Structure
@@ -117,7 +151,7 @@ class State(TypedDict):
 # Supervisor Node (AI-Powered)
 # ----------------------------------------------
 @traceable(run_type="chain", name="supervisor_decision")
-def supervisor_node(state: State) -> dict:
+async def supervisor_node(state: State) -> dict:
     """
     AI-powered supervisor that decides which agent to route to next.
     Uses LLM with structured output to make intelligent routing decisions.
@@ -135,7 +169,7 @@ def supervisor_node(state: State) -> dict:
     
     # Create and invoke the chain
     chain = decision_prompt | decision_llm
-    decision: ControllerDecision = chain.invoke({"messages": messages})
+    decision: ControllerDecision = await chain.ainvoke({"messages": messages})
     
     # Log the decision
     print(f"\nSupervisor Decision: {decision.action}")
@@ -153,45 +187,55 @@ def supervisor_node(state: State) -> dict:
 # ----------------------------------------------
 
 @traceable(run_type="chain", name="geomaterial_collector_agent")
-def geomaterial_collector_node(state: State) -> dict:
-    """Wrapper for collector agent that returns to supervisor"""
-    result = mindat_geomaterial.invoke(state)
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"  # Return control to supervisor
-    }
+async def geomaterial_collector_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    print(f"[DEBUG] geomaterial_collector_node called with {len(state['messages'])} messages")
+    if mindat_geomaterial is None:
+        raise RuntimeError("Agents not initialized! Call initialize_agents() first")
+    try:
+        result = await mindat_geomaterial.ainvoke(state)  # ainvoke!
+        print(f"[DEBUG] geomaterial_collector result: {result}")
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] geomaterial_collector_node failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 @traceable(run_type="chain", name="locality_collector_agent")
-def locality_collector_node(state: State) -> dict: 
-    """Wrapper for locality collector agent"""
-    result = mindat_locality.invoke(state)
+async def locality_collector_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    result = await mindat_locality.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
         "next": "supervisor"
     }
 
 @traceable(run_type="chain", name="histogram_plotter_agent")
-def histogram_plotter_node(state: State) -> dict:
-    """Wrapper for histogram plotter agent"""
-    result = histogram_plotter.invoke(state)
+async def histogram_plotter_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    result = await histogram_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
         "next": "supervisor"
     }
 
 @traceable(run_type="chain", name="network_plotter_agent")
-def network_plotter_node(state: State) -> dict:
-    """Wrapper for network plotter agent"""
-    result = network_plotter.invoke(state)
+async def network_plotter_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    result = await network_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
         "next": "supervisor"
     }
 
 @traceable(run_type="chain", name="heatmap_plotter_agent")
-def heatmap_plotter_node(state: State) -> dict:
-    """Wrapper for heatmap plotter agent"""
-    result = heatmap_plotter.invoke(state)
+async def heatmap_plotter_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    result = await heatmap_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
         "next": "supervisor"
@@ -273,3 +317,14 @@ def display_graph():
         except Exception as save_error:
             print(f"Could not save graph: {save_error}")
         return False
+    
+
+async def run_graph(input_messages: List[AnyMessage]):
+    """Run the agent graph. Initializes agents on first call."""
+    print(f"[DEBUG] run_graph called with {len(input_messages)} messages")
+    await initialize_agents()  # Ensure agents are initialized
+    print(f"[DEBUG] Agents initialized, invoking graph...")
+    result = await agent_graph.ainvoke({"messages": input_messages})
+    print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
+    print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
+    return result

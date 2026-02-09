@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List, Optional
 import re
 from pydantic import BaseModel
-from ..agents import agent_graph, initialize_llm
+from Backend.agents import run_graph
+from Backend.agents.initialize_llm import initialize_llm
 from langchain_core.messages import HumanMessage, BaseMessage
 import time
 
@@ -103,13 +104,12 @@ async def chat_with_agent(request: AgentQueryRequest):
     """
     
     try:
-        # Prepare initial state with user message
-        initial_state = {
-            "messages": [HumanMessage(content=request.query)],
-            "next": None
-        }
-        # Invoke the compiled graph asynchronously
-        result: Dict[str, Any] = await agent_graph.ainvoke(initial_state)
+        # Prepare user message
+        user_message = HumanMessage(content=request.query)
+        
+        # Run the graph - this handles initialization automatically
+        result: Dict[str, Any] = await run_graph([user_message])
+        
         # Extract messages from result
         messages: List[BaseMessage] = result.get("messages", [])
         
