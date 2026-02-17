@@ -25,19 +25,22 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> str:
         
         # Convert Pydantic model directly to API params
         query_dict = to_params(query)
+        print("Converted query to API params:", query_dict)
         
         geomaterial_api = get_geomaterial_api()
         response = geomaterial_api.search_geomaterials_minerals(query_dict)
 
         if not isinstance(response, dict) or not response.get("results"):
-             # Return a string error so the LLM sees it and can retry or apologize
+            # Return a string error so the LLM sees it and can retry or apologize
+            print("got into error case for geomaterials response:", response)
             return f"Error: No results found or invalid response. Details: {response}"
 
         # Save to file
         sample_dir = CONTENTS_DIR / "sample_data"
+        print("Sample data directory for geomaterials is: ", sample_dir)
         sample_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = sample_dir / "mindat_geomaterial_response.json"
-
+        print("Saving response of geomaterial sample data to: ", output_file_path)
         with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4, ensure_ascii=False)
 
