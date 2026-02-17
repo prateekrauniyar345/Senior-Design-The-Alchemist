@@ -23,9 +23,10 @@ from Backend.utils.custom_prompts import (
     network_plotter_prompt,
     heatmap_plotter_prompt
 )
-from typing_extensions import TypedDict, Annotated
+from typing_extensions import  Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
 from IPython.display import Image, display  
+import traceback
 
 
 
@@ -85,12 +86,21 @@ async def initialize_agents():
         ("heatmap_plotter", heatmap_plotter_prompt),
     ]
 
-    for name, prompt in agent_configs:
-        registry.register(
-            name=name,
-            tools=mcp_tools,
-            system_prompt=prompt
-        )
+    try:
+        for name, prompt in agent_configs:
+            print(f"Registering agent: {name} with prompt: {prompt}")
+            registry.register(
+                name=name,
+                tools=mcp_tools,
+                system_prompt=prompt
+            )
+        print("All agents initialized and registered successfully.")
+    except Exception as e:
+        print(f"Error initializing agents: {e}")
+        traceback.print_exc()
+    
+    # print all the agents in the registry to verify
+    print(f"Registered agents: {registry.list_agents()}")
 
 # ----------------------------------------------
 # Define the Graph Structure
@@ -120,45 +130,38 @@ class State(TypedDict):
 # ----------------------------------------------
 @traceable(run_type="chain", name="supervisor_decision")
 async def supervisor_node(state: State) -> dict:
-    """
-    AI-powered supervisor that decides which agent to route to next.
-    Uses LLM with structured output to make intelligent routing decisions.
-    """
-    supervisor_with_structured_output = registry.register(
-        name="supervisor_decision_llm",
-        tools=[],  # No tools needed for decision making
-        system_prompt=system_prompt
-    ).with_structured_output(ControllerDecision)    
-
-    # Extract messages from state
-    messages = state["messages"]
-
+    # Dynamically get the list of agents from your Registry
+    # This will return ['geomaterial_collector', 'locality_collector', ...]
+    registered_agents = registry.list_agents()
+    options = registered_agents + ["FINISH"]
     
-    # Build the decision prompt
+    # Set up the structured output model
+    decision_model = factory.llm.with_structured_output(ControllerDecision)
+    
+    # Inject the dynamic list into the system prompt
     decision_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         MessagesPlaceholder(variable_name="messages"),
+        ("system", f"You must route to one of the following: {', '.join(options)}.")
     ])
     
-    # Create and invoke the chain
-    chain = decision_prompt | supervisor_with_structured_output
-    decision: ControllerDecision = await chain.ainvoke({"messages": messages})
+    chain = decision_prompt | decision_model
     
-    # Log the decision
-    print(f"\nSupervisor Decision: {decision.next}")
-    if decision.reasoning:
-        print(f"   Reasoning: {decision.reasoning}")
+    # Invoke and handle result
+    decision = await chain.ainvoke({"messages": state["messages"]})
     
-    # Return state update with routing decision
+    print(f"\n[SUPERVISOR] Decision: {decision.next_agent}")
+    
     return {
-        "next": decision.next,
-        "messages": [AIMessage(content=f"Supervisor routing to: {decision.next}")]
+        "next": decision.next_agent,
+        "messages": [AIMessage(content=f"Supervisor routing to {decision.next_agent}.")]
     }
+
+
 
 # ----------------------------------------------
 # Agent Wrapper Nodes
 # ----------------------------------------------
-
 @traceable(run_type="chain", name="geomaterial_collector_agent")
 async def geomaterial_collector_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
@@ -175,9 +178,10 @@ async def geomaterial_collector_node(state: State) -> dict:  # Now async!
         }
     except Exception as e:
         print(f"[ERROR] geomaterial_collector_node failed: {e}")
-        import traceback
         traceback.print_exc()
         raise
+
+
 
 @traceable(run_type="chain", name="locality_collector_agent")
 async def locality_collector_node(state: State) -> dict:  # Now async!
@@ -185,11 +189,18 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
     agent = registry.get("locality_collector")
     if agent is None:
         raise Exception("Locality Collector agent not found in registry")
-    result = await agent.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        print(f"[DEBUG] locality_collector result: {result}")
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] locality_collector_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="histogram_plotter_agent")
 async def histogram_plotter_node(state: State) -> dict:  # Now async!
@@ -197,11 +208,17 @@ async def histogram_plotter_node(state: State) -> dict:  # Now async!
     agent = registry.get("histogram_plotter")
     if agent is None:
         raise Exception("Histogram Plotter agent not found in registry")
-    result = await agent.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] histogram_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="network_plotter_agent")
 async def network_plotter_node(state: State) -> dict:  # Now async!
@@ -209,11 +226,17 @@ async def network_plotter_node(state: State) -> dict:  # Now async!
     agent = registry.get("network_plotter")
     if agent is None:
         raise Exception("Network Plotter agent not found in registry")
-    result = await agent.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] network_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="heatmap_plotter_agent")
 async def heatmap_plotter_node(state: State) -> dict:  # Now async!
@@ -221,11 +244,17 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
     agent = registry.get("heatmap_plotter")
     if agent is None:
         raise Exception("Heatmap Plotter agent not found in registry")
-    result = await agent.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] heatmap_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 def finish_node(state: State) -> dict:
     """Terminal node that ends the workflow"""
@@ -307,7 +336,7 @@ def display_graph():
 
 async def run_graph(input_messages: List[AnyMessage]):
     """Run the agent graph. Initializes agents on first call."""
-    print(f"[DEBUG] run_graph called with {len(input_messages)} messages")
+    print(f"[DEBUG] run_graph called with {len(input_messages)} messages, message is : {input_messages}")
     await initialize_agents()  # Ensure agents are initialized
     print(f"[DEBUG] Agents initialized, invoking graph...")
     result = await agent_graph.ainvoke({"messages": input_messages})

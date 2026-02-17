@@ -22,7 +22,6 @@ class AgentFactory:
         name: str,
         tools: List[BaseTool],
         system_prompt: str,
-        verbose: bool = False
     ) -> Runnable:
         """
         Create a standardized agent executor using latest create_agent
@@ -42,7 +41,6 @@ class AgentFactory:
             model=self.llm,
             tools=tools,
             system_prompt=system_prompt,
-            verbose=verbose
         )
         
         logger.info(f"Created agent: {name} with {len(tools)} tools")
