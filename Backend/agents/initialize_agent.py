@@ -145,6 +145,8 @@ class State(TypedDict):
     # The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
     messages: Annotated[List[AnyMessage], operator.add]    
     next: Optional[str]
+    data_collected_type: Optional[str]
+    plot_generated: Optional[bool]
 
 
 # ----------------------------------------------
@@ -157,6 +159,36 @@ async def supervisor_node(state: State) -> dict:
     Uses LLM with structured output to make intelligent routing decisions.
     """
     messages = state["messages"]
+
+    if state.get("plot_generated"):
+        return {
+            "next": "FINISH",
+            "messages": [AIMessage(content="Supervisor: Task completed. Finishing workflow.")]
+        }
+
+    if state.get("data_collected_type") == "geomaterial":
+        # Let LLM choose histogram vs network
+        last_user_message = next(
+            (m.content.lower() for m in reversed(state["messages"]) if isinstance(m, HumanMessage)),
+            ""
+        )
+
+        if "network" in last_user_message:
+            return {
+                "next": "network_plotter",
+                "messages": [AIMessage(content="Supervisor routing to: network_plotter")]
+            }
+        else:
+            return {
+                "next": "histogram_plotter",
+                "messages": [AIMessage(content="Supervisor routing to: histogram_plotter")]
+            }
+
+    if state.get("data_collected_type") == "locality":
+        return {
+            "next": "heatmap_plotter",
+            "messages": [AIMessage(content="Supervisor routing to: heatmap_plotter")]
+        }
     
     # Create LLM with structured output capability
     decision_llm = llm.with_structured_output(ControllerDecision) 
@@ -197,6 +229,7 @@ async def geomaterial_collector_node(state: State) -> dict:  # Now async!
         print(f"[DEBUG] geomaterial_collector result: {result}")
         return {
             "messages": result["messages"],
+            "data_collected_type": "geomaterial",
             "next": "supervisor"
         }
     except Exception as e:
@@ -211,6 +244,7 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
     result = await mindat_locality.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
+        "data_collected_type": "locality",
         "next": "supervisor"
     }
 
@@ -220,6 +254,7 @@ async def histogram_plotter_node(state: State) -> dict:  # Now async!
     result = await histogram_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
+        "plot_generated": True,
         "next": "supervisor"
     }
 
@@ -229,6 +264,7 @@ async def network_plotter_node(state: State) -> dict:  # Now async!
     result = await network_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
+        "plot_generated": True,
         "next": "supervisor"
     }
 
@@ -238,6 +274,7 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
     result = await heatmap_plotter.ainvoke(state)  # ainvoke!
     return {
         "messages": result["messages"],
+        "plot_generated": True,
         "next": "supervisor"
     }
 
@@ -321,10 +358,26 @@ def display_graph():
 
 async def run_graph(input_messages: List[AnyMessage]):
     """Run the agent graph. Initializes agents on first call."""
-    print(f"[DEBUG] run_graph called with {len(input_messages)} messages")
+    
+    print(f"\n[DEBUG] run_graph called with {len(input_messages)} messages")
+
+    # Print initial messages
+    print("[DEBUG] Initial input messages:")
+    for i, msg in enumerate(input_messages):
+        print(f"   [{i}] {type(msg).__name__}: {msg.content}")
+
     await initialize_agents()  # Ensure agents are initialized
     print(f"[DEBUG] Agents initialized, invoking graph...")
+
     result = await agent_graph.ainvoke({"messages": input_messages})
+
     print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
     print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
+
+    print("\n[DEBUG] Final message trace:")
+    for i, msg in enumerate(result.get("messages", [])):
+        print(f"   [{i}] {type(msg).__name__}: {msg.content}")
+
+    print("[DEBUG] Workflow finished.\n")
+
     return result
