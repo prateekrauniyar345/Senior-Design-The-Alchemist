@@ -1,20 +1,19 @@
 """
-Base Agent Factory - Scalable agent creation system
+Base Agent Factory - Scalable agent creation system (LangChain v1+ compatible)
 """
 from typing import List, Dict, Any
-from langchain.agents import create_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import SystemMessage
+from langchain import create_agent  # Latest create_agent
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain.tools import BaseTool
 from langchain_openai import AzureChatOpenAI
-from langchain_core.runnables import Runnable 
+from langchain_core.runnables import Runnable
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class AgentFactory:
-    """Factory for creating standardized agents"""
+    """Factory for creating standardized agents with modern LangChain APIs"""
     
     def __init__(self, llm: AzureChatOpenAI):
         self.llm = llm
@@ -25,9 +24,9 @@ class AgentFactory:
         tools: List[BaseTool],
         system_prompt: str,
         verbose: bool = False
-    ) -> Runnable: # return the runnable type so that it can be executed
+    ) -> Runnable:
         """
-        Create a standardized agent executor
+        Create a standardized agent executor using latest create_agent
         
         Args:
             name: Agent identifier
@@ -36,24 +35,15 @@ class AgentFactory:
             verbose: Whether to enable verbose logging
             
         Returns:
-            Configured Agent (A LangChain Runnable object)
+            Configured AgentExecutor (Runnable)
         """
-        # Note: The LangChain utility `create_agent` accepts a SystemMessage 
-        # or string for the system_prompt argument, but its internal logic 
-        # is often easier to control with a simple prompt object like this:
-        
-        # We modify the prompt to ensure it's a ChatPromptTemplate 
-        # object as expected by LangChain agent utilities.
-        prompt_template = ChatPromptTemplate.from_messages([
-            SystemMessage(content=system_prompt),
-            MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
-        
+        # Latest create_agent handles messages automatically - no prompt needed!
+        # Just pass system_prompt as string or SystemMessage
         agent = create_agent(
-            llm=self.llm,
+            model=self.llm,
             tools=tools,
-            prompt=prompt_template, 
+            system_prompt=system_prompt,
+            verbose=verbose
         )
         
         logger.info(f"Created agent: {name} with {len(tools)} tools")
@@ -63,12 +53,11 @@ class AgentFactory:
 class AgentRegistry:
     """
     Registry for managing all agents in the system
-    Makes it easy to add new agents without modifying workflow logic
     """
     
     def __init__(self, factory: AgentFactory):
         self.factory = factory
-        self._agents: Dict[str, Runnable] = {} # ⬅returns Runnable type
+        self._agents: Dict[str, Runnable] = {}
     
     def register(
         self, 
