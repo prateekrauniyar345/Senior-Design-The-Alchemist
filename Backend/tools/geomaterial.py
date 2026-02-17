@@ -5,13 +5,9 @@ from typing import Union, Dict, Any
 
 from Backend.models import MindatGeoMaterialQuery
 from Backend.services import get_geomaterial_api
-from Backend.utils import to_params
+from Backend.utils import to_params, CONTENTS_DIR
 
 
-
-# Directories
-PARENT_DIR = Path(__file__).parent.resolve()
-BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents" # Adjusted for tool/ subdir
 
 def collect_geomaterials(query: MindatGeoMaterialQuery) -> str:
     """
@@ -38,7 +34,7 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> str:
             return f"Error: No results found or invalid response. Details: {response}"
 
         # Save to file
-        sample_dir = BASE_DATA_DIR / "sample_data"
+        sample_dir = CONTENTS_DIR / "sample_data"
         sample_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = sample_dir / "mindat_geomaterial_response.json"
 

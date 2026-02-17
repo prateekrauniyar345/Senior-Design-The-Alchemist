@@ -88,13 +88,11 @@ async def initialize_agents():
 
     try:
         for name, prompt in agent_configs:
-            print(f"Registering agent: {name} with prompt: {prompt}")
             registry.register(
                 name=name,
                 tools=mcp_tools,
                 system_prompt=prompt
             )
-        print("All agents initialized and registered successfully.")
     except Exception as e:
         print(f"Error initializing agents: {e}")
         traceback.print_exc()
@@ -326,9 +324,11 @@ def display_graph():
         print(f"Could not display graph: {e}")
         # Save to file as fallback
         try:
-            with open("Backend/contents/agent_workflow_graph.png", "wb") as f:
+            base_dir = Path(__file__).resolve().parents[1]
+            graph_path = base_dir / "contents" / "agent_workflow_graph.png"
+            with open(graph_path, "wb") as f:
                 f.write(graph_image)
-            print("Graph saved to Backend/contents/agent_workflow_graph.png")
+            print(f"Graph saved to {graph_path}")
         except Exception as save_error:
             print(f"Could not save graph: {save_error}")
         return False

@@ -14,15 +14,12 @@ import math
 import networkx as nx
 import folium
 from folium.plugins import HeatMap
+from Backend.utils.helpers import CONTENTS_DIR
 
 # Set style
 sns.set_style("whitegrid")
 plt.rcParams['figure.facecolor'] = 'white'
 
-# Define directories
-ROOT = Path(__file__).resolve().parents[1]
-PLOTS_DIR = ROOT / "contents" / "plots"
-PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 @tool
 def histogram_plot(file_path: str, plot_title: str = None) -> str:
@@ -101,7 +98,9 @@ def histogram_plot(file_path: str, plot_title: str = None) -> str:
         # Generate unique filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         plot_filename = f"mineral_elements_histogram_{timestamp}.png"
-        plot_path = PLOTS_DIR / plot_filename
+        plot_directory = CONTENTS_DIR / "plots"
+        plot_directory.mkdir(parents=True, exist_ok=True)
+        plot_path = plot_directory / plot_filename
         
         # Save the plot
         plt.savefig(plot_path, dpi=300, bbox_inches='tight', facecolor='white')
@@ -253,7 +252,9 @@ def network_plot(file_path: str, top_n: int = 50, plot_title: str = None) -> str
         # Save plot
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         plot_filename = f"mineral_network_{timestamp}.png"
-        plot_path = PLOTS_DIR / plot_filename
+        plot_directory = CONTENTS_DIR / "plots"
+        plot_directory.mkdir(parents=True, exist_ok=True)
+        plot_path = plot_directory / plot_filename
         plt.savefig(plot_path, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close()
         
@@ -333,7 +334,9 @@ def heatmap_plot(file_path: str, plot_title: str = None) -> str:
         # Save map
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         map_filename = f"mineral_heatmap_{timestamp}.html"
-        map_path = PLOTS_DIR / map_filename
+        map_directory = CONTENTS_DIR / "plots"
+        map_directory.mkdir(parents=True, exist_ok=True)
+        map_path = map_directory / map_filename
         m.save(str(map_path))
         
         return f"Success: Heatmap created and saved to {map_path}"

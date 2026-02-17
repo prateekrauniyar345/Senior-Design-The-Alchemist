@@ -13,11 +13,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
+from Backend.utils.helpers import CONTENTS_DIR
 
 
-# Get base directory
-BASE_DIR = Path(__file__).resolve().parents[1]
-PLOTS_DIR = BASE_DIR / "contents" / "plots"
+PLOTS_DIR = CONTENTS_DIR / "plots"
+
 
 
 def get_plot_path(file_name: str) -> Path:

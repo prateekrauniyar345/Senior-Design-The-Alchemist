@@ -5,11 +5,8 @@ from typing import Union, Dict, Any
 
 from Backend.models import MindatLocalityQuery
 from Backend.services.mindat_endpoints_services import get_locality_api
-from Backend.utils import to_params
+from Backend.utils import to_params, CONTENTS_DIR
 
-# Directories
-PARENT_DIR = Path(__file__).parent.resolve()
-BASE_DATA_DIR = PARENT_DIR.parent.parent / "contents"
 
 def collect_localities(query: MindatLocalityQuery) -> str:
     """
@@ -29,7 +26,7 @@ def collect_localities(query: MindatLocalityQuery) -> str:
         if not isinstance(response, dict) or not response.get("results"):
             return f"Error: No results found or invalid response. Details: {response}"
 
-        sample_dir = BASE_DATA_DIR / "sample_data"
+        sample_dir = CONTENTS_DIR / "sample_data"
         sample_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = sample_dir / "mindat_locality_response.json"
 

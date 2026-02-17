@@ -7,20 +7,25 @@ from langchain_core.messages import HumanMessage, BaseMessage
 import re
 
 
+CONTENTS_DIR = Path(__file__).resolve().parents[1] / "contents"
+print("Contents directory in helpers.py is: ", CONTENTS_DIR)
+
 # check path for storing the samples files in directory folder
 # Json files for the samples data will be saved in contents/sample_data
 def check_sample_data_path() -> bool:
-    current_dir = Path.cwd() # Get the current working directory
-    parent_dir = current_dir.parent # Navigate to the parent directory
-    sample_data_path = parent_dir / "contents" / "sample_data" # Construct the path to contents/sample_data
+    # Resolve Backend directory relative to this file
+    backend_dir = Path(__file__).resolve().parents[1]
+    print("bckend directory in check_sample_path is: ", backend_dir)
+    sample_data_path = backend_dir / "contents" / "sample_data"
     if sample_data_path.exists():
         return True
     return False
 
 def check_plots_path() -> bool:
-    current_dir = Path.cwd() # Get the current working directory
-    parent_dir = current_dir.parent # Navigate to the parent directory
-    plots_path = parent_dir / "contents" / "plots" # Construct the path to contents/plots
+    # Resolve Backend directory relative to this file
+    backend_dir = Path(__file__).resolve().parents[1]
+    print("bckend directory in check_plots_path is: ", backend_dir)
+    plots_path = backend_dir / "contents" / "plots"
     if plots_path.exists():
         return True
     return False
@@ -76,7 +81,7 @@ def save_message(sender: str, content: str, output_type="text", session_id=None)
             db.commit()                   # Commit to save the new session to DB
             db.refresh(new_session)       # Refresh to get the generated UUID
             session_id = new_session.id   # Store the new session's ID
-            print(f"🆕 New session created: {session_id}")
+            print(f"New session created: {session_id}")
 
         # Create a new message record linked to the session
         msg = Message(
