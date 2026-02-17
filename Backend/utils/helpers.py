@@ -10,25 +10,6 @@ import re
 CONTENTS_DIR = Path(__file__).resolve().parents[1] / "contents"
 print("Contents directory in helpers.py is: ", CONTENTS_DIR)
 
-# check path for storing the samples files in directory folder
-# Json files for the samples data will be saved in contents/sample_data
-def check_sample_data_path() -> bool:
-    # Resolve Backend directory relative to this file
-    backend_dir = Path(__file__).resolve().parents[1]
-    print("bckend directory in check_sample_path is: ", backend_dir)
-    sample_data_path = backend_dir / "contents" / "sample_data"
-    if sample_data_path.exists():
-        return True
-    return False
-
-def check_plots_path() -> bool:
-    # Resolve Backend directory relative to this file
-    backend_dir = Path(__file__).resolve().parents[1]
-    print("bckend directory in check_plots_path is: ", backend_dir)
-    plots_path = backend_dir / "contents" / "plots"
-    if plots_path.exists():
-        return True
-    return False
 
 # utility function to convert pydantic models to API params, handling aliases, 
 # None values, and list serialization
