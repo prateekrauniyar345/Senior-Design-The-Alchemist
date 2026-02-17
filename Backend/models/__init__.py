@@ -1,6 +1,7 @@
 from .mindat_query import MindatGeoMaterialQuery, MindatGeomaterialInput, MindatLocalityQuery, MindatLocalityInput
 from .visualization import PandasDFInput, DownloadRequest, EmailPlotRequest, PlotActionResponse
 from .auth_models import LoginRequest, RegisterRequest, AuthResponse
+from .agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
 __all__ = [
     "MindatGeoMaterialQuery", 
     "MindatGeomaterialInput", 
@@ -12,5 +13,8 @@ __all__ = [
     "AuthResponse", 
     "DownloadRequest",
     "EmailPlotRequest",
-    "PlotActionResponse"
+    "PlotActionResponse", 
+    "AgentQueryRequest",
+    "AgentQueryResponse",
+    "AgentHealthResponse"
 ]

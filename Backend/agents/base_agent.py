@@ -2,8 +2,8 @@
 Base Agent Factory - Scalable agent creation system (LangChain v1+ compatible)
 """
 from typing import List, Dict, Any
-from langchain import create_agent  # Latest create_agent
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain.agents import create_agent  # Latest create_agent
+from langchain.messages import SystemMessage, HumanMessage
 from langchain.tools import BaseTool
 from langchain_openai import AzureChatOpenAI
 from langchain_core.runnables import Runnable

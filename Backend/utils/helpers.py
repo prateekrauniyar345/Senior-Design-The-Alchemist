@@ -2,7 +2,9 @@ from pathlib import Path
 from Backend.database import SessionLocal
 from Backend.schema import Message, Session, AgentTask
 from pydantic import BaseModel
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
+from langchain_core.messages import HumanMessage, BaseMessage
+import re
 
 
 # check path for storing the samples files in directory folder
@@ -123,3 +125,59 @@ def save_agent_task(agent_name, session_id, input_message_id=None, output_messag
         print("Error saving agent task:", e)
     finally:
         db.close()
+
+
+
+
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+def extract_file_paths(messages: List[BaseMessage]) -> Dict[str, Optional[str]]:
+    """
+    Extract data and plot file paths from agent messages.
+    Looks for paths in success messages.
+    """
+    data_path = None
+    plot_path = None
+    
+    for msg in messages:
+        content = getattr(msg, "content", "")
+        
+        # Look for JSON data files
+        if "mindat_geomaterial_response.json" in content or "mindat_locality_response.json" in content or "mindat_locality.json" in content:
+            json_match = re.search(r'([/\w\-. ]+\.json)', content)
+            if json_match:
+                data_path = json_match.group(1)
+        
+        # Look for plot files (PNG, HTML)
+        if ".png" in content or ".html" in content:
+            # Try PNG first
+            png_match = re.search(r'([/\w\-. ]+\.png)', content)
+            if png_match:
+                plot_path = png_match.group(1)
+            else:
+                # Try HTML (for heatmaps)
+                html_match = re.search(r'([/\w\-. ]+\.html)', content)
+                if html_match:
+                    plot_path = html_match.group(1)
+    
+    return {
+        "data_file_path": data_path,
+        "plot_file_path": plot_path
+    }
+
+def convert_path_to_url(file_path: Optional[str]) -> Optional[str]:
+    """
+    Convert absolute file system path to relative HTTP URL.
+    Example: /Users/.../Backend/contents/plots/file.png -> /contents/plots/file.png
+    """
+    if not file_path:
+        return None
+    
+    # Find the /contents/ part and extract everything after it
+    if "/contents/" in file_path:
+        parts = file_path.split("/contents/")
+        return f"/contents/{parts[-1]}"
+    
+    return file_path
