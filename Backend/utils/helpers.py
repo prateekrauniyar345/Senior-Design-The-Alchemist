@@ -8,7 +8,6 @@ import re
 
 
 CONTENTS_DIR = Path(__file__).resolve().parents[1] / "contents"
-print("Contents directory in helpers.py is: ", CONTENTS_DIR)
 
 
 # utility function to convert pydantic models to API params, handling aliases, 

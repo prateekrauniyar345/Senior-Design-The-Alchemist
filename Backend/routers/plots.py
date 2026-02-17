@@ -6,8 +6,6 @@ from Backend.services.plots_services import get_plot_path, convert_to_pdf, send_
 
 router = APIRouter(prefix="/plots", tags=["plots"])
 
-print("plots dir in routes/plot.py is : ", PLOTS_DIR) 
-
 # ------------------------------
 # Router Endpoints
 # ------------------------------
