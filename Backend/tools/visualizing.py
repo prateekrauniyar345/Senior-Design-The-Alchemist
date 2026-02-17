@@ -20,7 +20,11 @@ sns.set_style("whitegrid")
 plt.rcParams['figure.facecolor'] = 'white'
 
 # Define directories
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve()
+
+while ROOT.name != "Backend":
+    ROOT = ROOT.parent
+
 PLOTS_DIR = ROOT / "contents" / "plots"
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
