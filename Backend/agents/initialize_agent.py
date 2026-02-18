@@ -28,7 +28,12 @@ from typing_extensions import  Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
 from IPython.display import Image, display  
 import traceback
-from Backend.models.vega_model import VegaLiteSpec
+from Backend.models.agent_models import (
+    CollectorAgentOutput,
+    PlotterAgentOutput,
+    VegaAgentOutput
+)
+from pathlib import Path
 
 
 # ----------------------------------------------
@@ -88,12 +93,12 @@ async def initialize_agents():
         ("vega_plot_planner", vega_plot_planner_prompt),
     ]
     agent_response_format = {
-        "geomaterial_collector": None,  # No special format needed
-        "locality_collector": None,     # No special format needed
-        "histogram_plotter": None,      # No special format needed
-        "network_plotter": None,        # No special format needed
-        "heatmap_plotter": None,       # No special format needed
-        "vega_plot_planner": VegaLiteSpec.schema()  # Expect structured Vega-Lite spec
+        "geomaterial_collector": CollectorAgentOutput,
+        "locality_collector": CollectorAgentOutput,
+        "histogram_plotter": PlotterAgentOutput,
+        "network_plotter": PlotterAgentOutput,
+        "heatmap_plotter": PlotterAgentOutput,
+        "vega_plot_planner": VegaAgentOutput,
     }
 
     try:
@@ -125,7 +130,7 @@ class ControllerDecision(BaseModel):
                 "network_plotter", 
                 "heatmap_plotter", 
                 "vega_plot_planner", 
-                " FINISH"] = Field(
+                "FINISH"] = Field(
                             ...,
                             description="Either 'FINISH' to end or the name of the agent to handle the query."
                 )
@@ -141,13 +146,16 @@ class State(TypedDict):
     next: Optional[str]
 
     # data payloads (not in chat messages)
-    geomaterial_raw: Optional[Dict[str, Any]]
-    locality_raw: Optional[Dict[str, Any]]
-    rows: Optional[List[Dict[str, Any]]]
+    geomaterial_raw: Optional[Dict[str, Any]] = None
+    locality_raw: Optional[Dict[str, Any]] = None
+    rows: Optional[List[Dict[str, Any]]] = None
+
+    # plot payloads
+    plot_file_path: Optional[str] = None
 
     # chart payloads
-    vega_spec: Optional[Dict[str, Any]]
-    profile: Optional[Dict[str, Any]]  # optional
+    vega_spec: Optional[Dict[str, Any]] = None
+    profile: Optional[Dict[str, Any]] = None 
 
 
 # ----------------------------------------------
@@ -196,11 +204,27 @@ async def geomaterial_collector_node(state: State) -> dict:  # Now async!
         raise Exception("Geomaterial Collector agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        print(f"[DEBUG] geomaterial_collector result: {result}")
-        return {
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+
+        # map to structured output if available
+        structured: CollectorAgentOutput | None = result.get("structured_response")
+
+        # update state with raw data if available
+        if structured and structured.status == "OK":
+            # store these in State so other agents don’t parse messages
+            updates["geomaterial_raw"] = structured.raw_data
+            updates["rows"] = (structured.raw_data or {}).get("results", [])
+        else:
+            # optional: store error info
+            updates["geomaterial_raw"] = None
+            updates["rows"] = None
+
+        print(f"[DEBUG] geomaterial_collector result: {result}")
+        return updates
+    
     except Exception as e:
         print(f"[ERROR] geomaterial_collector_node failed: {e}")
         traceback.print_exc()
@@ -216,11 +240,26 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
         raise Exception("Locality Collector agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        print(f"[DEBUG] locality_collector result: {result}")
-        return {
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+        # map to structured output if available
+        structured: CollectorAgentOutput | None = result.get("structured_response") or None
+
+        # update state with raw data if available
+        if structured and structured.status == "OK":
+            # store these in State so other agents don’t parse messages
+            updates["locality_raw"] = structured.raw_data
+            updates["rows"] = (structured.raw_data or {}).get("results", [])
+        else:
+            # optional: store error info
+            updates["locality_raw"] = None
+            updates["rows"] = None  
+
+        print(f"[DEBUG] locality_collector result: {result}")
+        return updates
+
     except Exception as e:
         print(f"[ERROR] locality_collector_node failed: {e}")
         traceback.print_exc()
@@ -235,10 +274,19 @@ async def histogram_plotter_node(state: State) -> dict:  # Now async!
         raise Exception("Histogram Plotter agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        return {
+
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+
+        return updates
     except Exception as e:
         print(f"[ERROR] histogram_plotter_node failed: {e}")
         traceback.print_exc()
@@ -253,10 +301,17 @@ async def network_plotter_node(state: State) -> dict:  # Now async!
         raise Exception("Network Plotter agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        return {
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+        
+        return updates
     except Exception as e:
         print(f"[ERROR] network_plotter_node failed: {e}")
         traceback.print_exc()
@@ -271,14 +326,21 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
         raise Exception("Heatmap Plotter agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        return {
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+        return updates
     except Exception as e:
-        print(f"[ERROR] heatmap_plotter_node failed: {e}")
+        print(f"[ERROR] network_plotter_node failed: {e}")
         traceback.print_exc()
         raise
+
 
 @traceable(run_type="chain", name="vega_plot_planner_agent")
 async def vega_plot_planner_node(state: State) -> dict:  # Now async!
@@ -288,10 +350,18 @@ async def vega_plot_planner_node(state: State) -> dict:  # Now async!
         raise Exception("Vega Plot Planner agent not found in registry")
     try:
         result = await agent.ainvoke(state)  # ainvoke!
-        return {
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+        structured: VegaAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["vega_spec"] = structured.vega_spec
+            updates["profile"] = structured.profile
+        else:
+            updates["vega_spec"] = None
+            updates["profile"] = None
+        return updates
     except Exception as e:
         print(f"[ERROR] vega_plot_planner_node failed: {e}")
         traceback.print_exc()
@@ -336,6 +406,7 @@ workflow.add_conditional_edges(
         "histogram_plotter": "histogram_plotter",
         "network_plotter": "network_plotter",
         "heatmap_plotter": "heatmap_plotter",
+        "vega_plot_planner": "vega_plot_planner",
         "FINISH": "FINISH"
     }
 )
@@ -346,6 +417,7 @@ workflow.add_edge("locality_collector", "supervisor")
 workflow.add_edge("histogram_plotter", "supervisor")
 workflow.add_edge("network_plotter", "supervisor")
 workflow.add_edge("heatmap_plotter", "supervisor")
+workflow.add_edge("vega_plot_planner", "supervisor")
 
 # FINISH ends the workflow
 workflow.add_edge("FINISH", END)
