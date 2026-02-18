@@ -1,14 +1,9 @@
 import matplotlib
 matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from pathlib import Path
-from langchain.tools import tool
 from datetime import datetime
-from langsmith import traceable
-from Backend.models import PandasDFInput
 import json
 import math
 import networkx as nx
@@ -21,7 +16,6 @@ sns.set_style("whitegrid")
 plt.rcParams['figure.facecolor'] = 'white'
 
 
-@tool
 def histogram_plot(file_path: str, plot_title: str = None) -> str:
     """
     Creates a histogram plot showing element distribution from mineral data.
@@ -116,7 +110,7 @@ def histogram_plot(file_path: str, plot_title: str = None) -> str:
         return f"Error creating histogram: {str(e)}"
 
 
-@tool
+
 def network_plot(file_path: str, top_n: int = 50, plot_title: str = None) -> str:
     """
     Creates a network visualization showing mineral relationships based on shared localities.
@@ -268,7 +262,7 @@ def network_plot(file_path: str, top_n: int = 50, plot_title: str = None) -> str
         return f"Error creating network plot: {str(e)}"
 
 
-@tool
+
 def heatmap_plot(file_path: str, plot_title: str = None) -> str:
     """
     Creates a heatmap visualization of mineral locality data on an interactive map.
