@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any, List, Literal
 
 # ----------------------------------------------
 # Query and Response Models for API Endpoints
@@ -69,30 +69,25 @@ class AgentHealthResponse(BaseModel):
 # ----------------------------------------------
 # Additional models for specific tools (e.g., locality, geomaterial) can be defined here
 # ----------------------------------------------
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List, Literal
-
 class CollectorAgentOutput(BaseModel):
     agent: Literal["geomaterial_collector", "locality_collector"]
     status: Literal["OK", "ERROR"]
     file_path: Optional[str] = None
-    count: Optional[int] = None
-    # keep raw_data optional; usually too big for LLM context
-    raw_data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
 class PlotterAgentOutput(BaseModel):
     agent: Literal["histogram_plotter", "network_plotter", "heatmap_plotter"]
     status: Literal["OK", "ERROR"]
-    plot_file_path: Optional[str] = None
-    plot_type: Optional[str] = None
+    file_path: Optional[str] = None
+    vega_spec: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
+
 
 class VegaAgentOutput(BaseModel):
     agent: Literal["vega_plot_planner"]
     status: Literal["OK", "ERROR"]
-    spec: Optional[Dict[str, Any]] = None
+    vega_spec: Optional[Dict[str, Any]] = None 
+    profile: Optional[Dict[str, Any]] = None    
     error: Optional[str] = None
-    warnings: Optional[List[str]] = None
 
 

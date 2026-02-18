@@ -2,7 +2,7 @@ from .mindat_query import MindatGeoMaterialQuery, MindatGeomaterialInput, Mindat
 from .visualization import PandasDFInput, DownloadRequest, EmailPlotRequest, PlotActionResponse
 from .auth_models import LoginRequest, RegisterRequest, AuthResponse
 from .agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
-from .tool_response_models import GeomaterialToolResponse, LocalityToolResponse
+from .tool_response_models import GeomaterialToolResponse, LocalityToolResponse, HistogramToolResponse
 __all__ = [
     "MindatGeoMaterialQuery", 
     "MindatGeomaterialInput", 
@@ -19,5 +19,6 @@ __all__ = [
     "AgentQueryResponse",
     "AgentHealthResponse", 
     "GeomaterialToolResponse", 
-    "LocalityToolResponse"
+    "LocalityToolResponse", 
+    "HistogramToolResponse"
 ]

@@ -2,6 +2,7 @@
 from .custom_message import AlchemistException, MindatAPIException, LLMException, ErrorSeverity
 from .custom_prompts import system_prompt, geomaterial_collector_prompt, locality_collector_prompt
 from .helpers import to_params, extract_file_paths, convert_path_to_url, CONTENTS_DIR   
+from .plot_sepcs import build_histogram_vega_spec
 
 __all__ = [
     "AlchemistException", 
@@ -14,5 +15,6 @@ __all__ = [
     "to_params", 
     "extract_file_paths",
     "convert_path_to_url",
-    "CONTENTS_DIR"
+    "CONTENTS_DIR", 
+    "build_histogram_vega_spec", 
     ]

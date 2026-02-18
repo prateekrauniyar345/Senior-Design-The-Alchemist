@@ -63,10 +63,11 @@ class AgentRegistry:
         self, 
         name: str, 
         tools: List[BaseTool], 
-        system_prompt: str
+        system_prompt: str, 
+        response_format: Optional[Dict[str, Any]] = None
     ) -> None:
         """Register a new agent"""
-        agent = self.factory.create_agent(name, tools, system_prompt)
+        agent = self.factory.create_agent(name, tools, system_prompt, response_format=response_format)
         self._agents[name] = agent
         logger.info(f"Registered agent: {name}")
     

@@ -145,10 +145,8 @@ class State(TypedDict):
     messages: Annotated[List[AnyMessage], operator.add]    
     next: Optional[str]
 
-    # data payloads (not in chat messages)
-    geomaterial_raw: Optional[Dict[str, Any]] = None
-    locality_raw: Optional[Dict[str, Any]] = None
-    rows: Optional[List[Dict[str, Any]]] = None
+    # sample_data path
+    sample_data_path: Optional[str] = None
 
     # plot payloads
     plot_file_path: Optional[str] = None
