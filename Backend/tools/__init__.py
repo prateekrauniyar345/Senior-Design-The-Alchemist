@@ -5,7 +5,7 @@ from .visualizing import (
     network_plot,
     heatmap_plot
 )
-from .data_profile import rows_data_profile
+from .data_profile import profile_sample_data
 
 __all__ = [
     "collect_geomaterials",
@@ -13,5 +13,5 @@ __all__ = [
     "histogram_plot",
     "network_plot",
     "heatmap_plot",
-    "rows_data_profile",
+    "profile_sample_data",
 ]

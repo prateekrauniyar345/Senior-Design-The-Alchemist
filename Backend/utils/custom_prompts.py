@@ -378,6 +378,21 @@ vega_plot_planner_prompt = """
         The actual data will be attached by the backend later.
 
         ════════════════════════════════════
+        DATA PROFILING TOOL
+        ════════════════════════════════════
+        You have access to a tool:
+
+        - profile_sample_data(sample_data_path: str)
+
+        When generating a visualization:
+        1) Read SAMPLE_DATA_PATH from system messages
+        2) Call profile_sample_data using that path
+        3) Use the returned profile to choose fields and encodings
+        4) Then output the Vega-Lite JSON
+
+        You MUST call profile_sample_data before producing a Vega-Lite spec.
+
+        ════════════════════════════════════
         YOUR OUTPUT
         ════════════════════════════════════
         - Output ONLY a valid Vega-Lite v5 JSON object

@@ -211,14 +211,10 @@ async def geomaterial_collector_node(state: State) -> dict:  # Now async!
         structured: CollectorAgentOutput | None = result.get("structured_response")
 
         # update state with raw data if available
-        if structured and structured.status == "OK":
-            # store these in State so other agents don’t parse messages
-            updates["geomaterial_raw"] = structured.raw_data
-            updates["rows"] = (structured.raw_data or {}).get("results", [])
+        if structured and structured.status == "OK" and structured.file_path:
+            updates["sample_data_path"] = structured.file_path
         else:
-            # optional: store error info
-            updates["geomaterial_raw"] = None
-            updates["rows"] = None
+            updates["sample_data_path"] = None
 
         print(f"[DEBUG] geomaterial_collector result: {result}")
         return updates
@@ -246,14 +242,10 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
         structured: CollectorAgentOutput | None = result.get("structured_response") or None
 
         # update state with raw data if available
-        if structured and structured.status == "OK":
-            # store these in State so other agents don’t parse messages
-            updates["locality_raw"] = structured.raw_data
-            updates["rows"] = (structured.raw_data or {}).get("results", [])
+        if structured and structured.status == "OK" and structured.file_path:
+            updates["sample_data_path"] = structured.file_path
         else:
-            # optional: store error info
-            updates["locality_raw"] = None
-            updates["rows"] = None  
+            updates["sample_data_path"] = None 
 
         print(f"[DEBUG] locality_collector result: {result}")
         return updates
@@ -341,18 +333,49 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
 
 
 @traceable(run_type="chain", name="vega_plot_planner_agent")
-async def vega_plot_planner_node(state: State) -> dict:  # Now async!
-    """Wrapper calls MCP-enabled agent."""
+# async def vega_plot_planner_node(state: State) -> dict:  # Now async!
+#     """Wrapper calls MCP-enabled agent."""
+#     agent = registry.get("vega_plot_planner")
+#     if agent is None:
+#         raise Exception("Vega Plot Planner agent not found in registry")
+#     try:
+#         result = await agent.ainvoke(state)  # ainvoke!
+#         updates: dict = {
+#             "messages": result["messages"],
+#             "next": "supervisor",
+#         }
+#         structured: VegaAgentOutput | None = result.get("structured_response") or None
+#         if structured and structured.status == "OK":
+#             updates["vega_spec"] = structured.vega_spec
+#             updates["profile"] = structured.profile
+#         else:
+#             updates["vega_spec"] = None
+#             updates["profile"] = None
+#         return updates
+#     except Exception as e:
+#         print(f"[ERROR] vega_plot_planner_node failed: {e}")
+#         traceback.print_exc()
+#         raise
+async def vega_plot_planner_node(state: State) -> dict:
     agent = registry.get("vega_plot_planner")
     if agent is None:
         raise Exception("Vega Plot Planner agent not found in registry")
+
     try:
-        result = await agent.ainvoke(state)  # ainvoke!
+        # make the path visible to the LLM
+        if state.get("sample_data_path"):
+            state["messages"].append(
+                SystemMessage(
+                    content=f"SAMPLE_DATA_PATH={state['sample_data_path']}"
+                )
+            )
+        result = await agent.ainvoke(state)
         updates: dict = {
             "messages": result["messages"],
             "next": "supervisor",
         }
-        structured: VegaAgentOutput | None = result.get("structured_response") or None
+        structured: VegaAgentOutput | None = result.get("structured_response")
+
         if structured and structured.status == "OK":
             updates["vega_spec"] = structured.vega_spec
             updates["profile"] = structured.profile

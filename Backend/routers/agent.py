@@ -36,50 +36,55 @@ async def chat_with_agent(request: AgentQueryRequest):
     """
     
     try:
-        # Prepare user message
         user_message = HumanMessage(content=request.query)
-        
-        # Run the graph - this handles initialization automatically
+
+        # Run the graph
         result: Dict[str, Any] = await run_graph([user_message])
-        
-        # Extract messages from result
+
+        # Extract messages
         messages: List[BaseMessage] = result.get("messages", [])
-        
         if not messages:
-            raise HTTPException(
-                status_code=500,
-                detail="No messages returned from agent workflow"
-            )
-        
-        # Get the last message as the final response
-        last_message = messages[-1]
-        final_message = getattr(last_message, "content", "Task completed")
- 
-        # Extract file paths from all messages
-        file_paths = extract_file_paths(messages)
-        
-        # Convert file system paths to HTTP URLs
-        data_url = convert_path_to_url(file_paths["data_file_path"])
-        plot_url = convert_path_to_url(file_paths["plot_file_path"])
-         
-        # Return success response
+            raise HTTPException(status_code=500, detail="No messages returned from agent workflow")
+
+        final_message = getattr(messages[-1], "content", "Task completed")
+
+        sample_data_path: Optional[str] = result.get("sample_data_path") or result.get("data_file_path")
+        plot_file_path: Optional[str] = result.get("plot_file_path")
+
+        # Vega outputs (from vega_plot_planner_node updates)
+        vega_spec: Optional[Dict[str, Any]] = result.get("vega_spec")
+        profile: Optional[Dict[str, Any]] = result.get("profile")
+
+        # Optional: fallback to message parsing ONLY if state missing (legacy safety net)
+        if not sample_data_path or not plot_file_path:
+            file_paths = extract_file_paths(messages)
+            sample_data_path = sample_data_path or file_paths.get("data_file_path")
+            plot_file_path = plot_file_path or file_paths.get("plot_file_path")
+
+        # Convert filesystem paths → HTTP URLs for client
+        data_url = convert_path_to_url(sample_data_path) if sample_data_path else None
+        plot_url = convert_path_to_url(plot_file_path) if plot_file_path else None
+
+        # Map to your response model fields
         return AgentQueryResponse(
             success=True,
             message=final_message,
-            data_file_path=data_url,
-            plot_file_path=plot_url,
+            data_file_path=data_url,       # this is URL now (fine per your docstring)
+            plot_file_path=plot_url,       # URL
+            chart_spec=vega_spec,          # Vega spec goes here
+            chart_data=None,               # keep None (you decided not to ship raw data)
             error=None
         )
     except Exception as e:
-        # Return error response
         return AgentQueryResponse(
             success=False,
             message="Agent workflow failed",
             data_file_path=None,
             plot_file_path=None,
+            chart_spec=None,
+            chart_data=None,
             error=str(e)
         )
-
 
 @router.get("/health", response_model=AgentHealthResponse)
 async def agent_health_check():

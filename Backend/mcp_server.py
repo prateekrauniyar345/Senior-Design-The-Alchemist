@@ -13,8 +13,8 @@ from Backend.tools import (
     network_plot, 
     histogram_plot, 
     heatmap_plot, 
-    rows_data_profile, 
-    )
+    profile_sample_data
+)
 
 
 # Initialize the Server
@@ -27,7 +27,7 @@ mcp.tool(collect_localities)
 mcp.tool(network_plot)
 mcp.tool(histogram_plot)
 mcp.tool(heatmap_plot)
-mcp.tool(rows_data_profile)
+mcp.tool(profile_sample_data)
 
 # Run the Server
 if __name__ == "__main__":

@@ -24,3 +24,16 @@ class HistogramToolResponse(BaseModel):
     plot_file_path: str = ""
     data_file_path: Optional[str] = None
     chart_spec: Optional[Dict[str, Any]] = None
+
+
+
+class ProfileToolResponse(BaseModel):
+    status: Literal["OK", "ERROR"] = Field(..., description="Tool status")
+    error: Optional[str] = Field(None, description="Error if any")
+    profile: Optional[Dict[str, Any]] = Field(None, description="Computed profile JSON")
+
+
+class ProfileToolArgs(BaseModel):
+    sample_data_path: str = Field(..., description="Path to saved JSON file containing results[]")
+    max_keys: int = Field(50, description="Max number of columns to profile")
+    sample_n: int = Field(5, description="Sample values per column")
