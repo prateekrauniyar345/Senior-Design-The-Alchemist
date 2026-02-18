@@ -321,3 +321,29 @@ heatmap_plotter_prompt = """
         - Output is HTML file that can be opened in browser to see interactive map
         - Red areas = high density of localities, blue areas = lower density
         """
+
+
+
+# vegs-lite prompts for dynamic plot generation based on user queries 
+vega_plot_planner_prompt = """
+                You are a Vega-Lite chart planner.
+
+                Your job:
+                - Generate a valid Vega-Lite v5 JSON spec for the user's request.
+                - You will be given:
+                (1) the user question
+                (2) a data profile listing columns + types + sample values
+                - Choose the best chart type and fields.
+
+                Rules:
+                - Output ONLY JSON (no markdown).
+                - The JSON must be a Vega-Lite spec with $schema.
+                - Do NOT include data values inside the spec (backend will attach data).
+                - Use only column names that exist in the profile.
+                - If request is ambiguous, choose a sensible default:
+                - "distribution" => histogram
+                - "compare categories" => bar
+                - "trend over time" => line
+                - "relationship" => scatter
+                - Keep spec simple: mark + encoding + title.
+        """

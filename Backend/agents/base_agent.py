@@ -1,12 +1,13 @@
 """
 Base Agent Factory - Scalable agent creation system (LangChain v1+ compatible)
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Union
 from langchain.agents import create_agent 
 from langchain.tools import BaseTool
 from langchain_openai import AzureChatOpenAI
 from langchain_core.runnables import Runnable
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class AgentFactory:
         name: str,
         tools: List[BaseTool],
         system_prompt: str,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> Runnable:
         """
         Create a standardized agent executor using latest create_agent
@@ -30,7 +32,7 @@ class AgentFactory:
             name: Agent identifier
             tools: List of tools available to this agent
             system_prompt: System instructions for the agent
-            verbose: Whether to enable verbose logging
+            response_format: Optional response format specification for structured output   
             
         Returns:
             Configured AgentExecutor (Runnable)
@@ -41,6 +43,7 @@ class AgentFactory:
             model=self.llm,
             tools=tools,
             system_prompt=system_prompt,
+            response_format=response_format,
         )
         
         logger.info(f"Created agent: {name} with {len(tools)} tools")

@@ -21,13 +21,14 @@ from Backend.utils.custom_prompts import (
     histogram_plotter_prompt,
     locality_collector_prompt,
     network_plotter_prompt,
-    heatmap_plotter_prompt
+    heatmap_plotter_prompt, 
+    vega_plot_planner_prompt
 )
 from typing_extensions import  Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
 from IPython.display import Image, display  
 import traceback
-
+from Backend.models.vega_model import VegaLiteSpec
 
 
 # ----------------------------------------------
@@ -84,14 +85,24 @@ async def initialize_agents():
         ("histogram_plotter", histogram_plotter_prompt),
         ("network_plotter", network_plotter_prompt),
         ("heatmap_plotter", heatmap_plotter_prompt),
+        ("vega_plot_planner", vega_plot_planner_prompt),
     ]
+    agent_response_format = {
+        "geomaterial_collector": None,  # No special format needed
+        "locality_collector": None,     # No special format needed
+        "histogram_plotter": None,      # No special format needed
+        "network_plotter": None,        # No special format needed
+        "heatmap_plotter": None,       # No special format needed
+        "vega_plot_planner": VegaLiteSpec.schema()  # Expect structured Vega-Lite spec
+    }
 
     try:
         for name, prompt in agent_configs:
             registry.register(
                 name=name,
                 tools=mcp_tools,
-                system_prompt=prompt
+                system_prompt=prompt, 
+                response_format  = agent_response_format.get(name)  # Pass the specific response format for this agent
             )
     except Exception as e:
         print(f"Error initializing agents: {e}")
@@ -107,10 +118,17 @@ async def initialize_agents():
 # Define ControllerDecision schema
 class ControllerDecision(BaseModel):
     """Decision made by the controller about which agent to invoke next."""
-    next_agent: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "network_plotter", "heatmap_plotter", "FINISH"] = Field(
-        ...,
-        description="Either 'FINISH' to end or the name of the agent to handle the query."
-    )
+    next_agent: Literal[
+                "geomaterial_collector", 
+                "locality_collector", 
+                "histogram_plotter", 
+                "network_plotter", 
+                "heatmap_plotter", 
+                "vega_plot_planner", 
+                " FINISH"] = Field(
+                            ...,
+                            description="Either 'FINISH' to end or the name of the agent to handle the query."
+                )
     reasoning: Optional[str] = Field(
         None,
         description="Brief explanation of why this agent was selected."
@@ -121,6 +139,15 @@ class State(TypedDict):
     # The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
     messages: Annotated[List[AnyMessage], operator.add]    
     next: Optional[str]
+
+    # data payloads (not in chat messages)
+    geomaterial_raw: Optional[Dict[str, Any]]
+    locality_raw: Optional[Dict[str, Any]]
+    rows: Optional[List[Dict[str, Any]]]
+
+    # chart payloads
+    vega_spec: Optional[Dict[str, Any]]
+    profile: Optional[Dict[str, Any]]  # optional
 
 
 # ----------------------------------------------
@@ -253,6 +280,23 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
         traceback.print_exc()
         raise
 
+@traceable(run_type="chain", name="vega_plot_planner_agent")
+async def vega_plot_planner_node(state: State) -> dict:  # Now async!
+    """Wrapper calls MCP-enabled agent."""
+    agent = registry.get("vega_plot_planner")
+    if agent is None:
+        raise Exception("Vega Plot Planner agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        return {
+            "messages": result["messages"],
+            "next": "supervisor"
+        }
+    except Exception as e:
+        print(f"[ERROR] vega_plot_planner_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 def finish_node(state: State) -> dict:
     """Terminal node that ends the workflow"""
@@ -275,6 +319,7 @@ workflow.add_node("locality_collector", locality_collector_node)
 workflow.add_node("histogram_plotter", histogram_plotter_node)
 workflow.add_node("network_plotter", network_plotter_node)
 workflow.add_node("heatmap_plotter", heatmap_plotter_node)
+workflow.add_node("vega_plot_planner", vega_plot_planner_node)
 workflow.add_node("FINISH", finish_node)
 
 # Define the workflow edges
