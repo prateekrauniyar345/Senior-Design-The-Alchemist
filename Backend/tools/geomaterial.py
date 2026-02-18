@@ -26,7 +26,6 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> GeomaterialToolRespon
                 status="ERROR",
                 error=f"No results found or invalid response. Details: {response}",
                 file_path="",
-                raw_data=response
             )
 
         # Save to file
@@ -42,7 +41,6 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> GeomaterialToolRespon
             status="OK",
             error=None,
             file_path=str(output_file_path),
-            raw_data=response
         )
 
     except Exception as e:
@@ -50,5 +48,4 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> GeomaterialToolRespon
             status="ERROR",
             error=f"Critical Error: {str(e)}",
             file_path="",
-            raw_data=None
         )

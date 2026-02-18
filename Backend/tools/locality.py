@@ -29,8 +29,6 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
                 status="ERROR",
                 error=f"No results found for the given query. Response: {response}",
                 file_path="",
-                count=0,
-                raw_data=response
             )
 
         # 2. Save logic
@@ -46,8 +44,6 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
             status="OK",
             error=None,
             file_path=str(output_file_path),
-            count=len(response.get("results", [])),
-            raw_data=response
         )
 
     except Exception as e:
@@ -55,5 +51,4 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
             status="ERROR",
             error=f"Critical Error in collect_localities: {str(e)}",
             file_path="",
-            count=0
         )

@@ -19,6 +19,9 @@ sns.set_style("whitegrid")
 plt.rcParams['figure.facecolor'] = 'white'
 
 
+
+
+
 def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> HistogramToolResponse:
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -30,7 +33,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
                 error=f"'results' key not found in {file_path}",
                 plot_file_path="",
                 chart_spec=None,
-                chart_data=None,
                 data_file_path=file_path,
             )
 
@@ -41,7 +43,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
                 error="The data file is empty.",
                 plot_file_path="",
                 chart_spec=None,
-                chart_data=None,
                 data_file_path=file_path,
             )
 
@@ -51,7 +52,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
                 error=f"'elements' column not found. Available columns: {list(df.columns)}",
                 plot_file_path="",
                 chart_spec=None,
-                chart_data=None,
                 data_file_path=file_path,
             )
 
@@ -67,7 +67,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
                 error="No elements found in the data.",
                 plot_file_path="",
                 chart_spec=None,
-                chart_data=None,
                 data_file_path=file_path,
             )
 
@@ -117,7 +116,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
             error=None,
             plot_file_path=str(plot_path),
             chart_spec=spec,        # vega-lite grammar
-            chart_data=chart_data,  # list[{"element":..., "count":...}]
             data_file_path=file_path,
         )
 
@@ -127,7 +125,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
             error=f"File not found at {file_path}",
             plot_file_path="",
             chart_spec=None,
-            chart_data=None,
             data_file_path=file_path,
         )
     except json.JSONDecodeError as e:
@@ -136,7 +133,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
             error=f"Invalid JSON format: {str(e)}",
             plot_file_path="",
             chart_spec=None,
-            chart_data=None,
             data_file_path=file_path,
         )
     except Exception as e:
@@ -145,7 +141,6 @@ def histogram_plot(file_path: str, plot_title: Optional[str] = None) -> Histogra
             error=f"Error creating histogram: {str(e)}",
             plot_file_path="",
             chart_spec=None,
-            chart_data=None,
             data_file_path=file_path,
         )
 
