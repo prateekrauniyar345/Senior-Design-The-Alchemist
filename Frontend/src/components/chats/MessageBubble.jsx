@@ -19,6 +19,7 @@ const MessageBubble = React.memo(({ message }) => {
   };
 
   const fileName = getFileName();
+  console.log("filename of the image is :", fileName);
   const isHtmlFile = fileName?.endsWith('.html');
 
   // Download plot in specified format

@@ -1,75 +1,93 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from Backend.database import Base
-import uuid
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, Dict, Any, List, Literal
+
+# ----------------------------------------------
+# Query and Response Models for API Endpoints
+# ----------------------------------------------
+
+class AgentQueryRequest(BaseModel):
+    """Request model for agent queries"""
+    query: str = Field(
+        ..., 
+        min_length=1, 
+        description="The natural language query or instruction for the agent to process.",
+        examples=["Generate a histogram of mineral samples from the Mojave desert."]
+    )
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"query": "Tell me about the geological composition of the Moon."}
+        }
+    )
+
+class AgentQueryResponse(BaseModel):
+    """Response model for agent queries"""
+    success: bool = Field(
+        default=True, 
+        description="Indicates if the agent successfully processed the request."
+    )
+    message: str = Field(
+        ..., 
+        description="A human-readable summary of the agent's action or result."
+    )
+    data_file_path: Optional[str] = Field(
+        default=None, 
+        description="The file system path or URL to the generated CSV/Data file."
+    )
+    plot_file_path: Optional[str] = Field(
+        default=None, 
+        description="The file system path or URL to the generated visualization/plot image."
+    )
+    chart_spec: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="The Vega-Lite chart specification used to generate the plot, if applicable."
+    )
+    chart_data: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="The raw data used for the chart, useful for client-side rendering or debugging."
+    )
+    error: Optional[str] = Field(   
+        default=None, 
+        description="Detailed error message if 'success' is false."
+    )
 
 
-class AgentTask(Base):
-    __tablename__ = "agent_tasks"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link task to user
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id", ondelete="CASCADE"))
-    agent_name = Column(String(100), nullable=False)
-    input_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
-    output_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
-    status = Column(String(50), default="pending")
-    started_at = Column(DateTime(timezone=True), server_default=func.now())
-    finished_at = Column(DateTime(timezone=True))
-
-    # Relationships
-    session = relationship("Session", back_populates="tasks")
-    input_message = relationship("Message", foreign_keys=[input_message_id], back_populates="input_tasks")
-    output_message = relationship("Message", foreign_keys=[output_message_id], back_populates="output_tasks")
-
-class AgentRun(Base):
-    __tablename__ = "agent_runs"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link run to user
-    agent_name = Column(String(100), nullable=False)       # e.g., "Collector", "Plotter"
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
-    status = Column(String(50), default="running")          # running, success, failed
-    started_at = Column(DateTime(timezone=True), server_default=func.now())
-    finished_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Relationship: One run can produce multiple artifacts
-    artifacts = relationship("DataArtifact", back_populates="run")
-
-    def __repr__(self):
-        return f"<AgentRun(agent_name={self.agent_name}, status={self.status})>"
-
-class DataArtifact(Base):
-    __tablename__ = "data_artifacts"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link artifact to user
-    run_id = Column(UUID(as_uuid=True), ForeignKey("agent_runs.id"))
-    artifact_type = Column(String(50))  # e.g., 'json', 'plot', 'map'
-    file_path = Column(String(255))
-    description = Column(Text)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    run = relationship("AgentRun", back_populates="artifacts")
+class AgentHealthResponse(BaseModel):
+    """Response model for agent health check"""
+    ok: bool = Field(
+        default=True, 
+        description="Status of the agent service. True if healthy."
+    )
+    lat_ms: float = Field(
+        ..., 
+        description="Latency of the health check in milliseconds.",
+        ge=0,
+        examples=[12.5]
+    )
 
 
-    # Relationships
-    run = relationship("AgentRun", back_populates="artifacts")
-    visualizations = relationship("Visualization", back_populates="artifact", cascade="all, delete-orphan")
+# ----------------------------------------------
+# Additional models for specific tools (e.g., locality, geomaterial) can be defined here
+# ----------------------------------------------
+class CollectorAgentOutput(BaseModel):
+    agent: Literal["geomaterial_collector", "locality_collector"]
+    status: Literal["OK", "ERROR"]
+    file_path: Optional[str] = None
+    error: Optional[str] = None
+
+class PlotterAgentOutput(BaseModel):
+    agent: Literal["histogram_plotter", "network_plotter", "heatmap_plotter"]
+    status: Literal["OK", "ERROR"]
+    file_path: Optional[str] = None
+    vega_spec: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
 
 
-class Visualization(Base):
-    __tablename__ = "visualizations"
+class VegaAgentOutput(BaseModel):
+    agent: Literal["vega_plot_planner"]
+    status: Literal["OK", "ERROR"]
+    vega_spec: Optional[Dict[str, Any]] = None 
+    profile: Optional[Dict[str, Any]] = None    
+    error: Optional[str] = None
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link visualization to user
-    artifact_id = Column(UUID(as_uuid=True), ForeignKey("data_artifacts.id"))
-    viz_type = Column(String(50))  # e.g. 'histogram', 'heatmap', 'network'
-    title = Column(String(120))
-    description = Column(Text)
-    rendered_html_path = Column(String(255))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
-    artifact = relationship("DataArtifact", back_populates="visualizations")

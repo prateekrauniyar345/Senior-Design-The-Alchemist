@@ -1,25 +1,40 @@
-
-from sqlalchemy import Column, String, DateTime
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
-from Backend.database import Base
-from sqlalchemy.orm import relationship
-import uuid
+from pydantic import BaseModel, EmailStr, ConfigDict
+from uuid import UUID
+from datetime import datetime
+from typing import Optional, List
 
 
-class User(Base):
-    __tablename__ = "users"
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: Optional[str] = None
+    supabase_user_id: UUID
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    supabase_user_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
-    email = Column(String(120), nullable=False)
-    full_name = Column(String(120))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
-    sessions = relationship("Session", back_populates="user")
-    messages = relationship("Message", back_populates="user")
-    runs = relationship("AgentRun", backref="user")
-    tasks = relationship("AgentTask", backref="user")
-    artifacts = relationship("DataArtifact", backref="user")
-    visualizations = relationship("Visualization", backref="user")
+class UserCreate(UserBase):
+    """Used for creating a new user (usually via Supabase webhook or signup)"""
+    pass
+
+
+class UserUpdate(BaseModel):
+    """Used for patching user data"""
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+
+
+class User(UserBase):
+    """The full user model returned to the client"""
+    id: UUID
+    created_at: datetime
+
+    # This allows Pydantic to work with SQLAlchemy models
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserWithRelations(User):
+    """
+    Optional: Use this if you want to nest related data 
+    (Requires corresponding Pydantic models for Session, Message, etc.)
+    """
+    # sessions: List[Session] = []
+    # messages: List[Message] = []
+    pass
