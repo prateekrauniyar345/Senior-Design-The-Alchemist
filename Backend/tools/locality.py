@@ -38,6 +38,7 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
 
         with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4, ensure_ascii=False)
+            
 
         # 3. Successful Return
         return LocalityToolResponse(

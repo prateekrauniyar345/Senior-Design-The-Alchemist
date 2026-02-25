@@ -37,6 +37,7 @@ async def chat_with_agent(request: AgentQueryRequest):
     """
     
     try:
+        print("RAW QUERY RECEIVED:", repr(request.query))
         # -------- INPUT VALIDATION LAYER --------
         validation = validate_user_input(request.query)
 
@@ -52,7 +53,7 @@ async def chat_with_agent(request: AgentQueryRequest):
         clean_query = validation["clean_query"]
         
         # Prepare user message
-        user_message = HumanMessage(content=request.query)
+        user_message = HumanMessage(content=clean_query)
 
         # Run the graph
         result: Dict[str, Any] = await run_graph([user_message])

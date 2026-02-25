@@ -1,3 +1,5 @@
+import re
+
 VALID_CRYSTAL_SYSTEMS = [
     "amorphous",
     "hexagonal",
@@ -16,7 +18,7 @@ def validate_parameters(user_input: str) -> dict:
 
     # Hardness validation
     if "hardness" in lower:
-        numbers = [int(s) for s in lower.split() if s.isdigit()]
+        numbers = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", lower)]
         for n in numbers:
             if n < 0 or n > 10:
                 return {

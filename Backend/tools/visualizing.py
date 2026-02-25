@@ -176,7 +176,7 @@ def network_plot(file_path: str, top_n: int = 50, plot_title: str = None) -> str
         }
         
         # Load data
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
         if 'results' not in data:
@@ -312,7 +312,7 @@ def heatmap_plot(file_path: str, plot_title: str = None) -> str:
     """
     try:
         # Load data
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
         if 'results' not in data:

@@ -44,7 +44,7 @@ async def load_mcp_tools():
     try:
         client = MultiServerMCPClient({
             "mindat": {
-                "url": "http://localhost:8005/mcp",
+                "url": "http://localhost:8010/mcp",
                 "transport": "http"  
             }
         })
@@ -54,6 +54,7 @@ async def load_mcp_tools():
     except Exception as e:
         print(f"Failed to load MCP tools: {e}")
         print(f"   Error type: {type(e).__name__}")
+        raise RuntimeError("Could not connect to MCP server at http://localhost:8010/mcp") from e
 
 
 
