@@ -105,6 +105,7 @@ class MindatAPIClient:
         try:
             response = self.session.get(url, params=params, timeout=timeout)
             response.raise_for_status()
+            response.encoding = "utf-8"
             return response.json()
         except requests.HTTPError as http_err:
             raise MindatAPIException(

@@ -44,7 +44,7 @@ async def load_mcp_tools():
     try:
         client = MultiServerMCPClient({
             "mindat": {
-                "url": "http://localhost:8005/mcp",
+                "url": "http://localhost:8010/mcp",
                 "transport": "http"  
             }
         })
@@ -54,6 +54,7 @@ async def load_mcp_tools():
     except Exception as e:
         print(f"Failed to load MCP tools: {e}")
         print(f"   Error type: {type(e).__name__}")
+        raise RuntimeError("Could not connect to MCP server at http://localhost:8010/mcp") from e
 
 
 
@@ -477,7 +478,16 @@ async def run_graph(input_messages: List[AnyMessage]):
     print(f"[DEBUG] run_graph called with {len(input_messages)} messages, message is : {input_messages}")
     await initialize_agents()  # Ensure agents are initialized
     print(f"[DEBUG] Agents initialized, invoking graph...")
+
     result = await agent_graph.ainvoke({"messages": input_messages})
+
     print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
     print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
+
+    print("\n[DEBUG] Final message trace:")
+    for i, msg in enumerate(result.get("messages", [])):
+        print(f"   [{i}] {type(msg).__name__}: {msg.content}")
+
+    print("[DEBUG] Workflow finished.\n")
+
     return result

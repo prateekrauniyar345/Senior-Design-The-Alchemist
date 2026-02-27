@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from Backend.agents import run_graph
 from Backend.agents.initialize_llm import initialize_llm
 from langchain_core.messages import HumanMessage, BaseMessage
+from Backend.input_validation.validator import validate_user_input
 import time
 from Backend.models.agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
 from Backend.utils.helpers import extract_file_paths, convert_path_to_url
@@ -36,7 +37,23 @@ async def chat_with_agent(request: AgentQueryRequest):
     """
     
     try:
-        user_message = HumanMessage(content=request.query)
+        print("RAW QUERY RECEIVED:", repr(request.query))
+        # -------- INPUT VALIDATION LAYER --------
+        validation = validate_user_input(request.query)
+
+        if validation["status"] != "safe":
+            return AgentQueryResponse(
+                success=False,
+                message="Input validation failed",
+                data_file_path=None,
+                plot_file_path=None,
+                error=validation["message"]
+            )
+
+        clean_query = validation["clean_query"]
+        
+        # Prepare user message
+        user_message = HumanMessage(content=clean_query)
 
         # Run the graph
         result: Dict[str, Any] = await run_graph([user_message])
