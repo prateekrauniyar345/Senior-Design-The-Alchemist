@@ -1,53 +1,57 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-import uuid
-from Backend.database import Base
-from Backend.models.agent_models import AgentTask  
-
-
-class Session(Base):
-    __tablename__ = "sessions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link session to a user
-    title = Column(String(100), default="New Chat")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relationships
-    messages = relationship("Message", back_populates="session")
-    user = relationship("User", back_populates="sessions")
-    tasks = relationship("AgentTask", back_populates="session", cascade="all, delete-orphan")
+from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
+from datetime import datetime
+from typing import Optional, List, Any
 
 
 
-class Message(Base):
-    __tablename__ = "messages"
+class SessionBase(BaseModel):
+    title: Optional[str] = "New Chat"
+    user_id: Optional[UUID] = None
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # add user tracking
-    sender = Column(String(50), nullable=False)
-    content = Column(Text, nullable=False)
-    output_type = Column(String(50), default="text")
-    meta_data = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+class SessionCreate(SessionBase):
+    pass
 
-    # Relationships
-    session = relationship("Session", back_populates="messages")
-    user = relationship("User", back_populates="messages")
-    input_tasks = relationship("AgentTask", back_populates="input_message", foreign_keys="AgentTask.input_message_id")
-    output_tasks = relationship("AgentTask", back_populates="output_message", foreign_keys="AgentTask.output_message_id")
+class Session(SessionBase):
+    id: UUID
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
-class AgentOutput(Base):
-    __tablename__ = "agent_outputs"
+class MessageBase(BaseModel):
+    session_id: UUID
+    user_id: UUID
+    sender: str = Field(..., description="e.g., 'user' or 'assistant'")
+    content: str
+    output_type: str = "text"
+    meta_data: Optional[str] = None
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"))
-    output_data = Column(Text, nullable=False)  # could store JSON or serialized output
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+class MessageCreate(MessageBase):
+    pass
+
+class Message(MessageBase):
+    id: UUID
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
+class AgentOutputBase(BaseModel):
+    message_id: UUID
+    user_id: Optional[UUID] = None
+    output_data: str  # JSON strings or serialized data
+
+class AgentOutputCreate(AgentOutputBase):
+    pass
+
+class AgentOutput(AgentOutputBase):
+    id: UUID
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SessionWithMessages(Session):
+    """Useful for fetching a full chat history in one go"""
+    messages: List[Message] = []

@@ -4,7 +4,8 @@
 #################################################
 import asyncio
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain.agents import create_agent
+# from langchain.agents import create_agent
+from Backend.agents.base_agent import AgentFactory, AgentRegistry
 from Backend.agents.initialize_llm import initialize_llm
 from langsmith import traceable
 from pydantic import BaseModel, Field
@@ -20,16 +21,19 @@ from Backend.utils.custom_prompts import (
     histogram_plotter_prompt,
     locality_collector_prompt,
     network_plotter_prompt,
-    heatmap_plotter_prompt
+    heatmap_plotter_prompt, 
+    vega_plot_planner_prompt
 )
-from typing_extensions import TypedDict, Annotated
+from typing_extensions import  Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
-from IPython.display import Image, display       # for visualizing the graph
-
-
-# get the llm initialized
-llm = initialize_llm()
-
+from IPython.display import Image, display  
+import traceback
+from Backend.models.agent_models import (
+    CollectorAgentOutput,
+    PlotterAgentOutput,
+    VegaAgentOutput
+)
+from pathlib import Path
 
 
 # ----------------------------------------------
@@ -60,69 +64,57 @@ async def get_mcp_tools():
     return await load_mcp_tools()
 
 
+# ----------------------------------------------
+# Initialize the Factory and Registry
+# ----------------------------------------------
+factory = AgentFactory(llm=initialize_llm())
+registry = AgentRegistry(factory)
+
 # Global variables - will be initialized lazily
 mcp_tools = None
-mindat_geomaterial = None
-mindat_locality = None
-histogram_plotter = None
-network_plotter = None
-heatmap_plotter = None
-
 
 async def initialize_agents():
-    """Initialize all agents with MCP tools. Must be called before using the graph."""
-    global mcp_tools, mindat_geomaterial, mindat_locality, histogram_plotter, network_plotter, heatmap_plotter
+    """Initialize all agents using the Registry."""
+    global mcp_tools
     
     if mcp_tools is not None:
-        return  # Already initialized
+        return 
     
-    # Load MCP tools once
     mcp_tools = await get_mcp_tools()
+    print(f"MCP tools loaded: {[tool.name for tool in mcp_tools]}")
     
-    # ----------------------------------------------
-    # Mindat Geomaterial Collector Agent
-    # ----------------------------------------------
-    mindat_geomaterial = create_agent(
-        model=llm, 
-        tools=mcp_tools,
-        system_prompt=geomaterial_collector_prompt
-    )
+    # Register all agents in one place
+    agent_configs = [
+        ("geomaterial_collector", geomaterial_collector_prompt),
+        ("locality_collector", locality_collector_prompt),
+        ("histogram_plotter", histogram_plotter_prompt),
+        ("network_plotter", network_plotter_prompt),
+        ("heatmap_plotter", heatmap_plotter_prompt),
+        ("vega_plot_planner", vega_plot_planner_prompt),
+    ]
+    agent_response_format = {
+        "geomaterial_collector": CollectorAgentOutput,
+        "locality_collector": CollectorAgentOutput,
+        "histogram_plotter": PlotterAgentOutput,
+        "network_plotter": PlotterAgentOutput,
+        "heatmap_plotter": PlotterAgentOutput,
+        "vega_plot_planner": VegaAgentOutput,
+    }
 
-    # ----------------------------------------------
-    # Mindat Locality Collector Agent
-    # ----------------------------------------------
-    mindat_locality = create_agent(
-        model=llm,
-        tools=mcp_tools,
-        system_prompt=locality_collector_prompt
-    )
-
-    # ----------------------------------------------
-    # Histogram Plotter Agent
-    # ----------------------------------------------
-    histogram_plotter = create_agent(
-        model=llm,
-        tools=mcp_tools,
-        system_prompt=histogram_plotter_prompt
-    )
-
-    # ----------------------------------------------
-    # Network Plotter Agent
-    # ----------------------------------------------
-    network_plotter = create_agent(
-        model=llm,
-        tools=mcp_tools,
-        system_prompt=network_plotter_prompt
-    )
-
-    # ----------------------------------------------
-    # Heatmap Plotter Agent
-    # ----------------------------------------------
-    heatmap_plotter = create_agent(
-        model=llm,
-        tools=mcp_tools,
-        system_prompt=heatmap_plotter_prompt
-    )   
+    try:
+        for name, prompt in agent_configs:
+            registry.register(
+                name=name,
+                tools=mcp_tools,
+                system_prompt=prompt, 
+                response_format  = agent_response_format.get(name)  # Pass the specific response format for this agent
+            )
+    except Exception as e:
+        print(f"Error initializing agents: {e}")
+        traceback.print_exc()
+    
+    # print all the agents in the registry to verify
+    print(f"Registered agents: {registry.list_agents()}")
 
 # ----------------------------------------------
 # Define the Graph Structure
@@ -131,10 +123,17 @@ async def initialize_agents():
 # Define ControllerDecision schema
 class ControllerDecision(BaseModel):
     """Decision made by the controller about which agent to invoke next."""
-    action: Literal["geomaterial_collector", "locality_collector", "histogram_plotter", "network_plotter", "heatmap_plotter", "FINISH"] = Field(
-        ...,
-        description="Either 'FINISH' to end or the name of the agent to handle the query."
-    )
+    next_agent: Literal[
+                "geomaterial_collector", 
+                "locality_collector", 
+                "histogram_plotter", 
+                "network_plotter", 
+                "heatmap_plotter", 
+                "vega_plot_planner", 
+                "FINISH"] = Field(
+                            ...,
+                            description="Either 'FINISH' to end or the name of the agent to handle the query."
+                )
     reasoning: Optional[str] = Field(
         None,
         description="Brief explanation of why this agent was selected."
@@ -146,100 +145,249 @@ class State(TypedDict):
     messages: Annotated[List[AnyMessage], operator.add]    
     next: Optional[str]
 
+    # sample_data path
+    sample_data_path: Optional[str] = None
+
+    # plot payloads
+    plot_file_path: Optional[str] = None
+
+    # chart payloads
+    vega_spec: Optional[Dict[str, Any]] = None
+    profile: Optional[Dict[str, Any]] = None 
+
 
 # ----------------------------------------------
 # Supervisor Node (AI-Powered)
 # ----------------------------------------------
 @traceable(run_type="chain", name="supervisor_decision")
 async def supervisor_node(state: State) -> dict:
-    """
-    AI-powered supervisor that decides which agent to route to next.
-    Uses LLM with structured output to make intelligent routing decisions.
-    """
-    messages = state["messages"]
+    # Dynamically get the list of agents from your Registry
+    # This will return ['geomaterial_collector', 'locality_collector', ...]
+    registered_agents = registry.list_agents()
+    options = registered_agents + ["FINISH"]
     
-    # Create LLM with structured output capability
-    decision_llm = llm.with_structured_output(ControllerDecision) 
+    # Set up the structured output model
+    decision_model = factory.llm.with_structured_output(ControllerDecision)
     
-    # Build the decision prompt
+    # Inject the dynamic list into the system prompt
     decision_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         MessagesPlaceholder(variable_name="messages"),
+        ("system", f"You must route to one of the following: {', '.join(options)}.")
     ])
     
-    # Create and invoke the chain
-    chain = decision_prompt | decision_llm
-    decision: ControllerDecision = await chain.ainvoke({"messages": messages})
+    chain = decision_prompt | decision_model
     
-    # Log the decision
-    print(f"\nSupervisor Decision: {decision.action}")
-    if decision.reasoning:
-        print(f"   Reasoning: {decision.reasoning}")
+    # Invoke and handle result
+    decision = await chain.ainvoke({"messages": state["messages"]})
     
-    # Return state update with routing decision
+    print(f"\n[SUPERVISOR] Decision: {decision.next_agent}")
+    
     return {
-        "next": decision.action,
-        "messages": [AIMessage(content=f"Supervisor routing to: {decision.action}")]
+        "next": decision.next_agent,
+        "messages": [AIMessage(content=f"Supervisor routing to {decision.next_agent}.")]
     }
+
+
 
 # ----------------------------------------------
 # Agent Wrapper Nodes
 # ----------------------------------------------
-
 @traceable(run_type="chain", name="geomaterial_collector_agent")
 async def geomaterial_collector_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
     print(f"[DEBUG] geomaterial_collector_node called with {len(state['messages'])} messages")
-    if mindat_geomaterial is None:
-        raise RuntimeError("Agents not initialized! Call initialize_agents() first")
+    agent = registry.get("geomaterial_collector")
+    if agent is None:
+        raise Exception("Geomaterial Collector agent not found in registry")
     try:
-        result = await mindat_geomaterial.ainvoke(state)  # ainvoke!
-        print(f"[DEBUG] geomaterial_collector result: {result}")
-        return {
+        result = await agent.ainvoke(state)  # ainvoke!
+        updates: dict = {
             "messages": result["messages"],
-            "next": "supervisor"
+            "next": "supervisor",
         }
+
+        # map to structured output if available
+        structured: CollectorAgentOutput | None = result.get("structured_response")
+
+        # update state with raw data if available
+        if structured and structured.status == "OK" and structured.file_path:
+            updates["sample_data_path"] = structured.file_path
+        else:
+            updates["sample_data_path"] = None
+
+        print(f"[DEBUG] geomaterial_collector result: {result}")
+        return updates
+    
     except Exception as e:
         print(f"[ERROR] geomaterial_collector_node failed: {e}")
-        import traceback
         traceback.print_exc()
         raise
+
+
 
 @traceable(run_type="chain", name="locality_collector_agent")
 async def locality_collector_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
-    result = await mindat_locality.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    agent = registry.get("locality_collector")
+    if agent is None:
+        raise Exception("Locality Collector agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+        # map to structured output if available
+        structured: CollectorAgentOutput | None = result.get("structured_response") or None
+
+        # update state with raw data if available
+        if structured and structured.status == "OK" and structured.file_path:
+            updates["sample_data_path"] = structured.file_path
+        else:
+            updates["sample_data_path"] = None 
+
+        print(f"[DEBUG] locality_collector result: {result}")
+        return updates
+
+    except Exception as e:
+        print(f"[ERROR] locality_collector_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="histogram_plotter_agent")
 async def histogram_plotter_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
-    result = await histogram_plotter.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    agent = registry.get("histogram_plotter")
+    if agent is None:
+        raise Exception("Histogram Plotter agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+
+        return updates
+    except Exception as e:
+        print(f"[ERROR] histogram_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="network_plotter_agent")
 async def network_plotter_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
-    result = await network_plotter.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    agent = registry.get("network_plotter")
+    if agent is None:
+        raise Exception("Network Plotter agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+        
+        return updates
+    except Exception as e:
+        print(f"[ERROR] network_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 @traceable(run_type="chain", name="heatmap_plotter_agent")
 async def heatmap_plotter_node(state: State) -> dict:  # Now async!
     """Wrapper calls MCP-enabled agent."""
-    result = await heatmap_plotter.ainvoke(state)  # ainvoke!
-    return {
-        "messages": result["messages"],
-        "next": "supervisor"
-    }
+    agent = registry.get("heatmap_plotter")
+    if agent is None:
+        raise Exception("Heatmap Plotter agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)  # ainvoke!
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+        structured: PlotterAgentOutput | None = result.get("structured_response") or None
+        if structured and structured.status == "OK":
+            updates["plot_file_path"] = structured.file_path
+        else:
+            updates["plot_file_path"] = None  # or some error info
+        return updates
+    except Exception as e:
+        print(f"[ERROR] network_plotter_node failed: {e}")
+        traceback.print_exc()
+        raise
+
+
+@traceable(run_type="chain", name="vega_plot_planner_agent")
+# async def vega_plot_planner_node(state: State) -> dict:  # Now async!
+#     """Wrapper calls MCP-enabled agent."""
+#     agent = registry.get("vega_plot_planner")
+#     if agent is None:
+#         raise Exception("Vega Plot Planner agent not found in registry")
+#     try:
+#         result = await agent.ainvoke(state)  # ainvoke!
+#         updates: dict = {
+#             "messages": result["messages"],
+#             "next": "supervisor",
+#         }
+#         structured: VegaAgentOutput | None = result.get("structured_response") or None
+#         if structured and structured.status == "OK":
+#             updates["vega_spec"] = structured.vega_spec
+#             updates["profile"] = structured.profile
+#         else:
+#             updates["vega_spec"] = None
+#             updates["profile"] = None
+#         return updates
+#     except Exception as e:
+#         print(f"[ERROR] vega_plot_planner_node failed: {e}")
+#         traceback.print_exc()
+#         raise
+async def vega_plot_planner_node(state: State) -> dict:
+    agent = registry.get("vega_plot_planner")
+    if agent is None:
+        raise Exception("Vega Plot Planner agent not found in registry")
+
+    try:
+        # make the path visible to the LLM
+        if state.get("sample_data_path"):
+            state["messages"].append(
+                SystemMessage(
+                    content=f"SAMPLE_DATA_PATH={state['sample_data_path']}"
+                )
+            )
+        result = await agent.ainvoke(state)
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+        structured: VegaAgentOutput | None = result.get("structured_response")
+
+        if structured and structured.status == "OK":
+            updates["vega_spec"] = structured.vega_spec
+            updates["profile"] = structured.profile
+        else:
+            updates["vega_spec"] = None
+            updates["profile"] = None
+        return updates
+    except Exception as e:
+        print(f"[ERROR] vega_plot_planner_node failed: {e}")
+        traceback.print_exc()
+        raise
+
 
 def finish_node(state: State) -> dict:
     """Terminal node that ends the workflow"""
@@ -262,6 +410,7 @@ workflow.add_node("locality_collector", locality_collector_node)
 workflow.add_node("histogram_plotter", histogram_plotter_node)
 workflow.add_node("network_plotter", network_plotter_node)
 workflow.add_node("heatmap_plotter", heatmap_plotter_node)
+workflow.add_node("vega_plot_planner", vega_plot_planner_node)
 workflow.add_node("FINISH", finish_node)
 
 # Define the workflow edges
@@ -278,6 +427,7 @@ workflow.add_conditional_edges(
         "histogram_plotter": "histogram_plotter",
         "network_plotter": "network_plotter",
         "heatmap_plotter": "heatmap_plotter",
+        "vega_plot_planner": "vega_plot_planner",
         "FINISH": "FINISH"
     }
 )
@@ -288,6 +438,7 @@ workflow.add_edge("locality_collector", "supervisor")
 workflow.add_edge("histogram_plotter", "supervisor")
 workflow.add_edge("network_plotter", "supervisor")
 workflow.add_edge("heatmap_plotter", "supervisor")
+workflow.add_edge("vega_plot_planner", "supervisor")
 
 # FINISH ends the workflow
 workflow.add_edge("FINISH", END)
@@ -311,9 +462,11 @@ def display_graph():
         print(f"Could not display graph: {e}")
         # Save to file as fallback
         try:
-            with open("Backend/contents/agent_workflow_graph.png", "wb") as f:
+            base_dir = Path(__file__).resolve().parents[1]
+            graph_path = base_dir / "contents" / "agent_workflow_graph.png"
+            with open(graph_path, "wb") as f:
                 f.write(graph_image)
-            print("Graph saved to Backend/contents/agent_workflow_graph.png")
+            print(f"Graph saved to {graph_path}")
         except Exception as save_error:
             print(f"Could not save graph: {save_error}")
         return False
@@ -321,7 +474,7 @@ def display_graph():
 
 async def run_graph(input_messages: List[AnyMessage]):
     """Run the agent graph. Initializes agents on first call."""
-    print(f"[DEBUG] run_graph called with {len(input_messages)} messages")
+    print(f"[DEBUG] run_graph called with {len(input_messages)} messages, message is : {input_messages}")
     await initialize_agents()  # Ensure agents are initialized
     print(f"[DEBUG] Agents initialized, invoking graph...")
     result = await agent_graph.ainvoke({"messages": input_messages})
