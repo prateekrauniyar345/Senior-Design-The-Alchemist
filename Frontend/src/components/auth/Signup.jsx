@@ -48,7 +48,7 @@ export default function SignUp() {
 
         <form className="form" onSubmit={handleSubmit}>
           <label className="label">Full name</label>
-          <input className="input" name="name" type="text" placeholder="Alex Doe" required />
+          <input className="input" name="name" type="text" placeholder="John Doe" required />
 
           <label className="label">Email</label>
           <input className="input" name="email" type="email" placeholder="name@example.com" required />

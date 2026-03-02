@@ -9,9 +9,10 @@ __pycache__/
 *.pyo
 *.pyd
 
-# ignore the env files
+# ignore the env files (keep .env.example committed)
 .env
 .env.*
+!.env.example
 
 # ignore database files
 *.sqlite3

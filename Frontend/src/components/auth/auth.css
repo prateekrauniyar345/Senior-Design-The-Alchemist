@@ -54,7 +54,9 @@ html, body, #root {
 .auth-sub { color: #a9a9a9; margin: 0 0 1.2rem; }
 
 /* buttons */
+.oauth-btn,
 .microsoft-btn,
+.google-btn,
 .primary-btn {
   width: 100%;
   padding: 11px 14px;
@@ -64,8 +66,12 @@ html, body, #root {
   font-weight: 600;
   transition: transform .06s ease, background .2s ease, box-shadow .2s ease;
 }
+.oauth-btn { margin-bottom: 10px; }
+.oauth-btn:last-of-type { margin-bottom: 0; }
 .microsoft-btn { background: #232323; color: #fff; }
 .microsoft-btn:hover { background: #2b2b2b; }
+.google-btn { background: #232323; color: #fff; }
+.google-btn:hover { background: #2b2b2b; }
 .primary-btn { background: #fff; color: #111; border: 0; margin-top: 10px; }
 .primary-btn:hover { background: #ececec; }
 .microsoft-btn:active,
