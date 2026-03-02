@@ -219,8 +219,6 @@ async def geomaterial_collector_node(state: State) -> dict:  # Now async!
         # update state with raw data if available
         if structured and structured.status == "OK" and structured.file_path:
             updates["sample_data_path"] = structured.file_path
-        else:
-            updates["sample_data_path"] = None
 
         print(f"[DEBUG] geomaterial_collector result: {result}")
         return updates
@@ -250,8 +248,6 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
         # update state with raw data if available
         if structured and structured.status == "OK" and structured.file_path:
             updates["sample_data_path"] = structured.file_path
-        else:
-            updates["sample_data_path"] = None 
 
         print(f"[DEBUG] locality_collector result: {result}")
         return updates
@@ -279,8 +275,6 @@ async def histogram_plotter_node(state: State) -> dict:  # Now async!
         structured: PlotterAgentOutput | None = result.get("structured_response") or None
         if structured and structured.status == "OK":
             updates["plot_file_path"] = structured.file_path
-        else:
-            updates["plot_file_path"] = None  # or some error info
 
         return updates
     except Exception as e:
@@ -304,8 +298,6 @@ async def network_plotter_node(state: State) -> dict:  # Now async!
         structured: PlotterAgentOutput | None = result.get("structured_response") or None
         if structured and structured.status == "OK":
             updates["plot_file_path"] = structured.file_path
-        else:
-            updates["plot_file_path"] = None  # or some error info
         
         return updates
     except Exception as e:
@@ -329,8 +321,6 @@ async def heatmap_plotter_node(state: State) -> dict:  # Now async!
         structured: PlotterAgentOutput | None = result.get("structured_response") or None
         if structured and structured.status == "OK":
             updates["plot_file_path"] = structured.file_path
-        else:
-            updates["plot_file_path"] = None  # or some error info
         return updates
     except Exception as e:
         print(f"[ERROR] network_plotter_node failed: {e}")
@@ -385,9 +375,6 @@ async def vega_plot_planner_node(state: State) -> dict:
         if structured and structured.status == "OK":
             updates["vega_spec"] = structured.vega_spec
             updates["profile"] = structured.profile
-        else:
-            updates["vega_spec"] = None
-            updates["profile"] = None
         return updates
     except Exception as e:
         print(f"[ERROR] vega_plot_planner_node failed: {e}")

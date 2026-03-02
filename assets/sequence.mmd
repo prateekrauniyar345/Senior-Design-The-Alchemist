@@ -1,0 +1,20 @@
+graph TD
+    User([User Query]) --> Supervisor{Supervisor}
+    
+    Supervisor -->|Greeting / Help| GeneralAgent[General Agent]
+    GeneralAgent --> Supervisor
+    
+    Supervisor -->|Need Mineral Data| GeoCollector[Geomaterial Collector]
+    Supervisor -->|Need Location Data| LocalityCollector[Locality Collector]
+    
+    GeoCollector --> Supervisor
+    LocalityCollector --> Supervisor
+    
+    Supervisor -->|Static Plot| PlotterAgents[Plotter Agents\nHistogram / Network / Heatmap]
+    PlotterAgents --> Supervisor
+    
+    Supervisor -->|Interactive Plot| VegaPlanner[Vega Plot Planner]
+    VegaPlanner --> Supervisor
+    
+    Supervisor -->|Task Complete| FINISH([Final Response])
+EOF
