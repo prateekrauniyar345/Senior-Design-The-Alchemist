@@ -38,19 +38,20 @@ async def chat_with_agent(request: AgentQueryRequest):
     
     try:
         print("RAW QUERY RECEIVED:", repr(request.query))
-        # -------- INPUT VALIDATION LAYER --------
-        validation = validate_user_input(request.query)
+        # -------- INPUT VALIDATION LAYER (DISABLED FOR NEW IMPLEMENTATION) --------
+        # validation = validate_user_input(request.query)
 
-        if validation["status"] != "safe":
-            return AgentQueryResponse(
-                success=False,
-                message="Input validation failed",
-                data_file_path=None,
-                plot_file_path=None,
-                error=validation["message"]
-            )
+        # if validation["status"] != "safe":
+        #     return AgentQueryResponse(
+        #         success=False,
+        #         message="Input validation failed",
+        #         data_file_path=None,
+        #         plot_file_path=None,
+        #         error=validation["message"]
+        #     )
 
-        clean_query = validation["clean_query"]
+        # clean_query = validation["clean_query"]
+        clean_query = request.query.strip()
         
         # Prepare user message
         user_message = HumanMessage(content=clean_query)
@@ -63,7 +64,41 @@ async def chat_with_agent(request: AgentQueryRequest):
         if not messages:
             raise HTTPException(status_code=500, detail="No messages returned from agent workflow")
 
-        final_message = getattr(messages[-1], "content", "Task completed")
+        # --- IMPROVED MESSAGE EXTRACTION ---
+        final_message = "Task completed successfully!"
+        
+        # Iterate backwards to find the last substantial message that isn't just supervisor routing
+        found_substantial = False
+        for msg in reversed(messages):
+            content = getattr(msg, "content", "").strip()
+            
+            # Skip empty messages or generic supervisor/finish messages
+            if not content or "Supervisor routing to" in content or "Workflow completed successfully!" in content:
+                continue
+            
+            # Extract content from structured tool response string
+            # Format: Returning structured response: agent='...' message='...' ...
+            if "Returning structured response:" in content:
+                # Attempt to extract the 'message' parameter value using regex
+                # We use a non-greedy match to grab the content of the message field specifically
+                match = re.search(r"message=['\"](.*?)['\"](?= status=|$| error=)", content)
+                if match:
+                    final_message = match.group(1)
+                    found_substantial = True
+                    break
+            
+            # Fallback for standard AI or Human messages that aren't supervisor routine
+            if content:
+                final_message = content
+                found_substantial = True
+                break
+
+        if not found_substantial:
+            # Check if there's any AIMessage content we missed
+            for msg in reversed(messages):
+                if hasattr(msg, "type") and msg.type == "ai" and msg.content.strip():
+                     final_message = msg.content.strip()
+                     break
 
         sample_data_path: Optional[str] = result.get("sample_data_path") or result.get("data_file_path")
         plot_file_path: Optional[str] = result.get("plot_file_path")

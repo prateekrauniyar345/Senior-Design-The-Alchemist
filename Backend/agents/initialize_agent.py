@@ -17,6 +17,7 @@ from langchain.messages import AnyMessage
 import operator
 from Backend.utils.custom_prompts import (
     system_prompt,
+    general_agent_prompt,
     geomaterial_collector_prompt, 
     histogram_plotter_prompt,
     locality_collector_prompt,
@@ -31,7 +32,8 @@ import traceback
 from Backend.models.agent_models import (
     CollectorAgentOutput,
     PlotterAgentOutput,
-    VegaAgentOutput
+    VegaAgentOutput, 
+    GeneralAgentOutput
 )
 from pathlib import Path
 
@@ -86,6 +88,7 @@ async def initialize_agents():
     
     # Register all agents in one place
     agent_configs = [
+        ("general_agent", general_agent_prompt),
         ("geomaterial_collector", geomaterial_collector_prompt),
         ("locality_collector", locality_collector_prompt),
         ("histogram_plotter", histogram_plotter_prompt),
@@ -94,6 +97,7 @@ async def initialize_agents():
         ("vega_plot_planner", vega_plot_planner_prompt),
     ]
     agent_response_format = {
+        "general_agent": GeneralAgentOutput,
         "geomaterial_collector": CollectorAgentOutput,
         "locality_collector": CollectorAgentOutput,
         "histogram_plotter": PlotterAgentOutput,
@@ -125,6 +129,7 @@ async def initialize_agents():
 class ControllerDecision(BaseModel):
     """Decision made by the controller about which agent to invoke next."""
     next_agent: Literal[
+                "general_agent",
                 "geomaterial_collector", 
                 "locality_collector", 
                 "histogram_plotter", 
@@ -390,6 +395,24 @@ async def vega_plot_planner_node(state: State) -> dict:
         raise
 
 
+@traceable(run_type="chain", name="general_agent_node")
+async def general_agent_node(state: State) -> dict:
+    agent = registry.get("general_agent")
+    if agent is None:
+        raise Exception("General Agent not found in registry")
+    try:
+        result = await agent.ainvoke(state)
+        updates: dict = {
+            "messages": result["messages"],
+            "next": "supervisor",
+        }
+        return updates
+    except Exception as e:
+        print(f"[ERROR] general_agent_node failed: {e}")
+        traceback.print_exc()
+        raise
+
+
 def finish_node(state: State) -> dict:
     """Terminal node that ends the workflow"""
     return {
@@ -406,6 +429,7 @@ workflow = StateGraph(State)
 
 # Add all nodes
 workflow.add_node("supervisor", supervisor_node)  
+workflow.add_node("general_agent", general_agent_node)
 workflow.add_node("geomaterial_collector", geomaterial_collector_node)
 workflow.add_node("locality_collector", locality_collector_node) 
 workflow.add_node("histogram_plotter", histogram_plotter_node)
@@ -423,6 +447,7 @@ workflow.add_conditional_edges(
     "supervisor",
     lambda state: state.get("next", "FINISH"),
     {
+        "general_agent": "general_agent",
         "geomaterial_collector": "geomaterial_collector",
         "locality_collector": "locality_collector",
         "histogram_plotter": "histogram_plotter",
@@ -434,6 +459,7 @@ workflow.add_conditional_edges(
 )
 
 # All agents return to supervisor
+workflow.add_edge("general_agent", "supervisor")
 workflow.add_edge("geomaterial_collector", "supervisor")
 workflow.add_edge("locality_collector", "supervisor")
 workflow.add_edge("histogram_plotter", "supervisor")

@@ -91,3 +91,10 @@ class VegaAgentOutput(BaseModel):
     error: Optional[str] = None
 
 
+class GeneralAgentOutput(BaseModel):
+    agent: Literal["general_agent"]
+    status: Literal["OK", "ERROR"]
+    message: str
+    error: Optional[str] = None
+
+
