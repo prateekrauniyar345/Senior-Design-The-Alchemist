@@ -3,6 +3,7 @@
 # And define the graph structure
 #################################################
 import asyncio
+import os
 from langchain_mcp_adapters.client import MultiServerMCPClient
 # from langchain.agents import create_agent
 from app.agents.base_agent import AgentFactory, AgentRegistry
@@ -39,24 +40,37 @@ from pathlib import Path
 
 
 # ----------------------------------------------
+# MCP Server Configuration
+# ----------------------------------------------
+# Get MCP server URL from environment variable (for Render deployment)
+# Fallback to localhost for local development
+MCP_SERVER_URL = os.getenv(
+    "MCP_SERVER_URL",
+    "http://localhost:8010/mcp"
+)
+print(f"[Initialize Agent] MCP Server URL configured as: {MCP_SERVER_URL}")
+
+
+# ----------------------------------------------
 # Load the tools from the MCP servers
 # ----------------------------------------------
 async def load_mcp_tools():
     """Asynchronously load tools from the MCP servers"""
     try:
+        print(f"[MCP Client] Attempting to connect to {MCP_SERVER_URL}")
         client = MultiServerMCPClient({
             "mindat": {
-                "url": "http://localhost:8010/mcp",
+                "url": MCP_SERVER_URL,
                 "transport": "http"  
             }
         })
         tools = await client.get_tools()
-        print(f"Successfully loaded {len(tools)} MCP tools")
+        print(f"[MCP Client] Successfully loaded {len(tools)} MCP tools from {MCP_SERVER_URL}")
         return tools
     except Exception as e:
-        print(f"Failed to load MCP tools: {e}")
-        print(f"   Error type: {type(e).__name__}")
-        raise RuntimeError("Could not connect to MCP server at http://localhost:8010/mcp") from e
+        print(f"[MCP Client] Failed to load MCP tools from {MCP_SERVER_URL}: {e}")
+        print(f"[MCP Client] Error type: {type(e).__name__}")
+        raise RuntimeError(f"Could not connect to MCP server at {MCP_SERVER_URL}. Make sure the MCP service is running.") from e
 
 
 
