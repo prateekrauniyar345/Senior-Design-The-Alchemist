@@ -20,12 +20,18 @@ def create_app() -> FastAPI:
         version="0.0.1"
     )
     
-    # Get base directory
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # Get base directory - Backend folder (one level up from app directory)
+    APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BACKEND_DIR = os.path.dirname(APP_DIR)
+    CONTENTS_DIR = os.path.join(BACKEND_DIR, "contents")
     
-    
-    # Mount contents directory to serve plots and data files
-    app.mount("/contents", StaticFiles(directory=os.path.join(BASE_DIR, "contents")), name="contents")
+    # Mount contents directory to serve plots and data files (if it exists)
+    if os.path.exists(CONTENTS_DIR):
+        app.mount("/contents", StaticFiles(directory=CONTENTS_DIR), name="contents")
+    else:
+        # Create the directory if it doesn't exist
+        os.makedirs(CONTENTS_DIR, exist_ok=True)
+        app.mount("/contents", StaticFiles(directory=CONTENTS_DIR), name="contents")
     
     # Include routers
     app.include_router(default_router)
