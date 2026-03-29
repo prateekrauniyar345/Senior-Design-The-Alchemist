@@ -71,3 +71,8 @@ Backend/app/contents/sample_data/
 
 # ignore my extras folder
 extras/
+
+
+
+# ignore the claude.md file
+claude.md
