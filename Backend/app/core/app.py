@@ -7,7 +7,8 @@ from app.routers import(
     auth_router,
     mindat_router,
     agent_router,
-    plots_router 
+    plots_router,
+    sessions_router
     )
 from app.utils import MindatAPIException
 
@@ -38,7 +39,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router) 
     app.include_router(mindat_router, prefix="/api")
     app.include_router(agent_router, prefix="/api")
-    app.include_router(plots_router, prefix="/api")  
+    app.include_router(plots_router, prefix="/api")
+    app.include_router(sessions_router)  
     
     # Exception handlers
     @app.exception_handler(MindatAPIException)

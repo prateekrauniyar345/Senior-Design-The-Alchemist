@@ -1,22 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, User, Settings, X, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import SettingsModal from "./SettingsModal";
+import chatService from "../../services/chatService";
+import { useAuth } from "../../contexts/AuthContext";
 import "./Sidebar.css";
 
 const Sidebar = ({
   onStartNewChat = () => {},
   onToggleSidebar = () => {},
   isOpen = true,
+  currentSessionId = null,
+  refreshKey = 0,
 }) => {
+  const { user } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const chatList = [
-    { id: 1, title: "Project brainstorm" },
-    { id: 2, title: "Math help session" },
-    { id: 3, title: "Code review notes" },
-  ];
+  const [sessions, setSessions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Fetch sessions when user logs in OR when Chat signals a change (refreshKey)
+  useEffect(() => {
+    if (user) {
+      loadSessions();
+    } else {
+      setSessions([]);
+      setIsLoading(false);
+    }
+  }, [user, refreshKey]);
+
+  const loadSessions = async () => {
+    try {
+      setIsLoading(true);
+      const data = await chatService.getSessions();
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+      setSessions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNewChat = () => {
+    // Delegate to Chat.jsx which handles session creation + navigation
+    onStartNewChat();
+  };
+
+  const handleSelectChat = (sessionId) => {
+    navigate(`/chat/${sessionId}`);
+  };
 
   return (
     <aside
@@ -57,8 +92,9 @@ const Sidebar = ({
           <div className="p-4 sidebar-header">
             <button
               className="btn w-100 d-flex align-items-center gap-3 fw-semibold py-3 px-4 rounded new-chat-btn text-white rounded-4"
-              onClick={onStartNewChat}
+              onClick={handleNewChat}
               type="button"
+              disabled={isLoading}
             >
               <Plus size={18} />
               New Chat
@@ -68,14 +104,35 @@ const Sidebar = ({
           {/* Chat List */}
           <nav className="flex-fill overflow-auto p-4">
             <div className="d-flex flex-column gap-2">
-              {chatList.map((chat) => (
-                <button
-                  key={chat.id}
-                  className="btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
-                >
-                  {chat.title}
-                </button>
-              ))}
+              {isLoading ? (
+                <div className="text-center py-4 text-secondary">
+                  <small>Loading chats...</small>
+                </div>
+              ) : sessions.length > 0 ? (
+                sessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => handleSelectChat(session.id)}
+                    className={`btn w-100 text-start px-4 py-3 rounded fw-medium rounded-4 ${
+                      currentSessionId === session.id 
+                        ? 'chat-list-btn-active' 
+                        : 'chat-list-btn'
+                    }`}
+                    title={session.title}
+                  >
+                    <div className="text-truncate">
+                      {session.title}
+                    </div>
+                    <small className="text-muted d-block text-truncate">
+                      {new Date(session.created_at).toLocaleDateString()}
+                    </small>
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-4 text-secondary">
+                  <small>No chats yet. Start a new one!</small>
+                </div>
+              )}
             </div>
           </nav>
 
@@ -146,10 +203,11 @@ const Sidebar = ({
           {/* New Chat button - just icon */}
           <button
             className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded-4 p-2"
-            onClick={onStartNewChat}
+            onClick={handleNewChat}
             type="button"
             aria-label="New chat"
             title="New chat"
+            disabled={isLoading}
             style={{ 
               width: '44px', 
               height: '44px',

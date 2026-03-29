@@ -106,4 +106,19 @@
   border-radius: 16px;
 }
 
+/* Active state for current chat */
+.chat-list-btn-active {
+  background-color: #0b3e90 !important;
+  border: none;
+  color: #ffffff !important;
+  transition: background-color 120ms ease-in-out;
+  border-radius: 16px;
+}
+
+.chat-list-btn-active:hover,
+.chat-list-btn-active:focus-visible {
+  background-color: #0f4da2 !important;
+  color: #ffffff !important;
+}
+
 
