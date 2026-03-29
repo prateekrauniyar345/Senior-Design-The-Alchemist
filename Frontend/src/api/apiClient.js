@@ -41,12 +41,15 @@ const processQueue = (error = null) => {
 
 /**
  * Handle authentication failure by redirecting to login
- * This is called when token refresh fails or user is no longer authenticated
+ * Only redirect if we're not already on a login/register page to avoid loops
  */
 const handleAuthFailure = () => {
+  const currentPath = window.location.pathname;
+  // Don't redirect if already on auth pages
+  if (currentPath === '/signin' || currentPath === '/signup' || currentPath === '/login' || currentPath === '/register') {
+    return;
+  }
   console.error("Authentication failed. Redirecting to login.");
-  // Clear any stale tokens if needed
-  // Redirect to login page
   window.location.href = "/signin";
 };
 
@@ -92,8 +95,11 @@ apiClient.interceptors.response.use(
     const isLogoutRequest =
       requestUrl.includes("/api/auth/logout") || requestUrl.includes("/logout");
 
-    // Do not retry refresh/login/logout requests
-    if (status !== 401 || isRefreshRequest || isLoginRequest || isLogoutRequest) {
+    // Don't retry auth check - it's expected to fail when not authenticated
+    const isAuthCheckRequest = requestUrl.includes("/api/auth/me") || requestUrl.includes("/me");
+
+    // Do not retry refresh/login/logout/auth-check requests
+    if (status !== 401 || isRefreshRequest || isLoginRequest || isLogoutRequest || isAuthCheckRequest) {
       return Promise.reject(error);
     }
 

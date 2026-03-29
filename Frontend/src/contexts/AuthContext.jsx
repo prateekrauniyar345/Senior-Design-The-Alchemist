@@ -14,15 +14,11 @@ export function AuthProvider({ children }) {
   const checkAuth = async () => {
     try {
       const res = await apiClient.get("/api/auth/me");
-      const data = res.data;
-      setUser(data.user);
+      setUser(res.data.user);
     } catch (err) {
-      // 401 is expected when user is not logged in - not an error
-      if (err.response?.status === 401) {
-        setUser(null);
-      } else {
-        console.error('Auth check failed:', err.message);
-      }
+      // Any error during checkAuth means user is not authenticated
+      // This is expected - just set user to null, don't redirect
+      setUser(null);
     } finally {
       setLoading(false);
     }
