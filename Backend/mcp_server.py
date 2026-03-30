@@ -8,11 +8,8 @@ print("file is : ", sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)
 
 from fastmcp import FastMCP
 from app.tools import (
-    collect_geomaterials, 
-    collect_localities, 
-    network_plot, 
-    histogram_plot, 
-    heatmap_plot, 
+    collect_geomaterials,
+    collect_localities,
     profile_sample_data
 )
 
@@ -24,9 +21,6 @@ mcp = FastMCP("Mindat Master Server")
 # Register the Tools
 mcp.tool(collect_geomaterials)
 mcp.tool(collect_localities)
-mcp.tool(network_plot)
-mcp.tool(histogram_plot)
-mcp.tool(heatmap_plot)
 mcp.tool(profile_sample_data)
 
 # Run the Server
