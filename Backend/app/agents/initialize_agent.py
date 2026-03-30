@@ -117,12 +117,13 @@ async def initialize_agents():
                 system_prompt=prompt, 
                 response_format  = agent_response_format.get(name)  # Pass the specific response format for this agent
             )
+        # print all the agents in the registry to verify
+        print(f"Registered agents: {registry.list_agents()}")
     except Exception as e:
         print(f"Error initializing agents: {e}")
         traceback.print_exc()
     
-    # print all the agents in the registry to verify
-    print(f"Registered agents: {registry.list_agents()}")
+    
 
 # ----------------------------------------------
 # Define the Graph Structure
@@ -169,6 +170,7 @@ async def supervisor_node(state: State) -> dict:
     registered_agents = registry.list_agents()
     print(f"all the registered agents are : ", registered_agents)
     options = registered_agents + ["FINISH"]
+    print("all the Supervisor options: ", options)
     
     # Set up the structured output model
     decision_model = factory.llm.with_structured_output(ControllerDecision)
@@ -391,12 +393,13 @@ async def run_graph(input_messages: List[AnyMessage]):
 
     result = await agent_graph.ainvoke({"messages": input_messages})
 
-    print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
-    print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
-
     print("\n[DEBUG] Final message trace:")
     for i, msg in enumerate(result.get("messages", [])):
         print(f"   [{i}] {type(msg).__name__}: {msg.content}")
+
+    print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
+    print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
+
 
     print("[DEBUG] Workflow finished.\n")
 
