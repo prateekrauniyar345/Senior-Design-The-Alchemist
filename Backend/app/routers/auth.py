@@ -111,10 +111,13 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
             "options": {"data": {"full_name": req.name}},
         })
 
+        print("auth response is : ", auth_response)
+
         if not auth_response.user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed. Email may already be in use.")
 
         supabase_user = auth_response.user
+        print("supabase_user is : ", supabase_user)
 
         user = User(
             supabase_user_id=uuid.UUID(supabase_user.id),
