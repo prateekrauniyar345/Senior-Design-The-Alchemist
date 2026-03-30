@@ -72,46 +72,8 @@ RULES:
 - This data is used for mapping and heatmaps.
 """
 
-histogram_plotter_prompt = """
-You are a histogram plotting specialist.
 
-JOB:
-1. Use the `sample_data_path` from the current state.
-2. Call `histogram_plot`.
-3. Provide the resulting `plot_file_path`.
-
-RULES:
-- Expects geomaterial JSON data.
-- Do not search messages; use the file path provided in the state.
-"""
-
-network_plotter_prompt = """
-You are a network visualization specialist.
-
-JOB:
-1. Use the `sample_data_path` from the current state.
-2. Call `network_plot`.
-3. Provide the resulting `plot_file_path`.
-
-RULES:
-- Requires data with 'locality' fields.
-- Connections represent shared mineral localities.
-"""
-
-heatmap_plotter_prompt = """
-You are a heatmap mapping specialist.
-
-JOB:
-1. Use the `sample_data_path` from the current state.
-2. Call `heatmap_plot`.
-3. Provide the resulting `plot_file_path`.
-
-RULES:
-- Requires data with latitude/longitude coordinates.
-- Output is an interactive HTML file path.
-"""
-
-vega_plot_planner_prompt = """
+vega_plot_generator_prompt = """
 You are a Vega-Lite visualization planner.
 
 JOB:
