@@ -118,12 +118,12 @@ const Sidebar = ({
                         ? 'chat-list-btn-active' 
                         : 'chat-list-btn'
                     }`}
-                    title={session.title}
+                      title={session.title}
                   >
-                    <div className="text-truncate">
+                    <div className="text-truncate" style={{ fontSize: "1.1rem", fontWeight: "500" }}>
                       {session.title}
                     </div>
-                    <small className="text-muted d-block text-truncate">
+                    <small className="d-block text-truncate" style={{ color: "white", fontSize: "0.75rem" }}>
                       {new Date(session.created_at).toLocaleDateString()}
                     </small>
                   </button>
