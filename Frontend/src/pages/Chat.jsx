@@ -1,3 +1,4 @@
+// Frontend/src/pages/Chat.jsx
 import React, { useCallback, useState } from "react";
 import Sidebar from "../components/chats/Sidebar";
 import ChatWindow from "../components/chats/ChatWindow";

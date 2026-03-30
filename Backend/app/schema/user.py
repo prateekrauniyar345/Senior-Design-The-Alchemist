@@ -1,3 +1,4 @@
+# Backend/app/schema/user.py
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func

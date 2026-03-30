@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/MessageBubble.jsx
 import React, { useState } from 'react';
 import { IconUser } from './IconComponents.jsx';
 import { Download, Mail, FileImage, FileText } from 'lucide-react';

@@ -1,4 +1,4 @@
-# tools/localities.py
+# Backend/app/tools/locality.py
 import json
 from pathlib import Path
 from typing import Union, Dict, Any

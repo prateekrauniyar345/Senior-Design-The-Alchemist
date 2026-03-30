@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/IconComponents.jsx
 import React from "react";
 
 export const IconSend = ({ className, style }) => (

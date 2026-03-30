@@ -1,3 +1,4 @@
+# Backend/app/utils/custom_prompts.py
 system_prompt = """
 You are the supervisor for a multi-agent mineral data analysis workflow. 
 Your job is to choose EXACTLY ONE next step (one agent name) for each decision.

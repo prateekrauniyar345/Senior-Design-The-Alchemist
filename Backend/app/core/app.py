@@ -1,3 +1,4 @@
+# Backend/app/core/app.py
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles

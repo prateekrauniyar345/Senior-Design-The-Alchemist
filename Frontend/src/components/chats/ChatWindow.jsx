@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/ChatWindow.jsx
 import React, { useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
 // import { IconBot } from './IconComponents.jsx';

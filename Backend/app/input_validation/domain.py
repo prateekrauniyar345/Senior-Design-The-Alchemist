@@ -1,3 +1,4 @@
+# Backend/app/input_validation/domain.py
 ALLOWED_KEYWORDS = [
     "mineral",
     "minerals",
