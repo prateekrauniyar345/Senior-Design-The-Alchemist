@@ -152,6 +152,38 @@ class UserService:
                 severity=ErrorSeverity.CRITICAL,
                 details={"user_id": str(user.id)}
             )
+    
+    @traceable(run_type="chain", name="delete_user")
+    def delete_user(self, user: User) -> None:
+        """
+        Delete a user.
+        
+        Args:
+            user: User object to delete
+            
+        Raises:
+            MindatAPIException if deletion fails
+        """
+        try:
+            self.db.delete(user)
+            self.db.commit()
+            
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise MindatAPIException(
+                message=f"Database error while deleting user: {str(e)}",
+                status_code=500,
+                severity=ErrorSeverity.ERROR,
+                details={"user_id": str(user.id)}
+            )
+        except Exception as e:
+            self.db.rollback()
+            raise MindatAPIException(
+                message=f"Error deleting user: {str(e)}",
+                status_code=500,
+                severity=ErrorSeverity.CRITICAL,
+                details={"user_id": str(user.id)}
+            )
 
 
 def get_user_service(db: DBSession) -> UserService:

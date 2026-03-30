@@ -97,3 +97,53 @@ async def update_user_full_name(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating user: {str(e)}"
         )
+
+
+@router.delete("/user", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    email: str = Query(..., description="Email of the user to delete"),
+    current_user: DBUser = Depends(get_current_user),
+    db: DBSession = Depends(get_db)
+):
+    """
+    Delete a user by email.
+    
+    Warning: This is a destructive operation and cannot be undone.
+    The user must be authenticated to delete any user.
+    
+    **email**: The email of the user to delete (required)
+    
+    Returns 204 No Content on successful deletion.
+    """
+    try:
+        # Validate email is provided
+        if not email or not email.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is required for deletion"
+            )
+        
+        # Get user service
+        user_service = get_user_service(db)
+        
+        # Find user by email (exact match)
+        user_to_delete = user_service.get_user_by_field(email=email.strip())
+        
+        if not user_to_delete:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found with the provided email"
+            )
+        
+        # Delete the user
+        user_service.delete_user(user_to_delete)
+        
+        return None
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting user: {str(e)}"
+        )
