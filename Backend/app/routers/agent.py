@@ -10,7 +10,7 @@ from app.input_validation.validator import validate_user_input
 import time
 from app.models.agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
 from app.utils.helpers import extract_file_paths, convert_path_to_url
-
+import json as _json
 
 # Create router instance
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -39,20 +39,8 @@ async def chat_with_agent(request: AgentQueryRequest):
     
     try:
         print("RAW QUERY RECEIVED:", repr(request.query))
-        # -------- INPUT VALIDATION LAYER (DISABLED FOR NEW IMPLEMENTATION) --------
-        # validation = validate_user_input(request.query)
-
-        # if validation["status"] != "safe":
-        #     return AgentQueryResponse(
-        #         success=False,
-        #         message="Input validation failed",
-        #         data_file_path=None,
-        #         plot_file_path=None,
-        #         error=validation["message"]
-        #     )
-
-        # clean_query = validation["clean_query"]
         clean_query = request.query.strip()
+        print("CLEANED QUERY:", repr(clean_query))
         
         # Prepare user message
         user_message = HumanMessage(content=clean_query)
@@ -101,31 +89,34 @@ async def chat_with_agent(request: AgentQueryRequest):
                      final_message = msg.content.strip()
                      break
 
-        sample_data_path: Optional[str] = result.get("sample_data_path") or result.get("data_file_path")
-        plot_file_path: Optional[str] = result.get("plot_file_path")
+        sample_data_path: Optional[str] = result.get("sample_data_path")
 
-        # Vega outputs (from vega_plot_planner_node updates)
+        # Vega outputs
         vega_spec: Optional[Dict[str, Any]] = result.get("vega_spec")
-        profile: Optional[Dict[str, Any]] = result.get("profile")
 
-        # Optional: fallback to message parsing ONLY if state missing (legacy safety net)
-        if not sample_data_path or not plot_file_path:
-            file_paths = extract_file_paths(messages)
-            sample_data_path = sample_data_path or file_paths.get("data_file_path")
-            plot_file_path = plot_file_path or file_paths.get("plot_file_path")
+        # Read first 100 rows from saved JSON file for frontend preview
 
-        # Convert filesystem paths → HTTP URLs for client
+        sample_data = None
+        try:
+            if sample_data_path:
+                with open(sample_data_path, "r", encoding="utf-8") as f:
+                    raw = _json.load(f)
+                sample_data = raw.get("results", [])[:100]
+        except Exception as e:
+            print(f"Error reading sample data file at {sample_data_path}: {e}")
+            sample_data = None
+
+        # Convert filesystem path → HTTP URL for client
         data_url = convert_path_to_url(sample_data_path) if sample_data_path else None
-        plot_url = convert_path_to_url(plot_file_path) if plot_file_path else None
 
-        # Map to your response model fields
         return AgentQueryResponse(
             success=True,
             message=final_message,
-            data_file_path=data_url,       # this is URL now (fine per your docstring)
-            plot_file_path=plot_url,       # URL
-            chart_spec=vega_spec,          # Vega spec goes here
-            chart_data=None,               # keep None (you decided not to ship raw data)
+            data_file_path=data_url,
+            plot_file_path=None,
+            chart_spec=vega_spec,
+            chart_data=None,
+            sample_data=sample_data,
             error=None
         )
     except Exception as e:
@@ -136,6 +127,7 @@ async def chat_with_agent(request: AgentQueryRequest):
             plot_file_path=None,
             chart_spec=None,
             chart_data=None,
+            sample_data=None,
             error=str(e)
         )
 

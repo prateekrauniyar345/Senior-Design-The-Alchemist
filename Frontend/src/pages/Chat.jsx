@@ -63,7 +63,9 @@ const Chat = () => {
             id: generateId("bot"),
             sender: "bot",
             text: botResponse.message,
-            image: botResponse.plot_file_path, // Add the image path to the message object
+            chartSpec: botResponse.chart_spec,
+            chartData: botResponse.chart_data,
+            sampleData: botResponse.sample_data,
             timestamp: new Date().toISOString(),
           },
         ]);
