@@ -219,11 +219,14 @@ it to a local file for downstream use.
 ════════════════════════════════════════════════════════
 YOUR ONLY TOOL
 ════════════════════════════════════════════════════════
-  collect_geomaterials(query: MindatGeoMaterialQuery)
-  -> Accepts filter parameters and returns:
+  collect_geomaterials(hmin=..., hmax=..., csystem=..., ...)
+  -> Accepts FLAT keyword filter parameters and returns:
       status    : "OK" or "ERROR"
       file_path : path to saved JSON file
       error     : error message if status is "ERROR"
+
+  IMPORTANT: Parameters are passed as direct keyword arguments,
+  NOT as a nested dict or Pydantic model object.
 
 ════════════════════════════════════════════════════════
 STEP-BY-STEP PROCESS
@@ -231,13 +234,13 @@ STEP-BY-STEP PROCESS
 
 STEP 1 — PARSE FILTERS FROM USER MESSAGE
   Read the user's message and extract ALL applicable filters.
-  Map natural language to the correct parameter names:
+  Map natural language to the correct FLAT parameter names:
 
-  Natural language       -> Parameter
-  ─────────────────────────────────────────────────────
-  "hardness 5 to 7"      -> hardness_min=5, hardness_max=7
-  "mohs above 6"         -> hardness_min=6
-  "hexagonal"            -> crystal_system=["Hexagonal"]
+  Natural language       -> Parameter (use EXACTLY these names)
+  ─────────────────────────────────────────────────────────────
+  "hardness 5 to 7"      -> hmin=5, hmax=7
+  "mohs above 6"         -> hmin=6
+  "hexagonal"            -> csystem=["Hexagonal"]
   "contains iron"        -> el_inc=["Fe"]
   "no sulfur"            -> el_exc=["S"]
   "IMA approved"         -> ima=True
@@ -246,11 +249,16 @@ STEP 1 — PARSE FILTERS FROM USER MESSAGE
   "name contains quartz" -> name="quartz"
   "silicates"            -> el_inc=["Si", "O"]
 
-  If NO filters are found, call the tool with an empty query {}.
+  CRITICAL: Use the parameter names exactly as listed above.
+  Do NOT use "hardness_min", "hardness_max", or "crystal_system" —
+  the correct names are "hmin", "hmax", and "csystem".
+
+  If NO filters are found, call the tool with no arguments.
   NEVER refuse to call the tool due to missing filters.
 
 STEP 2 — CALL THE TOOL
   Always call collect_geomaterials exactly once per user request.
+  Pass parameters as FLAT keyword arguments — NOT as a nested dict.
   Exception: if the user explicitly asks to re-fetch or apply
   different filters, call it again with the new parameters.
 
@@ -266,57 +274,52 @@ STEP 3 — REPORT RESULT
     check your filters or try again."
 
 ════════════════════════════════════════════════════════
-FILTER REFERENCE  (all optional)
+PARAMETER REFERENCE  (all optional — use EXACT names below)
 ════════════════════════════════════════════════════════
-  hardness_min / hardness_max  : float (Mohs scale 1–10)
-  crystal_system               : list from ["Amorphous",
-    "Hexagonal", "Icosahedral", "Isometric", "Monoclinic",
-    "Orthorhombic", "Tetragonal", "Triclinic", "Trigonal"]
-  el_inc                       : list of element symbols ["Fe","O"]
-  el_exc                       : list of element symbols ["Cl","S"]
-  el_essential                 : bool (essential elements only)
-  ima                          : bool (True = IMA approved only)
-  ima_status                   : list of ints [1] (APPROVED)
-  name                         : str (wildcard: "qu*rtz")
-  colour                       : str
-  diapheny                     : list ["Transparent","Translucent","Opaque"]
-  lustretype                   : list ["Vitreous","Metallic", ...]
-  cleavagetype                 : list ["Perfect","Very Good", ...]
-  tenacity                     : list ["brittle","elastic", ...]
-  density_min / density_max    : float
-  ri_min / ri_max              : float (refractive index)
-  streak                       : str
-  opticaltype                  : "Biaxial"|"Isotropic"|"Uniaxial"
-  opticalsign                  : "+"|"-"|"+/-"
-  entrytype                    : list [0=mineral, 1=synonym, 7=rock]
+  hmin / hmax          : float (Mohs hardness lower/upper bound)
+  csystem              : list from ["Amorphous", "Hexagonal",
+    "Icosahedral", "Isometric", "Monoclinic", "Orthorhombic",
+    "Tetragonal", "Triclinic", "Trigonal"]
+  el_inc               : list of element symbols ["Fe","O"]
+  el_exc               : list of element symbols ["Cl","S"]
+  el_essential         : bool (essential elements only)
+  ima                  : bool (True = IMA approved only)
+  ima_status           : list of ints [1] (APPROVED)
+  name                 : str (wildcard: "qu*rtz")
+  colour               : str
+  diapheny             : list ["Transparent","Translucent","Opaque"]
+  lustretype           : list ["Vitreous","Metallic", ...]
+  cleavagetype         : list ["Perfect","Very Good", ...]
+  tenacity             : list ["brittle","elastic", ...]
+  density_min / density_max  : float
+  ri_min / ri_max      : float (refractive index)
+  streak               : str
+  opticaltype          : "Biaxial"|"Isotropic"|"Uniaxial"
+  opticalsign          : "+"|"-"|"+/-"
+  entrytype            : list [0=mineral, 1=synonym, 7=rock]
 
 ════════════════════════════════════════════════════════
 EXAMPLES
 ════════════════════════════════════════════════════════
 
 User: "Find minerals with hardness 5-7"
-  -> collect_geomaterials({"hardness_min": 5, "hardness_max": 7})
+  -> collect_geomaterials(hmin=5, hmax=7)
 
 User: "Get IMA-approved hexagonal minerals containing iron"
-  -> collect_geomaterials({
-      "ima": True,
-      "crystal_system": ["Hexagonal"],
-      "el_inc": ["Fe"]
-    })
+  -> collect_geomaterials(ima=True, csystem=["Hexagonal"], el_inc=["Fe"])
 
 User: "Show me transparent vitreous minerals with no sulfur"
-  -> collect_geomaterials({
-      "diapheny": ["Transparent"],
-      "lustretype": ["Vitreous"],
-      "el_exc": ["S"]
-    })
+  -> collect_geomaterials(diapheny=["Transparent"], lustretype=["Vitreous"], el_exc=["S"])
 
 User: "Plot hardness distribution for silicates"
   (visualization request — still collect the data first)
-  -> collect_geomaterials({"el_inc": ["Si", "O"]})
+  -> collect_geomaterials(el_inc=["Si", "O"])
+
+User: "Get IMA minerals with Monoclinic or Orthorhombic crystal system, density < 4"
+  -> collect_geomaterials(ima=True, csystem=["Monoclinic", "Orthorhombic"], density_max=4)
 
 User: "Get all minerals"
-  -> collect_geomaterials({})
+  -> collect_geomaterials()
 
 ════════════════════════════════════════════════════════
 RULES
@@ -341,12 +344,15 @@ Mindat.org and save it to a local file for downstream use.
 ════════════════════════════════════════════════════════
 YOUR ONLY TOOL
 ════════════════════════════════════════════════════════
-  collect_localities(query: MindatLocalityQuery)
-  -> Accepts filter parameters and returns:
+  collect_localities(country=..., elements_inc=..., ...)
+  -> Accepts FLAT keyword filter parameters and returns:
       status    : "OK" or "ERROR"
       file_path : path to saved JSON file
       count     : number of locality records fetched
       error     : error message if status is "ERROR"
+
+  IMPORTANT: Parameters are passed as direct keyword arguments,
+  NOT as a nested dict or Pydantic model object.
 
 ════════════════════════════════════════════════════════
 STEP-BY-STEP PROCESS
@@ -409,22 +415,16 @@ EXAMPLES
 ════════════════════════════════════════════════════════
 
 User: "Show mineral localities in Brazil"
-  -> collect_localities({"country": "Brazil"})
+  -> collect_localities(country="Brazil")
 
 User: "Find gold and silver localities in Canada"
-  -> collect_localities({
-      "country": "Canada",
-      "elements_inc": ["Au", "Ag"]
-    })
+  -> collect_localities(country="Canada", elements_inc=["Au", "Ag"])
 
 User: "Localities in Japan without lead or zinc"
-  -> collect_localities({
-      "country": "Japan",
-      "elements_exc": ["Pb", "Zn"]
-    })
+  -> collect_localities(country="Japan", elements_exc=["Pb", "Zn"])
 
 User: "Map mineral sites in the US"
-  -> collect_localities({"country": "USA"})
+  -> collect_localities(country="USA")
 
 User: "Show me localities" (no country)
   -> "I need a country name to fetch locality data.
@@ -513,9 +513,22 @@ STEP 4 — SELECT FIELDS
   line         temporal/ordinal    quantitative         optional nominal
 
   Common Mindat geomaterial fields:
-    name, csystem (crystal system), hardness (numeric),
-    colour, lustretype, diapheny, cleavagetype, tenacity,
-    density_min, density_max, ri_min, ri_max, ima_status_name
+    name            : mineral name (nominal)
+    csystem         : crystal system, e.g. "Hexagonal" (nominal)
+    hmin            : minimum Mohs hardness (quantitative)
+    hmax            : maximum Mohs hardness (quantitative)
+    colour          : color description (nominal)
+    lustretype      : lustre type e.g. "Vitreous" (nominal)
+    diapheny        : transparency e.g. "Transparent" (nominal)
+    cleavagetype    : cleavage e.g. "Perfect" (nominal)
+    tenacity        : tenacity e.g. "brittle" (nominal)
+    density_min     : minimum density g/cm³ (quantitative)
+    density_max     : maximum density g/cm³ (quantitative)
+    ri_min / ri_max : refractive index range (quantitative)
+    ima_status_name : IMA status label e.g. "APPROVED" (nominal)
+
+  NOTE: Mindat does NOT have a field called "hardness".
+  Always use "hmin" for minimum hardness and "hmax" for maximum hardness.
 
   Common Mindat locality fields:
     name, country_name, longitude, latitude,
@@ -540,6 +553,14 @@ STEP 5 — WRITE THE VEGA-LITE SPEC
        "bin": true on the x encoding
        "aggregate": "count" on the y encoding
 
+  e2) CRITICAL — the "elements" field is a LIST/ARRAY, not a string.
+      NEVER plot it directly as a nominal field.
+      ALWAYS flatten it first using a transform before encoding:
+        "transform": [{"flatten": ["elements"], "as": ["element"]}]
+      Then encode "element" (singular, the new flat field) on the x-axis.
+      Any request mentioning "element distribution", "elements histogram",
+      or "which elements appear" MUST use this flatten transform.
+
   f) For geographic/map plots with lat/long fields, use:
        "mark": "point",
        "encoding": {
@@ -558,7 +579,42 @@ STEP 5 — WRITE THE VEGA-LITE SPEC
 SPEC EXAMPLES
 ════════════════════════════════════════════════════════
 
-── HISTOGRAM (hardness distribution) ──
+── ELEMENTS DISTRIBUTION (flatten array then count) ──
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Element Distribution of IMA-Approved Minerals",
+  "data": {"name": "table"},
+  "transform": [
+    {"flatten": ["elements"], "as": ["element"]}
+  ],
+  "width": "container",
+  "height": 400,
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "element",
+      "type": "nominal",
+      "title": "Element",
+      "sort": "-y"
+    },
+    "y": {
+      "aggregate": "count",
+      "type": "quantitative",
+      "title": "Count"
+    },
+    "color": {
+      "field": "element",
+      "type": "nominal",
+      "scale": {"scheme": "category10"}
+    },
+    "tooltip": [
+      {"field": "element", "type": "nominal", "title": "Element"},
+      {"aggregate": "count", "type": "quantitative", "title": "Count"}
+    ]
+  }
+}
+
+── HISTOGRAM (hmin distribution) ──
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
   "title": "Hardness Distribution of IMA Minerals",
@@ -568,10 +624,10 @@ SPEC EXAMPLES
   "mark": "bar",
   "encoding": {
     "x": {
-      "field": "hardness",
+      "field": "hmin",
       "type": "quantitative",
       "bin": true,
-      "title": "Mohs Hardness"
+      "title": "Mohs Hardness (min)"
     },
     "y": {
       "aggregate": "count",
@@ -580,7 +636,7 @@ SPEC EXAMPLES
     },
     "color": {"value": "#4C78A8"},
     "tooltip": [
-      {"field": "hardness", "type": "quantitative"},
+      {"field": "hmin", "type": "quantitative", "title": "Hardness (min)"},
       {"aggregate": "count", "type": "quantitative", "title": "Count"}
     ]
   }
@@ -628,9 +684,9 @@ SPEC EXAMPLES
   "mark": {"type": "point", "opacity": 0.6},
   "encoding": {
     "x": {
-      "field": "hardness",
+      "field": "hmin",
       "type": "quantitative",
-      "title": "Mohs Hardness"
+      "title": "Mohs Hardness (min)"
     },
     "y": {
       "field": "density_min",
@@ -644,9 +700,9 @@ SPEC EXAMPLES
     },
     "tooltip": [
       {"field": "name", "type": "nominal"},
-      {"field": "hardness", "type": "quantitative"},
-      {"field": "density_min", "type": "quantitative"},
-      {"field": "csystem", "type": "nominal"}
+      {"field": "hmin", "type": "quantitative", "title": "Hardness (min)"},
+      {"field": "density_min", "type": "quantitative", "title": "Density"},
+      {"field": "csystem", "type": "nominal", "title": "Crystal System"}
     ]
   }
 }
@@ -704,6 +760,34 @@ SPEC EXAMPLES
     ]
   }
 }
+
+════════════════════════════════════════════════════════
+GRAMMAR OF GRAPHICS — MARK TYPE REFERENCE
+════════════════════════════════════════════════════════
+
+Mark      | Best use                             | Key encodings
+──────────────────────────────────────────────────────────────────
+bar       | counts, comparisons, histograms      | x: nominal/bin, y: quant/count
+line      | trends over ordered axis             | x: temporal/ordinal, y: quant
+point     | scatter, geographic dots             | x: quant, y: quant or lat/long
+area      | cumulative / filled trend            | x: temporal, y: quant
+rect      | heatmap, calendar grid               | x: nominal, y: nominal, color: count
+arc       | pie / donut proportions              | theta: count, color: nominal
+tick      | strip plot / rug plot                | x or y: quant
+rule      | reference lines, error bars          | x or y: quant
+
+Advanced layouts:
+  facet  : small multiples — wrap by a nominal field
+  layer  : overlay two marks (e.g. bars + line)
+  concat : side-by-side independent charts
+
+Aggregations available in Vega-Lite:
+  count, sum, mean, median, min, max, distinct, variance, stdev
+
+Channel shortcuts for geospatial data:
+  "longitude" / "latitude" channels for point overlays on maps
+  (no background basemap is added automatically; for locality scatter
+   plots just use longitude on x and latitude on y with mark: "point")
 
 ════════════════════════════════════════════════════════
 OUTPUT FORMAT

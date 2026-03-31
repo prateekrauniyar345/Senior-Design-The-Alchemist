@@ -53,46 +53,33 @@ async def chat_with_agent(request: AgentQueryRequest):
         if not messages:
             raise HTTPException(status_code=500, detail="No messages returned from agent workflow")
 
-        # --- IMPROVED MESSAGE EXTRACTION ---
-        final_message = "Task completed successfully!"
-        
-        # Iterate backwards to find the last substantial message that isn't just supervisor routing
-        found_substantial = False
-        for msg in reversed(messages):
-            content = getattr(msg, "content", "").strip()
-            
-            # Skip empty messages or generic supervisor/finish messages
-            if not content or "Supervisor routing to" in content or "Workflow completed successfully!" in content:
-                continue
-            
-            # Extract content from structured tool response string
-            # Format: Returning structured response: agent='...' message='...' ...
-            if "Returning structured response:" in content:
-                # Attempt to extract the 'message' parameter value using regex
-                # We use a non-greedy match to grab the content of the message field specifically
-                match = re.search(r"message=['\"](.*?)['\"](?= status=|$| error=)", content)
-                if match:
-                    final_message = match.group(1)
-                    found_substantial = True
-                    break
-            
-            # Fallback for standard AI or Human messages that aren't supervisor routine
-            if content:
-                final_message = content
-                found_substantial = True
-                break
-
-        if not found_substantial:
-            # Check if there's any AIMessage content we missed
-            for msg in reversed(messages):
-                if hasattr(msg, "type") and msg.type == "ai" and msg.content.strip():
-                     final_message = msg.content.strip()
-                     break
-
         sample_data_path: Optional[str] = result.get("sample_data_path")
-
-        # Vega outputs
         vega_spec: Optional[Dict[str, Any]] = result.get("vega_spec")
+
+        # --- MESSAGE EXTRACTION ---
+        # Determine a clean human-readable message based on what was produced
+        if vega_spec:
+            # Chart was generated — extract title from spec for a clean message
+            chart_title = vega_spec.get("title", "visualization")
+            final_message = f"Here is your {chart_title}."
+        elif sample_data_path:
+            # Data was collected but no chart requested
+            final_message = "Here is the data you requested."
+        else:
+            # General agent or fallback — find last meaningful message
+            final_message = "Task completed successfully!"
+            for msg in reversed(messages):
+                content = getattr(msg, "content", "").strip()
+                if not content or "Supervisor routing to" in content or "Workflow completed successfully!" in content:
+                    continue
+                if "Returning structured response:" in content:
+                    match = re.search(r"message=['\"](.*?)['\"](?= status=|$| error=)", content)
+                    if match:
+                        final_message = match.group(1)
+                        break
+                    continue  # skip raw structured dumps
+                final_message = content
+                break
 
         # Read first 100 rows from saved JSON file for frontend preview
 

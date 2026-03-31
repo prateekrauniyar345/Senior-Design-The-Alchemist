@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { IconUser } from './IconComponents.jsx';
 import { Download, Mail, FileImage, FileText } from 'lucide-react';
 import DataTable from './DataTable.jsx';
+import VegaChart from './VegaChart.jsx';
 
 // --- Component: MessageBubble ---
 const MessageBubble = React.memo(({ message }) => {
-  const { sender, text, timestamp, image, sampleData } = message;
+  const { sender, text, timestamp, image, sampleData, chartSpec, chartData } = message;
   const isUser = sender === 'user';
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
@@ -156,10 +157,17 @@ const MessageBubble = React.memo(({ message }) => {
             )}
           </div>
 
-          {/* Data Table - Outside padding */}
-          {sampleData && sampleData.length > 0 && (
+          {/* Data Table — only when no chart is present */}
+          {sampleData && sampleData.length > 0 && !chartSpec && (
             <div style={{ width: '100%', marginTop: '8px' }}>
               <DataTable data={sampleData} />
+            </div>
+          )}
+
+          {/* Vega-Lite Chart */}
+          {chartSpec && (
+            <div style={{ width: '100%' }}>
+              <VegaChart spec={chartSpec} data={sampleData || chartData} />
             </div>
           )}
 

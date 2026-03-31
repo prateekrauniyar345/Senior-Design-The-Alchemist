@@ -1,7 +1,6 @@
 # Backend/app/tools/locality.py
 import json
-from pathlib import Path
-from typing import Union, Dict, Any
+from typing import Optional, List
 
 from app.models import MindatLocalityQuery
 from app.services.mindat_endpoints_services import get_locality_api
@@ -9,25 +8,51 @@ from app.utils import to_params, CONTENTS_DIR
 from app.models import LocalityToolResponse
 
 
-def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
+def collect_localities(
+    country: Optional[str] = None,
+    description: Optional[str] = None,
+    elements_inc: Optional[List[str]] = None,
+    elements_exc: Optional[List[str]] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> LocalityToolResponse:
     """
-    Query Mindat /v1/localities using a structured filter.
-    
-    Use this when the user asks to find localities by properties 
-    (e.g., country, region, associated minerals, geological setting).
+    Query Mindat /v1/localities using individual filter parameters.
+    Use this when the user asks to find mineral localities by country or elements.
+
+    A country name is required for useful results.
+
+    Parameters
+    ----------
+    country       : full English country name, e.g. "Brazil", "Japan", "USA"
+    description   : locality description contains this string
+    elements_inc  : elements that MUST be present at the locality, e.g. ["Au","Ag"]
+    elements_exc  : elements that must NOT be present, e.g. ["Pb","Zn"]
+    limit         : max records to return (default 100)
+    offset        : pagination offset (default 0)
     """
     try:
+        if not country:
+            return LocalityToolResponse(
+                status="ERROR",
+                error="A country name is required to fetch locality data.",
+                file_path="",
+            )
+
+        query = MindatLocalityQuery(
+            country=country,
+            description=description,
+            elements_inc=elements_inc,
+            elements_exc=elements_exc,
+            limit=limit,
+            offset=offset,
+        )
+
         print(f"Locality Tool called with: {query}")
-
-        # Ensure limit is set to 100 to get maximum results
-        if query.limit is None or query.limit < 100:
-            query.limit = 100
-
         query_dict = to_params(query)
         locality_api = get_locality_api()
         response = locality_api.search_localities(query_dict)
 
-        # 1. Handle API Failure or Empty Results
         if not isinstance(response, dict) or not response.get("results"):
             return LocalityToolResponse(
                 status="ERROR",
@@ -35,16 +60,13 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
                 file_path="",
             )
 
-        # 2. Save logic
         sample_dir = CONTENTS_DIR / "sample_data"
         sample_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = sample_dir / "mindat_locality_response.json"
 
         with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(response, f, indent=4, ensure_ascii=False)
-            
 
-        # 3. Successful Return
         return LocalityToolResponse(
             status="OK",
             error=None,

@@ -84,13 +84,14 @@ registry = AgentRegistry(factory)
 
 # Global variables - will be initialized lazily
 mcp_tools = None
+_agents_initialized = False
 
 async def initialize_agents():
     """Initialize all agents using the Registry."""
-    global mcp_tools
-    
-    if mcp_tools is not None:
-        return 
+    global mcp_tools, _agents_initialized
+
+    if _agents_initialized:
+        return
     
     mcp_tools = await get_mcp_tools()
     print(f"MCP tools loaded: {[tool.name for tool in mcp_tools]}")
@@ -114,11 +115,11 @@ async def initialize_agents():
             registry.register(
                 name=name,
                 tools=mcp_tools,
-                system_prompt=prompt, 
-                response_format  = agent_response_format.get(name)  # Pass the specific response format for this agent
+                system_prompt=prompt,
+                response_format  = agent_response_format.get(name)
             )
-        # print all the agents in the registry to verify
         print(f"Registered agents: {registry.list_agents()}")
+        _agents_initialized = True
     except Exception as e:
         print(f"Error initializing agents: {e}")
         traceback.print_exc()
