@@ -19,7 +19,8 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> GeomaterialToolRespon
         # Ensure limit is set to 100 to get maximum results
         if query.limit is None or query.limit < 100:
             query.limit = 100
-        
+        # if query.page_size is None or query.page_size<100:
+        #     query.page_size =100
         query_dict = to_params(query)
         print("the query dict for fetching the data is : ", query_dict)
         geomaterial_api = get_geomaterial_api()

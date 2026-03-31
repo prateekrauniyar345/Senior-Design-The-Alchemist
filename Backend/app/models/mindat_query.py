@@ -117,12 +117,12 @@ class MindatGeoMaterialQuery(BaseModel):
     # We maintain this structure but use descriptive Pydantic names with aliases.
     hardness_max: Optional[float] = Field(
         None, 
-        alias="hmin", 
+        alias="hmax", 
         description="Mohs hardness to (hmin<=) - corresponds to API's hmin parameter."
     ) 
     hardness_min: Optional[float] = Field(
         None, 
-        alias="hmax", 
+        alias="hmin", 
         description="Mohs hardness from (hmax>=) - corresponds to API's hmax parameter."
     )
     
