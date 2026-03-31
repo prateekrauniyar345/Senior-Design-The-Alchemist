@@ -1,75 +1,114 @@
 // src/services/chatService.js
 
-/**
- * Chat service for handling LLM API interactions
- */
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
+async function parseResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  let data;
+  if (contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof data === "string"
+        ? data
+        : data?.detail || data?.message || "An unknown error occurred.";
+    throw new Error(message);
+  }
+
+  return data;
+}
+
 const chatService = {
-    /**
- * Get response from the backend agent.
- * @param {string} userMessage - The user's message.
- * @returns {Promise<object>} The full response object from the backend agent, including message and plot_file_path.
- */
-async getLLMResponse(userMessage) {
-  try {
-    const response = await fetch('/api/agent/chat', {
-      method: 'POST',
+  async getLLMResponse(userMessage) {
+    const response = await fetch(`${API_BASE}/api/agent/chat`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ query: userMessage }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'An unknown error occurred.' }));
-      throw new Error(errorData.detail || `HTTP error! Status: ${response.status}`);
-    }
+    return parseResponse(response);
+  },
 
-    const data = await response.json();
-    return data;
+  async createSession(title = "New conversation") {
+    const response = await fetch(`${API_BASE}/api/chat/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ title }),
+    });
+    return parseResponse(response);
+  },
 
-  } catch (error) {
-    console.error('Error in getLLMResponse:', error);
-    throw error; // Re-throw to be handled by the component
-  }
-},
-  
-/**
- * Optional: Stream response from LLM API
- * @param {string} userMessage - The user's message
- * @param {Function} onChunk - Callback for each chunk of data
- * @returns {Promise<void>}
- */
-async streamLLMResponse(userMessage, onChunk) {
-  try {
-      // TODO: Implement streaming API call
-      // Example with fetch streaming:
-      // const response = await fetch('YOUR_STREAMING_ENDPOINT', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ message: userMessage })
-      // });
-      
-      // const reader = response.body.getReader();
-      // const decoder = new TextDecoder();
-      
-      // while (true) {
-      //   const { done, value } = await reader.read();
-      //   if (done) break;
-      //   const chunk = decoder.decode(value);
-      //   onChunk(chunk);
-      // }
-      
-      // Simulated streaming for now
-      const fullResponse = `Streamed response to: "${userMessage}"`;
-      for (let i = 0; i < fullResponse.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        onChunk(fullResponse.slice(0, i + 1));
+  async listSessions() {
+    const response = await fetch(`${API_BASE}/api/chat/sessions`, {
+      method: "GET",
+      credentials: "include",
+    });
+    return parseResponse(response);
+  },
+
+  async getSession(sessionId) {
+    const response = await fetch(`${API_BASE}/api/chat/sessions/${sessionId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+    return parseResponse(response);
+  },
+
+  async createMessage(sessionId, payload) {
+    const response = await fetch(
+      `${API_BASE}/api/chat/sessions/${sessionId}/messages`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
       }
-    } catch (error) {
-        console.error('Error in streamLLMResponse:', error);
-        throw error;
-      }
-    }
-  };
-  
-  export default chatService;
+    );
+    return parseResponse(response);
+  },
+
+  async renameSession(sessionId, title) {
+    const response = await fetch(`${API_BASE}/api/chat/sessions/${sessionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ title }),
+    });
+    return parseResponse(response);
+  },
+
+  async deleteSession(sessionId) {
+    const response = await fetch(`${API_BASE}/api/chat/sessions/${sessionId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    return parseResponse(response);
+  },
+
+  createChat(title) {
+    return this.createSession(title);
+  },
+  listChats() {
+    return this.listSessions();
+  },
+  getChat(id) {
+    return this.getSession(id);
+  },
+  renameChat(id, title) {
+    return this.renameSession(id, title);
+  },
+  deleteChat(id) {
+    return this.deleteSession(id);
+  },
+};
+
+export default chatService;

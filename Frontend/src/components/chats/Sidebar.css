@@ -106,4 +106,17 @@
   border-radius: 16px;
 }
 
+.chat-list-btn-active {
+  background-color: #2b2c33 !important;
+}
+
+.chat-list-item-wrapper {
+  border-radius: 16px;
+}
+
+.chat-list-delete-btn {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+}
 

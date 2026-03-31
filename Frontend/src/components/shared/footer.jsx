@@ -17,8 +17,8 @@ export default function Footer() {
                 <Col md={3}>
                     <h4 className="text-white mb-3 fs-5">Product</h4>
                     <Nav className="flex-column">
-                        <Nav.Link href="/dashboard" className="text-secondary px-0 py-2 fs-5">Dashboard</Nav.Link>
-                        <Nav.Link href="/chat" className="text-secondary px-0 py-2 fs-5">Query Agents</Nav.Link>
+                        <Nav.Link as={Link} to="/" className="text-secondary px-0 py-2 fs-5">Dashboard</Nav.Link>
+                        <Nav.Link as={Link} to="/chat" className="text-secondary px-0 py-2 fs-5">Query Agents</Nav.Link>
                         <Nav.Link href="#" className="text-secondary px-0 py-2 fs-5">API Docs</Nav.Link>
                     </Nav>
                 </Col>

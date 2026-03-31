@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from Backend.routers.chat import router as chat_router
 
 from Backend.routers import( 
     default_router,
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     app.include_router(mindat_router, prefix="/api")
     app.include_router(agent_router, prefix="/api")
     app.include_router(plots_router, prefix="/api")  
+    app.include_router(chat_router, prefix="/api")
     
     # Exception handlers
     @app.exception_handler(MindatAPIException)

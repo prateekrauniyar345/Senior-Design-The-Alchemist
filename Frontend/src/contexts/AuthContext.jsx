@@ -52,19 +52,49 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
-  // On first mount only: mark boot complete. Do NOT set user=null or call logout.
-  // User is set only after explicit login or OAuth callback. Navigation must not reset auth.
+  // Bootstrap auth on app load: restore user from session cookie via /me.
+  // Keeps booting=true until the request completes so ProtectedRoute does not redirect prematurely.
   useEffect(() => {
-    setBooting(false);
+    let cancelled = false;
+
+    async function bootstrap() {
+      try {
+        const res = await fetch(`${API}/api/auth/me`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (cancelled) return;
+        const data = await parseJsonOrText(res);
+        setUser(data.user);
+      } catch {
+        // 401 or network error: no valid session, leave user null
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setBooting(false);
+      }
+    }
+
+    bootstrap();
+    return () => { cancelled = true; };
   }, []);
 
   function setUserFromOAuth(userPayload) {
-    setUser(userPayload ? { id: userPayload.id, email: userPayload.email } : null);
+    if (!userPayload) {
+      setUser(null);
+      return;
+    }
+    const meta = userPayload.user_metadata || {};
+    const name = (meta.name || meta.full_name || "").trim();
+    setUser({ id: userPayload.id, email: userPayload.email, name });
+  }
+
+  function updateUser(partial) {
+    setUser((prev) => (prev ? { ...prev, ...partial } : null));
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, booting, login, register, logout, refreshMe, setUserFromOAuth }}
+      value={{ user, booting, login, register, logout, refreshMe, setUserFromOAuth, updateUser }}
     >
       {children}
     </AuthContext.Provider>

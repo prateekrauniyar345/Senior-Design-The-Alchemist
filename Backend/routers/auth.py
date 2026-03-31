@@ -18,8 +18,20 @@ print("LOADING AUTH ROUTER FROM:", __file__)
 
 
 # Initialize Supabase client using project credentials
-# This connects your backend to Supabase Auth service
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
+
+# Admin client for profile updates (requires SUPABASE_SERVICE_ROLE_KEY)
+supabase_admin: Client | None = None
+if settings.supabase_service_role_key:
+    supabase_admin = create_client(settings.supabase_url, settings.supabase_service_role_key)
+
+
+def _get_display_name(user) -> str:
+    """Extract display name from Supabase user metadata. Uses 'name' or 'full_name'."""
+    meta = getattr(user, "user_metadata", None) or {}
+    if isinstance(meta, dict):
+        return (meta.get("name") or meta.get("full_name") or "").strip() or ""
+    return ""
 
 
 # Cookie names used to store JWT tokens
@@ -113,11 +125,12 @@ def login(req: LoginRequest, response: Response):
         # Store tokens in secure HTTP-only cookies
         set_auth_cookies(response, auth.session.access_token, auth.session.refresh_token)
 
-        # Return basic user info (never return tokens in body)
+        name = _get_display_name(auth.user)
         return {
             "user": {
                 "id": auth.user.id,
-                "email": auth.user.email
+                "email": auth.user.email,
+                "name": name,
             }
         }
 
@@ -187,8 +200,71 @@ def me(request: Request):
         if not user:
             raise HTTPException(status_code=401, detail="Not authenticated (invalid token)")
 
-        return {"user": {"id": user.id, "email": user.email}}
+        name = _get_display_name(user)
+        return {"user": {"id": user.id, "email": user.email, "name": name}}
 
     except Exception as e:
         # IMPORTANT: return the real error so frontend shows it
         raise HTTPException(status_code=401, detail=f"/me failed: {str(e)}")
+
+
+# Profile update request
+class ProfileUpdateRequest(BaseModel):
+    name: str
+
+
+def _get_user_from_request(request: Request):
+    """Extract authenticated user from request cookies. Raises 401 if not authenticated."""
+    access_token = request.cookies.get(COOKIE_ACCESS)
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated (no cookie)")
+    res = supabase.auth.get_user(access_token)
+    user = getattr(res, "user", None) or (res if isinstance(res, dict) else {}).get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated (invalid token)")
+    return user
+
+
+@router.get("/profile")
+def get_profile(request: Request):
+    """
+    Get current user profile (id, email, name).
+    Same shape as /me; useful for refreshing profile in modals.
+    """
+    user = _get_user_from_request(request)
+    name = _get_display_name(user)
+    return {
+        "id": user.id,
+        "email": user.email or "",
+        "name": name,
+    }
+
+
+@router.patch("/profile")
+def update_profile(req: ProfileUpdateRequest, request: Request):
+    """
+    Update user display name in Supabase user_metadata.
+    Requires SUPABASE_SERVICE_ROLE_KEY to be set in env.
+    """
+    if not supabase_admin:
+        raise HTTPException(
+            status_code=503,
+            detail="Profile updates are not configured. Set SUPABASE_SERVICE_ROLE_KEY.",
+        )
+    user = _get_user_from_request(request)
+    new_name = (req.name or "").strip()
+    meta = getattr(user, "user_metadata", None) or {}
+    if not isinstance(meta, dict):
+        meta = {}
+    meta = dict(meta)
+    meta["name"] = new_name
+    try:
+        updated = supabase_admin.auth.admin.update_user_by_id(
+            user.id,
+            {"user_metadata": meta},
+        )
+        u = getattr(updated, "user", None) or (updated if isinstance(updated, dict) else {}).get("user")
+        name = _get_display_name(u) if u else (req.name or "").strip()
+        return {"id": user.id, "email": user.email or "", "name": name}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

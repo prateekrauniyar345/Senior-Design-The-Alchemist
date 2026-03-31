@@ -1,22 +1,22 @@
 import React, { useState } from "react";
-import { Plus, User, Settings, X, Menu } from "lucide-react";
+import { Plus, User, Settings, X, Menu, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import SettingsModal from "./SettingsModal";
 import "./Sidebar.css";
 
 const Sidebar = ({
+  chats = [],
+  currentChatId = null,
+  onSelectChat = () => {},
+  onDeleteChat = () => {},
   onStartNewChat = () => {},
   onToggleSidebar = () => {},
   isOpen = true,
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const chatList = [
-    { id: 1, title: "Project brainstorm" },
-    { id: 2, title: "Math help session" },
-    { id: 3, title: "Code review notes" },
-  ];
+  const [hoveredId, setHoveredId] = useState(null);
 
   return (
     <aside
@@ -33,14 +33,13 @@ const Sidebar = ({
                 src="/images/the-alchemist.png"
                 alt="The Alchemist logo"
                 className="rounded object-fit-cover p-1"
-                style={{ height: '3rem', width: '3rem', backgroundColor: 'rgba(0,0,0,0.2)' }}
-                // loading="lazy"
+                style={{ height: "3rem", width: "3rem", backgroundColor: "rgba(0,0,0,0.2)" }}
               />
-              <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+              <div className="d-flex flex-column" style={{ lineHeight: "1.2" }}>
                 <span className="text-uppercase fw-semibold fs-6 sidebar-logo-text">
                   The Alchemist
                 </span>
-                <span className="">AI Research Crew</span>
+                <span>AI Research Crew</span>
               </div>
             </div>
             <button
@@ -68,14 +67,41 @@ const Sidebar = ({
           {/* Chat List */}
           <nav className="flex-fill overflow-auto p-4">
             <div className="d-flex flex-column gap-2">
-              {chatList.map((chat) => (
-                <button
-                  key={chat.id}
-                  className="btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
-                >
-                  {chat.title}
-                </button>
-              ))}
+              {chats.length === 0 ? (
+                <div className="text-secondary small">No chats yet</div>
+              ) : (
+                chats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className="d-flex align-items-center gap-1 chat-list-item-wrapper"
+                    onMouseEnter={() => setHoveredId(chat.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                  >
+                    <button
+                      type="button"
+                      className={`btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4 flex-grow-1 ${
+                        currentChatId === chat.id ? "chat-list-btn-active" : ""
+                      }`}
+                      onClick={() => onSelectChat(chat.id)}
+                    >
+                      {chat.title || "New conversation"}
+                    </button>
+                    {hoveredId === chat.id && (
+                      <button
+                        type="button"
+                        className="btn btn-sm p-1 text-danger opacity-75 chat-list-delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm("Delete this chat?")) onDeleteChat(chat.id);
+                        }}
+                        aria-label="Delete chat"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </nav>
 
@@ -110,7 +136,6 @@ const Sidebar = ({
       ) : (
         /* Mini Sidebar - Collapsed State */
         <div className="d-flex flex-column align-items-center py-4 gap-4 h-100">
-          {/* Menu toggle button */}
           <button
             type="button"
             onClick={() => onToggleSidebar(true)}
@@ -121,7 +146,6 @@ const Sidebar = ({
             <Menu size={20} />
           </button>
 
-          {/* Logo */}
           <button
             type="button"
             onClick={() => onToggleSidebar(true)}
@@ -133,28 +157,27 @@ const Sidebar = ({
               src="/images/the-alchemist.png"
               alt="The Alchemist logo"
               className="rounded-4 object-fit-cover p-1"
-              style={{ 
-                height: '2.5rem', 
-                width: '2.5rem', 
-                backgroundColor: 'rgba(0,0,0,0.2)',
-                cursor: 'pointer'
+              style={{
+                height: "2.5rem",
+                width: "2.5rem",
+                backgroundColor: "rgba(0,0,0,0.2)",
+                cursor: "pointer",
               }}
               loading="lazy"
             />
           </button>
 
-          {/* New Chat button - just icon */}
           <button
             className="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center rounded-4 p-2"
             onClick={onStartNewChat}
             type="button"
             aria-label="New chat"
             title="New chat"
-            style={{ 
-              width: '44px', 
-              height: '44px',
-              backgroundColor: '#2a2c34',
-              borderColor: 'transparent'
+            style={{
+              width: "44px",
+              height: "44px",
+              backgroundColor: "#2a2c34",
+              borderColor: "transparent",
             }}
           >
             <Plus size={20} />
@@ -162,7 +185,6 @@ const Sidebar = ({
         </div>
       )}
 
-      {/* Modals */}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </aside>

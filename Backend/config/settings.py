@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     # Supabase
     supabase_url: str = Field(..., validation_alias="SUPABASE_URL")
     supabase_key: str = Field(..., validation_alias="SUPABASE_KEY")
+    supabase_service_role_key: str | None = Field(None, validation_alias="SUPABASE_SERVICE_ROLE_KEY")
     database_url: str = Field(..., validation_alias="DATABASE_URL")
 
     # Application

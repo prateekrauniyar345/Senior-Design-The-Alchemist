@@ -1,43 +1,79 @@
-import React, { useState } from 'react';
-import { X, Upload, User as UserIcon } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import './ProfileModal.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { X, Upload, User as UserIcon } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { parseJsonOrText } from "../../utils/http";
+import "./ProfileModal.css";
+
+const API = import.meta.env.VITE_API_URL;
 
 const ProfileModal = ({ isOpen, onClose }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshMe, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-  });
+  const [formData, setFormData] = useState({ name: "", email: "" });
   const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: null, text: "" });
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/auth/profile`, { credentials: "include" });
+      const data = await parseJsonOrText(res);
+      setFormData({ name: data.name || "", email: data.email || "" });
+    } catch (err) {
+      setFormData({ name: user?.name || "", email: user?.email || "" });
+    }
+  }, [user?.name, user?.email]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMessage({ type: null, text: "" });
+      if (user?.email) {
+        setFormData({ name: user.name || "", email: user.email || "" });
+        fetchProfile();
+      }
+    }
+  }, [isOpen, user?.email, fetchProfile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
+      reader.onloadend = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = () => {
-    // TODO: Implement save logic later
-    console.log('Saving profile:', formData);
-    onClose();
+  const handleSave = async () => {
+    setLoading(true);
+    setMessage({ type: null, text: "" });
+    try {
+      const res = await fetch(`${API}/api/auth/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: formData.name.trim() }),
+      });
+      const data = await parseJsonOrText(res);
+      updateUser({ name: data.name });
+      setFormData((prev) => ({ ...prev, name: data.name }));
+      setMessage({ type: "success", text: "Profile updated successfully." });
+      await refreshMe();
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to update profile." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate("/");
   };
 
   if (!isOpen) return null;
@@ -77,10 +113,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 className="d-none"
               />
               {previewImage && (
-                <button 
-                  className="remove-btn"
-                  onClick={() => setPreviewImage(null)}
-                >
+                <button className="remove-btn" onClick={() => setPreviewImage(null)}>
                   Remove
                 </button>
               )}
@@ -89,6 +122,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
           {/* Form Fields */}
           <div className="profile-form">
+            {message.text && (
+              <div className={`profile-message profile-message-${message.type}`}>
+                {message.text}
+              </div>
+            )}
             <div className="form-group">
               <label htmlFor="name">Name</label>
               <input
@@ -109,8 +147,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 name="email"
                 type="email"
                 value={formData.email}
-                onChange={handleChange}
-                className="form-control"
+                readOnly
+                className="form-control form-control-readonly"
                 placeholder="Enter your email"
               />
             </div>
@@ -122,11 +160,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
             Logout
           </button>
           <div className="action-buttons">
-            <button className="cancel-btn" onClick={onClose}>
+            <button className="cancel-btn" onClick={onClose} disabled={loading}>
               Cancel
             </button>
-            <button className="save-btn" onClick={handleSave}>
-              Save Changes
+            <button className="save-btn" onClick={handleSave} disabled={loading}>
+              {loading ? "Saving…" : "Save Changes"}
             </button>
           </div>
         </div>

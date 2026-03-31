@@ -1,7 +1,7 @@
 import { Navbar, Nav, Button, Dropdown } from "react-bootstrap";
 import { LogIn, UserPlus, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -14,15 +14,15 @@ export default function Header() {
 
   return(
       <Navbar variant="dark" expand="lg" className="py-3">
-        <Navbar.Brand href="/" className="d-flex align-items-center text-white">
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center text-white">
             <span className="fw-bold" style={{ fontSize: '2.1rem' }}>The Alchemist</span>
         </Navbar.Brand>
         
         <Navbar.Toggle aria-controls="nav" />
         <Navbar.Collapse id="nav">
             <Nav className="ms-auto me-3 d-none d-lg-flex fs-4">
-                <Nav.Link href="/" className="text-white px-3">Dashboard</Nav.Link>
-                <Nav.Link href="/chat" className="text-secondary px-3">Chat</Nav.Link>
+                <Nav.Link as={Link} to="/" className="text-white px-3">Dashboard</Nav.Link>
+                <Nav.Link as={Link} to="/chat" className="text-secondary px-3">Chat</Nav.Link>
                 <Nav.Link href="/docs" className="text-secondary px-3">Docs</Nav.Link>
             </Nav>
             
@@ -44,14 +44,14 @@ export default function Header() {
               ) : (
                 // Show login/signup buttons when not logged in
                 <>
-                  <Nav.Link href="/signin" className="text-white px-3">
+                  <Nav.Link as={Link} to="/signin" className="text-white px-3">
                       <Button variant="link" className="text-white text-decoration-none p-0 d-flex align-items-center fs-5">
                           <LogIn size={22} className="me-2" />
                           <span>Sign In</span>
                       </Button>
                   </Nav.Link>
 
-                  <Nav.Link href="/signup" className="text-white px-3">
+                  <Nav.Link as={Link} to="/signup" className="text-white px-3">
                     <Button 
                         variant="outline-light" 
                         size="lg"
