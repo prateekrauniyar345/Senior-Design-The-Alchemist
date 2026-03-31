@@ -16,9 +16,15 @@ def collect_geomaterials(query: MindatGeoMaterialQuery) -> GeomaterialToolRespon
     (e.g., crystal system, hardness range, transparency, composition).
     """
     try:
+        # Ensure limit is set to 100 to get maximum results
+        if query.limit is None or query.limit < 100:
+            query.limit = 100
+        
         query_dict = to_params(query)
+        print("the query dict for fetching the data is : ", query_dict)
         geomaterial_api = get_geomaterial_api()
         response = geomaterial_api.search_geomaterials_minerals(query_dict)
+
 
         # Handle Empty or Invalid API Response
         if not isinstance(response, dict) or not response.get("results"):

@@ -19,6 +19,10 @@ def collect_localities(query: MindatLocalityQuery) -> LocalityToolResponse:
     try:
         print(f"Locality Tool called with: {query}")
 
+        # Ensure limit is set to 100 to get maximum results
+        if query.limit is None or query.limit < 100:
+            query.limit = 100
+
         query_dict = to_params(query)
         locality_api = get_locality_api()
         response = locality_api.search_localities(query_dict)
