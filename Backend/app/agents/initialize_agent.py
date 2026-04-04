@@ -1,8 +1,8 @@
+# Backend/app/agents/initialize_agent.py
 #################################################
 # define the Agents for the multi-agent system
 # And define the graph structure
 #################################################
-import asyncio
 import os
 from langchain_mcp_adapters.client import MultiServerMCPClient
 # from langchain.agents import create_agent
@@ -10,7 +10,6 @@ from app.agents.base_agent import AgentFactory, AgentRegistry
 from app.agents.initialize_llm import initialize_llm
 from langsmith import traceable
 from pydantic import BaseModel, Field
-from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import StateGraph, MessagesState, START, END
@@ -20,11 +19,8 @@ from app.utils.custom_prompts import (
     system_prompt,
     general_agent_prompt,
     geomaterial_collector_prompt, 
-    histogram_plotter_prompt,
     locality_collector_prompt,
-    network_plotter_prompt,
-    heatmap_plotter_prompt, 
-    vega_plot_planner_prompt
+    vega_plot_generator_prompt
 )
 from typing_extensions import  Annotated
 from typing import List, Dict, Any, TypedDict, Union, Optional, Literal
@@ -32,8 +28,7 @@ from IPython.display import Image, display
 import traceback
 from app.models.agent_models import (
     CollectorAgentOutput,
-    PlotterAgentOutput,
-    VegaAgentOutput, 
+    VegaAgentOutput,
     GeneralAgentOutput
 )
 from pathlib import Path
@@ -89,13 +84,14 @@ registry = AgentRegistry(factory)
 
 # Global variables - will be initialized lazily
 mcp_tools = None
+_agents_initialized = False
 
 async def initialize_agents():
     """Initialize all agents using the Registry."""
-    global mcp_tools
-    
-    if mcp_tools is not None:
-        return 
+    global mcp_tools, _agents_initialized
+
+    if _agents_initialized:
+        return
     
     mcp_tools = await get_mcp_tools()
     print(f"MCP tools loaded: {[tool.name for tool in mcp_tools]}")
@@ -105,19 +101,13 @@ async def initialize_agents():
         ("general_agent", general_agent_prompt),
         ("geomaterial_collector", geomaterial_collector_prompt),
         ("locality_collector", locality_collector_prompt),
-        ("histogram_plotter", histogram_plotter_prompt),
-        ("network_plotter", network_plotter_prompt),
-        ("heatmap_plotter", heatmap_plotter_prompt),
-        ("vega_plot_planner", vega_plot_planner_prompt),
+        ("vega_plot_generator", vega_plot_generator_prompt),
     ]
     agent_response_format = {
         "general_agent": GeneralAgentOutput,
         "geomaterial_collector": CollectorAgentOutput,
         "locality_collector": CollectorAgentOutput,
-        "histogram_plotter": PlotterAgentOutput,
-        "network_plotter": PlotterAgentOutput,
-        "heatmap_plotter": PlotterAgentOutput,
-        "vega_plot_planner": VegaAgentOutput,
+        "vega_plot_generator": VegaAgentOutput,
     }
 
     try:
@@ -125,15 +115,16 @@ async def initialize_agents():
             registry.register(
                 name=name,
                 tools=mcp_tools,
-                system_prompt=prompt, 
-                response_format  = agent_response_format.get(name)  # Pass the specific response format for this agent
+                system_prompt=prompt,
+                response_format  = agent_response_format.get(name)
             )
+        print(f"Registered agents: {registry.list_agents()}")
+        _agents_initialized = True
     except Exception as e:
         print(f"Error initializing agents: {e}")
         traceback.print_exc()
     
-    # print all the agents in the registry to verify
-    print(f"Registered agents: {registry.list_agents()}")
+    
 
 # ----------------------------------------------
 # Define the Graph Structure
@@ -146,10 +137,7 @@ class ControllerDecision(BaseModel):
                 "general_agent",
                 "geomaterial_collector", 
                 "locality_collector", 
-                "histogram_plotter", 
-                "network_plotter", 
-                "heatmap_plotter", 
-                "vega_plot_planner", 
+                "vega_plot_generator", 
                 "FINISH"] = Field(
                             ...,
                             description="Either 'FINISH' to end or the name of the agent to handle the query."
@@ -168,9 +156,6 @@ class State(TypedDict):
     # sample_data path
     sample_data_path: Optional[str] = None
 
-    # plot payloads
-    plot_file_path: Optional[str] = None
-
     # chart payloads
     vega_spec: Optional[Dict[str, Any]] = None
     profile: Optional[Dict[str, Any]] = None 
@@ -184,7 +169,9 @@ async def supervisor_node(state: State) -> dict:
     # Dynamically get the list of agents from your Registry
     # This will return ['geomaterial_collector', 'locality_collector', ...]
     registered_agents = registry.list_agents()
+    print(f"all the registered agents are : ", registered_agents)
     options = registered_agents + ["FINISH"]
+    print("all the Supervisor options: ", options)
     
     # Set up the structured output model
     decision_model = factory.llm.with_structured_output(ControllerDecision)
@@ -272,104 +259,12 @@ async def locality_collector_node(state: State) -> dict:  # Now async!
         raise
 
 
-@traceable(run_type="chain", name="histogram_plotter_agent")
-async def histogram_plotter_node(state: State) -> dict:  # Now async!
-    """Wrapper calls MCP-enabled agent."""
-    agent = registry.get("histogram_plotter")
+
+@traceable(run_type="chain", name="vega_plot_generator_agent")
+async def vega_plot_generator_node(state: State) -> dict:
+    agent = registry.get("vega_plot_generator")
     if agent is None:
-        raise Exception("Histogram Plotter agent not found in registry")
-    try:
-        result = await agent.ainvoke(state)  # ainvoke!
-
-        updates: dict = {
-            "messages": result["messages"],
-            "next": "supervisor",
-        }
-
-        structured: PlotterAgentOutput | None = result.get("structured_response") or None
-        if structured and structured.status == "OK":
-            updates["plot_file_path"] = structured.file_path
-
-        return updates
-    except Exception as e:
-        print(f"[ERROR] histogram_plotter_node failed: {e}")
-        traceback.print_exc()
-        raise
-
-
-@traceable(run_type="chain", name="network_plotter_agent")
-async def network_plotter_node(state: State) -> dict:  # Now async!
-    """Wrapper calls MCP-enabled agent."""
-    agent = registry.get("network_plotter")
-    if agent is None:
-        raise Exception("Network Plotter agent not found in registry")
-    try:
-        result = await agent.ainvoke(state)  # ainvoke!
-        updates: dict = {
-            "messages": result["messages"],
-            "next": "supervisor",
-        }
-        structured: PlotterAgentOutput | None = result.get("structured_response") or None
-        if structured and structured.status == "OK":
-            updates["plot_file_path"] = structured.file_path
-        
-        return updates
-    except Exception as e:
-        print(f"[ERROR] network_plotter_node failed: {e}")
-        traceback.print_exc()
-        raise
-
-
-@traceable(run_type="chain", name="heatmap_plotter_agent")
-async def heatmap_plotter_node(state: State) -> dict:  # Now async!
-    """Wrapper calls MCP-enabled agent."""
-    agent = registry.get("heatmap_plotter")
-    if agent is None:
-        raise Exception("Heatmap Plotter agent not found in registry")
-    try:
-        result = await agent.ainvoke(state)  # ainvoke!
-        updates: dict = {
-            "messages": result["messages"],
-            "next": "supervisor",
-        }
-        structured: PlotterAgentOutput | None = result.get("structured_response") or None
-        if structured and structured.status == "OK":
-            updates["plot_file_path"] = structured.file_path
-        return updates
-    except Exception as e:
-        print(f"[ERROR] network_plotter_node failed: {e}")
-        traceback.print_exc()
-        raise
-
-
-@traceable(run_type="chain", name="vega_plot_planner_agent")
-# async def vega_plot_planner_node(state: State) -> dict:  # Now async!
-#     """Wrapper calls MCP-enabled agent."""
-#     agent = registry.get("vega_plot_planner")
-#     if agent is None:
-#         raise Exception("Vega Plot Planner agent not found in registry")
-#     try:
-#         result = await agent.ainvoke(state)  # ainvoke!
-#         updates: dict = {
-#             "messages": result["messages"],
-#             "next": "supervisor",
-#         }
-#         structured: VegaAgentOutput | None = result.get("structured_response") or None
-#         if structured and structured.status == "OK":
-#             updates["vega_spec"] = structured.vega_spec
-#             updates["profile"] = structured.profile
-#         else:
-#             updates["vega_spec"] = None
-#             updates["profile"] = None
-#         return updates
-#     except Exception as e:
-#         print(f"[ERROR] vega_plot_planner_node failed: {e}")
-#         traceback.print_exc()
-#         raise
-async def vega_plot_planner_node(state: State) -> dict:
-    agent = registry.get("vega_plot_planner")
-    if agent is None:
-        raise Exception("Vega Plot Planner agent not found in registry")
+        raise Exception("Vega Plot Generator agent not found in registry")
 
     try:
         # make the path visible to the LLM
@@ -391,7 +286,7 @@ async def vega_plot_planner_node(state: State) -> dict:
             updates["profile"] = structured.profile
         return updates
     except Exception as e:
-        print(f"[ERROR] vega_plot_planner_node failed: {e}")
+        print(f"[ERROR] vega_plot_generator_node failed: {e}")
         traceback.print_exc()
         raise
 
@@ -433,10 +328,7 @@ workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("general_agent", general_agent_node)
 workflow.add_node("geomaterial_collector", geomaterial_collector_node)
 workflow.add_node("locality_collector", locality_collector_node) 
-workflow.add_node("histogram_plotter", histogram_plotter_node)
-workflow.add_node("network_plotter", network_plotter_node)
-workflow.add_node("heatmap_plotter", heatmap_plotter_node)
-workflow.add_node("vega_plot_planner", vega_plot_planner_node)
+workflow.add_node("vega_plot_generator", vega_plot_generator_node)
 workflow.add_node("FINISH", finish_node)
 
 # Define the workflow edges
@@ -451,10 +343,7 @@ workflow.add_conditional_edges(
         "general_agent": "general_agent",
         "geomaterial_collector": "geomaterial_collector",
         "locality_collector": "locality_collector",
-        "histogram_plotter": "histogram_plotter",
-        "network_plotter": "network_plotter",
-        "heatmap_plotter": "heatmap_plotter",
-        "vega_plot_planner": "vega_plot_planner",
+        "vega_plot_generator": "vega_plot_generator",
         "FINISH": "FINISH"
     }
 )
@@ -463,10 +352,7 @@ workflow.add_conditional_edges(
 workflow.add_edge("general_agent", "supervisor")
 workflow.add_edge("geomaterial_collector", "supervisor")
 workflow.add_edge("locality_collector", "supervisor")
-workflow.add_edge("histogram_plotter", "supervisor")
-workflow.add_edge("network_plotter", "supervisor")
-workflow.add_edge("heatmap_plotter", "supervisor")
-workflow.add_edge("vega_plot_planner", "supervisor")
+workflow.add_edge("vega_plot_generator", "supervisor")
 
 # FINISH ends the workflow
 workflow.add_edge("FINISH", END)
@@ -508,12 +394,13 @@ async def run_graph(input_messages: List[AnyMessage]):
 
     result = await agent_graph.ainvoke({"messages": input_messages})
 
-    print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
-    print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
-
     print("\n[DEBUG] Final message trace:")
     for i, msg in enumerate(result.get("messages", [])):
         print(f"   [{i}] {type(msg).__name__}: {msg.content}")
+
+    print(f"[DEBUG] Graph execution complete. Result keys: {result.keys()}")
+    print(f"[DEBUG] Result messages count: {len(result.get('messages', []))}")
+
 
     print("[DEBUG] Workflow finished.\n")
 

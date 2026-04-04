@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/Sidebar.jsx
 import React, { useState } from "react";
 import { Plus, User, Settings, X, Menu } from "lucide-react";
 import { Link } from "react-router-dom";

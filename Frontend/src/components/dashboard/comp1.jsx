@@ -1,1 +1,1 @@
-// component2.jsx
+// Frontend/src/components/dashboard/comp1.jsx

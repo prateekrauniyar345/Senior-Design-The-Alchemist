@@ -1,3 +1,4 @@
+# Backend/app/services/plots_services.py
 from pathlib import Path
 import os
 import json
@@ -169,4 +170,6 @@ async def send_email_with_attachment(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending email: {str(e)}")
+
+
 

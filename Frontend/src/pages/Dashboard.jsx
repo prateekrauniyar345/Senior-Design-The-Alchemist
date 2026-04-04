@@ -1,3 +1,4 @@
+// Frontend/src/pages/Dashboard.jsx
 import React from 'react';
 import { Container, Navbar, Nav, Button, Row, Col, Card, Table, Badge } from 'react-bootstrap';
 import { LogIn, UserPlus, Sparkles, Activity, CheckCircle, Clock, Zap } from 'lucide-react';

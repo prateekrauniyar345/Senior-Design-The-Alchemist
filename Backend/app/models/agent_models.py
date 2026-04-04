@@ -1,5 +1,7 @@
+# Backend/app/models/agent_models.py
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List, Literal
+from uuid import UUID
 
 # ----------------------------------------------
 # Query and Response Models for API Endpoints
@@ -8,12 +10,16 @@ from typing import Optional, Dict, Any, List, Literal
 class AgentQueryRequest(BaseModel):
     """Request model for agent queries"""
     query: str = Field(
-        ..., 
-        min_length=1, 
+        ...,
+        min_length=1,
         description="The natural language query or instruction for the agent to process.",
         examples=["Generate a histogram of mineral samples from the Mojave desert."]
     )
-    
+    session_id: Optional[UUID] = Field(
+        default=None,
+        description="Optional session ID. When provided and the user is authenticated, messages are persisted to the database."
+    )
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"query": "Tell me about the geological composition of the Moon."}
@@ -46,6 +52,10 @@ class AgentQueryResponse(BaseModel):
         default=None,
         description="The raw data used for the chart, useful for client-side rendering or debugging."
     )
+    sample_data: Optional[List[Dict[str,Any]]] = Field(
+        default=None,
+        description="A small sample of the data (e.g., first 100 rows) for quick inspection without loading the full dataset."
+    )
     error: Optional[str] = Field(   
         default=None, 
         description="Detailed error message if 'success' is false."
@@ -75,16 +85,8 @@ class CollectorAgentOutput(BaseModel):
     file_path: Optional[str] = None
     error: Optional[str] = None
 
-class PlotterAgentOutput(BaseModel):
-    agent: Literal["histogram_plotter", "network_plotter", "heatmap_plotter"]
-    status: Literal["OK", "ERROR"]
-    file_path: Optional[str] = None
-    vega_spec: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-
-
 class VegaAgentOutput(BaseModel):
-    agent: Literal["vega_plot_planner"]
+    agent: Literal["vega_plot_generator"]
     status: Literal["OK", "ERROR"]
     vega_spec: Optional[Dict[str, Any]] = None 
     profile: Optional[Dict[str, Any]] = None    

@@ -1,3 +1,4 @@
+# Backend/app/routers/agent.py
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List, Optional
 import re
@@ -9,7 +10,7 @@ from app.input_validation.validator import validate_user_input
 import time
 from app.models.agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
 from app.utils.helpers import extract_file_paths, convert_path_to_url
-
+import json as _json
 
 # Create router instance
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -38,20 +39,8 @@ async def chat_with_agent(request: AgentQueryRequest):
     
     try:
         print("RAW QUERY RECEIVED:", repr(request.query))
-        # -------- INPUT VALIDATION LAYER (DISABLED FOR NEW IMPLEMENTATION) --------
-        # validation = validate_user_input(request.query)
-
-        # if validation["status"] != "safe":
-        #     return AgentQueryResponse(
-        #         success=False,
-        #         message="Input validation failed",
-        #         data_file_path=None,
-        #         plot_file_path=None,
-        #         error=validation["message"]
-        #     )
-
-        # clean_query = validation["clean_query"]
         clean_query = request.query.strip()
+        print("CLEANED QUERY:", repr(clean_query))
         
         # Prepare user message
         user_message = HumanMessage(content=clean_query)
@@ -64,67 +53,57 @@ async def chat_with_agent(request: AgentQueryRequest):
         if not messages:
             raise HTTPException(status_code=500, detail="No messages returned from agent workflow")
 
-        # --- IMPROVED MESSAGE EXTRACTION ---
-        final_message = "Task completed successfully!"
-        
-        # Iterate backwards to find the last substantial message that isn't just supervisor routing
-        found_substantial = False
-        for msg in reversed(messages):
-            content = getattr(msg, "content", "").strip()
-            
-            # Skip empty messages or generic supervisor/finish messages
-            if not content or "Supervisor routing to" in content or "Workflow completed successfully!" in content:
-                continue
-            
-            # Extract content from structured tool response string
-            # Format: Returning structured response: agent='...' message='...' ...
-            if "Returning structured response:" in content:
-                # Attempt to extract the 'message' parameter value using regex
-                # We use a non-greedy match to grab the content of the message field specifically
-                match = re.search(r"message=['\"](.*?)['\"](?= status=|$| error=)", content)
-                if match:
-                    final_message = match.group(1)
-                    found_substantial = True
-                    break
-            
-            # Fallback for standard AI or Human messages that aren't supervisor routine
-            if content:
+        sample_data_path: Optional[str] = result.get("sample_data_path")
+        vega_spec: Optional[Dict[str, Any]] = result.get("vega_spec")
+
+        # --- MESSAGE EXTRACTION ---
+        # Determine a clean human-readable message based on what was produced
+        if vega_spec:
+            # Chart was generated — extract title from spec for a clean message
+            chart_title = vega_spec.get("title", "visualization")
+            final_message = f"Here is your {chart_title}."
+        elif sample_data_path:
+            # Data was collected but no chart requested
+            final_message = "Here is the data you requested."
+        else:
+            # General agent or fallback — find last meaningful message
+            final_message = "Task completed successfully!"
+            for msg in reversed(messages):
+                content = getattr(msg, "content", "").strip()
+                if not content or "Supervisor routing to" in content or "Workflow completed successfully!" in content:
+                    continue
+                if "Returning structured response:" in content:
+                    match = re.search(r"message=['\"](.*?)['\"](?= status=|$| error=)", content)
+                    if match:
+                        final_message = match.group(1)
+                        break
+                    continue  # skip raw structured dumps
                 final_message = content
-                found_substantial = True
                 break
 
-        if not found_substantial:
-            # Check if there's any AIMessage content we missed
-            for msg in reversed(messages):
-                if hasattr(msg, "type") and msg.type == "ai" and msg.content.strip():
-                     final_message = msg.content.strip()
-                     break
+        # Read first 100 rows from saved JSON file for frontend preview
 
-        sample_data_path: Optional[str] = result.get("sample_data_path") or result.get("data_file_path")
-        plot_file_path: Optional[str] = result.get("plot_file_path")
+        sample_data = None
+        try:
+            if sample_data_path:
+                with open(sample_data_path, "r", encoding="utf-8") as f:
+                    raw = _json.load(f)
+                sample_data = raw.get("results", [])[:100]
+        except Exception as e:
+            print(f"Error reading sample data file at {sample_data_path}: {e}")
+            sample_data = None
 
-        # Vega outputs (from vega_plot_planner_node updates)
-        vega_spec: Optional[Dict[str, Any]] = result.get("vega_spec")
-        profile: Optional[Dict[str, Any]] = result.get("profile")
-
-        # Optional: fallback to message parsing ONLY if state missing (legacy safety net)
-        if not sample_data_path or not plot_file_path:
-            file_paths = extract_file_paths(messages)
-            sample_data_path = sample_data_path or file_paths.get("data_file_path")
-            plot_file_path = plot_file_path or file_paths.get("plot_file_path")
-
-        # Convert filesystem paths → HTTP URLs for client
+        # Convert filesystem path → HTTP URL for client
         data_url = convert_path_to_url(sample_data_path) if sample_data_path else None
-        plot_url = convert_path_to_url(plot_file_path) if plot_file_path else None
 
-        # Map to your response model fields
         return AgentQueryResponse(
             success=True,
             message=final_message,
-            data_file_path=data_url,       # this is URL now (fine per your docstring)
-            plot_file_path=plot_url,       # URL
-            chart_spec=vega_spec,          # Vega spec goes here
-            chart_data=None,               # keep None (you decided not to ship raw data)
+            data_file_path=data_url,
+            plot_file_path=None,
+            chart_spec=vega_spec,
+            chart_data=None,
+            sample_data=sample_data,
             error=None
         )
     except Exception as e:
@@ -135,6 +114,7 @@ async def chat_with_agent(request: AgentQueryRequest):
             plot_file_path=None,
             chart_spec=None,
             chart_data=None,
+            sample_data=None,
             error=str(e)
         )
 

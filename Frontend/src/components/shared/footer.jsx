@@ -1,3 +1,4 @@
+// Frontend/src/components/shared/footer.jsx
 import { Container, Nav , Row, Col} from "react-bootstrap";
 import { Link } from "react-router-dom";
 

@@ -1,3 +1,4 @@
+# Backend/app/routers/auth.py
 from fastapi import APIRouter, HTTPException, Response, status, Depends
 from pydantic import BaseModel, EmailStr
 from typing import Optional

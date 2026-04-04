@@ -1,3 +1,4 @@
+# Backend/app/core/app.py
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -7,7 +8,10 @@ from app.routers import(
     auth_router,
     mindat_router,
     agent_router,
-    plots_router 
+    plots_router,
+    sessions_router,
+    user_router,
+    profile_router
     )
 from app.utils import MindatAPIException
 
@@ -23,7 +27,7 @@ def create_app() -> FastAPI:
     # Get base directory - Backend folder (one level up from app directory)
     APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     BACKEND_DIR = os.path.dirname(APP_DIR)
-    CONTENTS_DIR = os.path.join(BACKEND_DIR, "contents")
+    CONTENTS_DIR = os.path.join(APP_DIR, "contents")
     
     # Mount contents directory to serve plots and data files (if it exists)
     if os.path.exists(CONTENTS_DIR):
@@ -36,9 +40,13 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(default_router)
     app.include_router(auth_router) 
+    app.include_router(user_router)  
+    app.include_router(profile_router)
     app.include_router(mindat_router, prefix="/api")
     app.include_router(agent_router, prefix="/api")
-    app.include_router(plots_router, prefix="/api")  
+    app.include_router(plots_router, prefix="/api")
+    app.include_router(sessions_router)
+
     
     # Exception handlers
     @app.exception_handler(MindatAPIException)

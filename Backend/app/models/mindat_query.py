@@ -1,3 +1,4 @@
+# Backend/app/models/mindat_query.py
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Literal, Union
 
@@ -30,8 +31,10 @@ class MindatGeoMaterialQuery(BaseModel):
             "ima": True,
             "ima_notes": [1, 2],
             "ima_status": [1],
+            "limit": 100,
             "lustretype": ["Vitreous"],
             "name": "Quartz",
+            "offset": 0,
             "optical2v_max": "90",
             "optical2v_min": "10",
             "opticalsign": "+",
@@ -114,12 +117,12 @@ class MindatGeoMaterialQuery(BaseModel):
     # We maintain this structure but use descriptive Pydantic names with aliases.
     hardness_max: Optional[float] = Field(
         None, 
-        alias="hmin", 
+        alias="hmax", 
         description="Mohs hardness to (hmin<=) - corresponds to API's hmin parameter."
     ) 
     hardness_min: Optional[float] = Field(
         None, 
-        alias="hmax", 
+        alias="hmin", 
         description="Mohs hardness from (hmax>=) - corresponds to API's hmax parameter."
     )
     
@@ -172,6 +175,10 @@ class MindatGeoMaterialQuery(BaseModel):
         "malleable", "sectile", "very brittle", "waxy"
     ]]] = Field(None, description="Tenacity: multiple choice (AND).")
 
+    # Pagination
+    limit: Optional[int] = Field(default=100, description="Maximum number of results to return (default: 100).")
+    offset: Optional[int] = Field(default=0, description="Number of results to skip for pagination (default: 0).")
+
     # Pydantic model configuration  for verison v2, it will allow population by field name and alias
     # eg : ri_min can be populated using 'ri_min' or 'rimin'
     model_config = ConfigDict(populate_by_name=True)
@@ -200,8 +207,10 @@ class MindatGeomaterialInput(BaseModel):
             "ima": True,
             "ima_notes": [1, 2],
             "ima_status": [1],
+            "limit": 100,
             "lustretype": ["Vitreous"],
             "name": "Quartz",
+            "offset": 0,
             "optical2v_max": "90",
             "optical2v_min": "10",
             "opticalsign": "+",
@@ -250,6 +259,10 @@ class MindatLocalityQuery(BaseModel):
         None, 
         description="Include chemical elements (e.g. 'Au,Ag'), comma separated string."
     )
+    
+    # Pagination
+    limit: Optional[int] = Field(default=100, description="Maximum number of results to return (default: 100).")
+    offset: Optional[int] = Field(default=0, description="Number of results to skip for pagination (default: 0).")
     
     # pydantic model configuration
     # to allow population by field name and alias

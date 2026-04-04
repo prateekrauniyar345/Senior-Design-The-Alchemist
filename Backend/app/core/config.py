@@ -1,3 +1,4 @@
+# Backend/app/core/config.py
 import os
 from fastapi.templating import Jinja2Templates
 

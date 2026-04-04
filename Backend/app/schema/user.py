@@ -1,3 +1,4 @@
+# Backend/app/schema/user.py
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -16,6 +17,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
+    profile = relationship("Profile", back_populates="user", uselist=False)  
     sessions = relationship("Session", back_populates="user")
     messages = relationship("Message", back_populates="user")
     runs = relationship("AgentRun", backref="user")

@@ -1,3 +1,4 @@
+// Frontend/src/pages/Chat.jsx
 import React, { useCallback, useState } from "react";
 import Sidebar from "../components/chats/Sidebar";
 import ChatWindow from "../components/chats/ChatWindow";
@@ -62,7 +63,9 @@ const Chat = () => {
             id: generateId("bot"),
             sender: "bot",
             text: botResponse.message,
-            image: botResponse.plot_file_path, // Add the image path to the message object
+            chartSpec: botResponse.chart_spec,
+            chartData: botResponse.chart_data,
+            sampleData: botResponse.sample_data,
             timestamp: new Date().toISOString(),
           },
         ]);

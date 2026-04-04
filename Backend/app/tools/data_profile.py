@@ -1,4 +1,4 @@
-# Backend/tools/profile_tool.py
+# Backend/app/tools/data_profile.py
 import json
 from pathlib import Path
 from typing import Any, Dict, List

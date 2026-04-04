@@ -78,7 +78,7 @@
 
 
 .chat-list-btn {
-  background-color: transparent;
+  background-color: #32343d;
   border: none;
   color: white !important;
   transition: background-color 120ms ease-in-out;
@@ -104,6 +104,21 @@
   border-color: transparent !important;
   box-shadow: none;
   border-radius: 16px;
+}
+
+/* Active state for current chat */
+.chat-list-btn-active {
+  background-color: #32343d !important;
+  border: none;
+  color: #ffffff !important;
+  transition: background-color 120ms ease-in-out;
+  border-radius: 16px;
+}
+
+.chat-list-btn-active:hover,
+.chat-list-btn-active:focus-visible {
+  background-color: #32343d !important;
+  color: #ffffff !important;
 }
 
 
