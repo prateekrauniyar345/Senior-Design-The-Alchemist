@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List, Literal
+from uuid import UUID
 
 # ----------------------------------------------
 # Query and Response Models for API Endpoints
@@ -8,12 +9,16 @@ from typing import Optional, Dict, Any, List, Literal
 class AgentQueryRequest(BaseModel):
     """Request model for agent queries"""
     query: str = Field(
-        ..., 
-        min_length=1, 
+        ...,
+        min_length=1,
         description="The natural language query or instruction for the agent to process.",
         examples=["Generate a histogram of mineral samples from the Mojave desert."]
     )
-    
+    session_id: Optional[UUID] = Field(
+        default=None,
+        description="Optional session ID. When provided and the user is authenticated, messages are persisted to the database."
+    )
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"query": "Tell me about the geological composition of the Moon."}

@@ -1,40 +1,44 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
-
-class UserBase(BaseModel):
+class User(BaseModel):
+    """The full user model matching the database table exactly"""
+    id: UUID
+    supabase_user_id: UUID
     email: EmailStr
     full_name: Optional[str] = None
-    supabase_user_id: UUID
-
-
-class UserCreate(UserBase):
-    """Used for creating a new user (usually via Supabase webhook or signup)"""
-    pass
-
-
-class UserUpdate(BaseModel):
-    """Used for patching user data"""
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
-
-
-class User(UserBase):
-    """The full user model returned to the client"""
-    id: UUID
     created_at: datetime
 
-    # This allows Pydantic to work with SQLAlchemy models
+    # Enables compatibility with SQLAlchemy (e.g., User.model_validate(db_user))
     model_config = ConfigDict(from_attributes=True)
 
+class UserCreate(BaseModel):
+    """Used for initial creation/sync from Supabase"""
+    supabase_user_id: UUID
+    email: EmailStr
+    full_name: Optional[str] = None
 
-class UserWithRelations(User):
+class UserUpdate(BaseModel):
+    """Requirement: Update ONLY the full_name"""
+    full_name: str
+
+class UserDelete(BaseModel):
+    """Requirement: Delete ONLY by email"""
+    email: EmailStr
+
+
+class UserResponse(BaseModel):
     """
-    Optional: Use this if you want to nest related data 
-    (Requires corresponding Pydantic models for Session, Message, etc.)
+    Returns every field of the User class. 
+    Using a separate class allows you to add API-only fields later 
+    without changing your core Database model.
     """
-    # sessions: List[Session] = []
-    # messages: List[Message] = []
-    pass
+    id: UUID
+    supabase_user_id: UUID
+    email: EmailStr
+    full_name: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
