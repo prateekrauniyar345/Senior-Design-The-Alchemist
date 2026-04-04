@@ -21,7 +21,6 @@ from app.models.agent_models import (
     AgentHealthResponse, 
     GeneralAgentOutput,
     CollectorAgentOutput,
-    PlotterAgentOutput,
     VegaAgentOutput
 )
 from app.models.tool_response_models import (
@@ -62,7 +61,6 @@ __all__ = [
     "AgentHealthResponse", 
     "GeneralAgentOutput",
     "CollectorAgentOutput",
-    "PlotterAgentOutput",
     "VegaAgentOutput",
     "GeomaterialToolResponse", 
     "LocalityToolResponse", 

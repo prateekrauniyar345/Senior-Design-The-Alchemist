@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/ChatWindow.jsx
 import React, { useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
 // import { IconBot } from './IconComponents.jsx';
@@ -6,7 +7,8 @@ import './ChatWindow.css';
 // --- Component: TypingIndicator ---
 const TypingIndicator = () => (
   <div className="d-flex justify-content-start my-4">
-    <div className="d-flex align-items-start gap-3" style={{ maxWidth: '48rem' }}>
+    <div className="d-flex align-items-start gap-3" 
+    >
       <div
         className="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
         style={{
@@ -56,7 +58,9 @@ const ChatWindow = ({ messages, isLoading = false }) => {
       role="log"
       aria-live="polite"
     >
-      <div className="mx-auto" style={{ maxWidth: '768px' }}>
+      <div className="w-75 mx-auto" 
+        // style={{ maxWidth: '768px' }}
+      >
         {messages.length === 0 ? (
           <div className="text-center mt-5 empty-chat-subtitle">
             <h1 className="fw-semibold mb-2 empty-chat-title">Smart Agent</h1>

@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/ProfileModal.jsx
 import React, { useState } from 'react';
 import { X, Upload, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';

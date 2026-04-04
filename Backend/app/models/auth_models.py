@@ -1,3 +1,4 @@
+# Backend/app/models/auth_models.py
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List, Dict, Literal
 

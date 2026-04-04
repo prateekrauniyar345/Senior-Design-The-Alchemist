@@ -1,3 +1,4 @@
+# Backend/app/config/mindat_config.py
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 import requests

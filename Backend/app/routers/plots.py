@@ -1,7 +1,8 @@
+# Backend/app/routers/plots.py
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 from app.models.visualization import EmailPlotRequest, PlotActionResponse, DownloadRequest
-from app.services.plots_services import get_plot_path, convert_to_pdf, send_email_with_attachment, PLOTS_DIR  
+from app.services.plots_services import get_plot_path, convert_to_pdf, send_email_with_attachment, PLOTS_DIR
 
 
 router = APIRouter(prefix="/plots", tags=["plots"])

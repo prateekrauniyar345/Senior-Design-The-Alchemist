@@ -1,3 +1,4 @@
+# Backend/app/core/app.py
 import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -26,7 +27,7 @@ def create_app() -> FastAPI:
     # Get base directory - Backend folder (one level up from app directory)
     APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     BACKEND_DIR = os.path.dirname(APP_DIR)
-    CONTENTS_DIR = os.path.join(BACKEND_DIR, "contents")
+    CONTENTS_DIR = os.path.join(APP_DIR, "contents")
     
     # Mount contents directory to serve plots and data files (if it exists)
     if os.path.exists(CONTENTS_DIR):
