@@ -1,0 +1,23 @@
+flowchart TB
+    subgraph client[Frontend]
+        ui[React UI]
+    end
+
+    subgraph cloud[Cloud and Services]
+        auth[Supabase Auth]
+        llm[Azure OpenAI GPT4o]
+        mindat[Mindat API]
+    end
+
+    subgraph backend[Backend API]
+        router[FastAPI Router]
+        langGraph[LangGraph Engine]
+        mcp[MCP Server]
+    end
+
+    ui -- login --> auth
+    ui <--> router
+    router <--> langGraph
+    langGraph <--> llm
+    langGraph <--> mcp
+    mcp --> mindat

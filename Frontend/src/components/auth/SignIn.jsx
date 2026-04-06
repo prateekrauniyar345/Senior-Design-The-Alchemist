@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { getApiErrorMessage } from "../../api/apiClient";
 import "./auth.css";
 
 export default function SignIn() {
@@ -26,7 +27,7 @@ export default function SignIn() {
       // Redirect to chat page after successful login
       nav("/chat");
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(getApiErrorMessage(err) || "Login failed");
     } finally {
       setLoading(false);
     }

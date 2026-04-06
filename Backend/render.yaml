@@ -1,0 +1,88 @@
+services:
+  - type: web
+    name: alchemist-backend
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: REQUEST_TIMEOUT
+        value: "30"
+      - key: MAX_RETRIES
+        value: "3"
+
+      - key: MCP_SERVER_URL
+        value: https://alchemist-mcp.onrender.com/mcp
+
+      - key: AZURE_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        sync: false
+      - key: AZURE_OPENAI_API_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+
+      - key: MINDAT_API_KEY
+        sync: false
+      - key: MINDAT_HOST
+        value: https://api.mindat.org/v1/
+
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        sync: false
+
+    buildFilter:
+      paths:
+        - Backend/**
+
+  - type: web
+    name: alchemist-mcp
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python mcp_server.py
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: REQUEST_TIMEOUT
+        value: "30"
+      - key: MAX_RETRIES
+        value: "3"
+
+      - key: MINDAT_API_KEY
+        sync: false
+      - key: MINDAT_HOST
+        value: https://api.mindat.org/v1/
+
+      - key: AZURE_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        sync: false
+      - key: AZURE_OPENAI_API_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+
+    buildFilter:
+      paths:
+        - Backend/**
