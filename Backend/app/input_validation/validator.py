@@ -1,6 +1,5 @@
-# Backend/app/input_validation/validator.py
 from .security import is_safe_input
-from .domain import is_domain_query
+from .domain import classify_query
 from .parameters import validate_parameters
 
 MAX_INPUT_LENGTH = 500
@@ -22,10 +21,18 @@ def validate_user_input(user_input: str) -> dict:
     if not is_safe_input(user_input):
         return _blocked("Unsafe or malicious input detected.")
 
-    # ---------- Domain Validation ----------
-    if not is_domain_query(user_input):
-        return _error("Query is outside Mindat system capability.")
+    # ---------- Domain Classification ----------
+    query_type = classify_query(user_input)
 
+    if query_type == "general":
+        return {
+            "status": "general",
+            "clean_query": user_input.strip()
+        }
+
+    if query_type == "off_topic":
+        return _error("Query is outside Mindat system capability.")
+    
     # ---------- Parameter Validation ----------
     param_result = validate_parameters(user_input)
     if param_result["status"] != "valid":

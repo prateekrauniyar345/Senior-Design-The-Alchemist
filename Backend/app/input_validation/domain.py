@@ -1,4 +1,3 @@
-# Backend/app/input_validation/domain.py
 ALLOWED_KEYWORDS = [
     "mineral",
     "minerals",
@@ -23,13 +22,41 @@ ALLOWED_KEYWORDS = [
     "mindat"
 ]
 
+GENERAL_KEYWORDS = [
+    "hello",
+    "hi",
+    "hey",
+    "what can you do",
+    "how do i use you",
+    "help",
+    "who are you"
+]
 
-def is_domain_query(user_input: str) -> bool:
-    lower = user_input.lower()
+
+import re
+
+def classify_query(user_input: str) -> str:
+    lower = user_input.lower().replace("-", " ")
+
+    # Greeting / onboarding (STRICT word matching)
+    for keyword in GENERAL_KEYWORDS:
+        if re.search(rf"\b{re.escape(keyword)}\b", lower):
+            return "general"
+
+    # Mineral domain
     if any(keyword in lower for keyword in ALLOWED_KEYWORDS):
-        return True
+        return "mineral"
 
-    # Allow normal data-task phrasing to reduce false negatives.
-    action_words = ("get", "show", "find", "list", "analyze", "analyse", "compare")
-    token_count = len([t for t in lower.split() if t.strip()])
-    return any(word in lower for word in action_words) and token_count >= 3
+    # Fallback action detection
+    action_words = [
+        "get", "show", "find", "list",
+        "plot", "generate", "create",
+        "analyze", "analyse"
+    ]
+
+    token_count = len(lower.split())
+
+    if any(word in lower for word in action_words) and token_count >= 3:
+        return "mineral"
+
+    return "off_topic"
