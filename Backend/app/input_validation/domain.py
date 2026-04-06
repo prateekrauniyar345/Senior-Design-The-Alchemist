@@ -1,4 +1,12 @@
 ALLOWED_KEYWORDS = [
+    "hello",
+    "hi",
+    "hey",
+    "thanks",
+    "help",
+    "who are you",
+    "what can",
+    "alchemist",
     "mineral",
     "minerals",
     "rock",

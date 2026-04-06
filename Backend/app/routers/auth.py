@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response, status, Depends, Request
 from sqlalchemy.orm import Session as DBSession
+from sqlalchemy.exc import IntegrityError
 from app.database import get_db
 from app.schema import User
 from app.config import settings
@@ -8,48 +9,70 @@ from app.models import LoginRequest, RegisterRequest, AuthResponse
 from app.dependencies import get_current_user
 from supabase import create_client, Client
 import os
-from dotenv import load_dotenv
-
-
-# load the .env file
-load_dotenv()
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
 
-def _set_auth_cookies(response: Response, session) -> None:
-    """Helper to set the three auth cookies from a Supabase session object."""
+def _cookie_security() -> tuple[bool, str]:
+    """
+    Local HTTP: secure=False + SameSite=lax (browsers reject SameSite=None without Secure).
+    Production HTTPS (e.g. API on its own domain): set COOKIE_SECURE=true → Secure + SameSite=none.
+    """
+    secure = os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+    samesite = "none" if secure else "lax"
+    return secure, samesite
 
-    # set the access token cookie (httpOnly, secure, sameSite=None)
+
+def _set_auth_cookies(response: Response, session) -> None:
+    """Set HttpOnly auth cookies from a Supabase session."""
+    secure, samesite = _cookie_security()
+    path = "/"
+
     response.set_cookie(
         key="sb-access-token",
         value=session.access_token,
+        path=path,
         httponly=True,
-        secure=False,   # Set True in production (HTTPS)
-        samesite= os.getenv("SAMESITE", "none"),  # Use env var or default to 'none'
+        secure=secure,
+        samesite=samesite,
         max_age=session.expires_in,
     )
 
-    # set the refresh token cookie (httpOnly, secure, sameSite=None)
     response.set_cookie(
         key="sb-refresh-token",
         value=session.refresh_token,
+        path=path,
         httponly=True,
-        secure=False,
-        samesite= os.getenv("SAMESITE", "none"),  # Use env var or default to 'none'
-        max_age=7 * 24 * 60 * 60,  # 7 days
+        secure=secure,
+        samesite=samesite,
+        max_age=7 * 24 * 60 * 60,
     )
 
-    # set a non-httpOnly cookie with the user ID for frontend use (optional, can be decoded from access token if needed)
+    # Legacy cookie name — expire if present
     response.set_cookie(
         key="user-id",
-        value="",       # cleared — no longer needed for auth
+        value="",
+        path=path,
         httponly=False,
-        secure=False,
-        samesite= os.getenv("SAMESITE", "none"),  # Use env var or default to 'none'
+        secure=secure,
+        samesite=samesite,
         max_age=0,
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    secure, samesite = _cookie_security()
+    path = "/"
+    response.delete_cookie(
+        key="sb-access-token", path=path, secure=secure, httponly=True, samesite=samesite
+    )
+    response.delete_cookie(
+        key="sb-refresh-token", path=path, secure=secure, httponly=True, samesite=samesite
+    )
+    response.delete_cookie(
+        key="user-id", path=path, secure=secure, httponly=False, samesite=samesite
     )
 
 
@@ -119,14 +142,31 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
         supabase_user = auth_response.user
         print("supabase_user is : ", supabase_user)
 
-        user = User(
-            supabase_user_id=uuid.UUID(supabase_user.id),
-            email=req.email,
-            full_name=req.name,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        supabase_user_id = uuid.UUID(supabase_user.id)
+        user = db.query(User).filter(User.supabase_user_id == supabase_user_id).first()
+        if user:
+            user.email = req.email
+            user.full_name = req.name
+            db.commit()
+            db.refresh(user)
+        else:
+            user = User(
+                supabase_user_id=supabase_user_id,
+                email=req.email,
+                full_name=req.name,
+            )
+            db.add(user)
+            try:
+                db.commit()
+                db.refresh(user)
+            except IntegrityError:
+                db.rollback()
+                user = db.query(User).filter(User.supabase_user_id == supabase_user_id).first()
+                if not user:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Could not create local user profile",
+                    )
 
         if auth_response.session:
             _set_auth_cookies(response, auth_response.session)
@@ -176,8 +216,7 @@ async def logout(response: Response):
     except Exception:
         pass
 
-    for cookie in ("sb-access-token", "sb-refresh-token", "user-id"):
-        response.delete_cookie(key=cookie, samesite="none", secure=False)
+    _clear_auth_cookies(response)
 
     return {"success": True, "message": "Logged out successfully"}
 

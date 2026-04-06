@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { getApiErrorMessage } from "../../api/apiClient";
 import "./auth.css";
 
 export default function SignUp() {
@@ -18,16 +19,19 @@ export default function SignUp() {
     const fd = new FormData(e.target);
     
     try {
-      await register(
+      const data = await register(
         fd.get("name"),
         fd.get("email"),
         fd.get("password")
       );
-      
-      // Redirect to signin page after successful registration
-      nav("/signin");
+
+      if (data?.session?.access_token) {
+        nav("/chat");
+      } else {
+        nav("/signin");
+      }
     } catch (err) {
-      setError(err.message);
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }

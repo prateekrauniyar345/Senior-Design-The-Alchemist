@@ -33,7 +33,13 @@ const Chat = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [messages, setMessages] = useState([createWelcomeMessage()]);
+  /** Latest route param — read after awaits so stale loads never overwrite the active chat */
+  const routeSessionIdRef = useRef(sessionId);
+  routeSessionIdRef.current = sessionId ?? null;
+
+  const [messages, setMessages] = useState(() =>
+    sessionId ? [] : [createWelcomeMessage()]
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -42,56 +48,123 @@ const Chat = () => {
 
   // Track whether this is the first user message in the session (for title update)
   const isFirstMessageRef = useRef(true);
+  // After first-message session creation we navigate before getLLMResponse persists rows;
+  // skip the fetch that would replace optimistic messages with an empty list.
+  const suppressSessionFetchRef = useRef(null);
+  /** Bumped when the sessionId effect starts a fetch — stale completions must not clear isLoading */
+  const sessionFetchGenRef = useRef(0);
+
+  useEffect(() => {
+    console.log("[Chat DEBUG] Chat component MOUNT");
+    return () => console.log("[Chat DEBUG] Chat component UNMOUNT");
+  }, []);
 
   // Load messages from DB when sessionId changes
   useEffect(() => {
-    if (sessionId) {
-      loadSessionMessages(sessionId);
-    } else {
+    console.log("[Chat DEBUG] sessionId effect fired (route vs ref)", {
+      sessionId: sessionId ?? null,
+      routeRef: routeSessionIdRef.current,
+      suppress: suppressSessionFetchRef.current,
+    });
+    if (!sessionId) {
+      suppressSessionFetchRef.current = null;
+      console.log("[Chat DEBUG] sessionId effect: no id → welcome only");
       setMessages([createWelcomeMessage()]);
       isFirstMessageRef.current = true;
+      setIsLoading(false);
+      return;
     }
+    if (
+      suppressSessionFetchRef.current !== null &&
+      String(suppressSessionFetchRef.current) === String(sessionId)
+    ) {
+      console.log("[Chat DEBUG] sessionId effect: SKIP fetch (first-send suppress)", String(sessionId));
+      return;
+    }
+    sessionFetchGenRef.current += 1;
+    const fetchGen = sessionFetchGenRef.current;
+    console.log("[Chat DEBUG] sessionId effect: loadSessionMessages", String(sessionId), "gen=", fetchGen);
+    loadSessionMessages(sessionId, { manageLoading: true, allowEmptyWipe: true, fetchGen });
   }, [sessionId]);
 
-  const loadSessionMessages = async (sid) => {
+  const loadSessionMessages = async (
+    sid,
+    { manageLoading = true, allowEmptyWipe = true, fetchGen } = {}
+  ) => {
+    console.log("[Chat DEBUG] loadSessionMessages START", {
+      sid: String(sid),
+      manageLoading,
+      allowEmptyWipe,
+      fetchGen: fetchGen ?? null,
+    });
     try {
-      setIsLoading(true);
+      if (manageLoading) setIsLoading(true);
       const dbMessages = await chatService.getMessages(sid);
-      if (dbMessages.length === 0) {
+      const rows = Array.isArray(dbMessages) ? dbMessages : [];
+      console.log("[Chat DEBUG] loadSessionMessages fetched count", rows.length, {
+        sid: String(sid),
+        routeNow: routeSessionIdRef.current,
+      });
+
+      if (String(routeSessionIdRef.current) !== String(sid)) {
+        console.log("[Chat DEBUG] loadSessionMessages STALE — skip setMessages", {
+          requested: String(sid),
+          routeNow: String(routeSessionIdRef.current),
+        });
+        return;
+      }
+
+      if (rows.length === 0) {
+        if (!allowEmptyWipe) {
+          console.log(
+            "[Chat DEBUG] loadSessionMessages: empty result, skip wipe (allowEmptyWipe=false)"
+          );
+          return;
+        }
+        console.log("[Chat DEBUG] loadSessionMessages: empty → welcome only");
         setMessages([createWelcomeMessage()]);
         isFirstMessageRef.current = true;
       } else {
-        setMessages(dbMessages.map(dbMessageToLocal));
+        console.log("[Chat DEBUG] loadSessionMessages: setMessages from DB", rows.length, "rows");
+        setMessages(rows.map(dbMessageToLocal));
         isFirstMessageRef.current = false;
       }
     } catch (err) {
-      console.error("Failed to load session messages:", err);
-      setMessages([createWelcomeMessage()]);
+      console.error("[Chat DEBUG] loadSessionMessages ERROR", err);
+      if (String(routeSessionIdRef.current) !== String(sid)) {
+        console.log("[Chat DEBUG] loadSessionMessages ERROR ignored (stale)", String(sid));
+        return;
+      }
+      if (allowEmptyWipe) {
+        console.log("[Chat DEBUG] loadSessionMessages: error → welcome only");
+        setMessages([createWelcomeMessage()]);
+      }
     } finally {
-      setIsLoading(false);
+      if (manageLoading) {
+        const superseded = fetchGen !== undefined && fetchGen !== sessionFetchGenRef.current;
+        if (!superseded) {
+          setIsLoading(false);
+        } else {
+          console.log("[Chat DEBUG] loadSessionMessages END — isLoading unchanged (superseded gen)", {
+            fetchGen,
+            currentGen: sessionFetchGenRef.current,
+          });
+        }
+      }
+      console.log("[Chat DEBUG] loadSessionMessages END", {
+        sid: String(sid),
+        routeNow: routeSessionIdRef.current,
+      });
     }
   };
 
   const handleStartNewChat = useCallback(async () => {
-    if (!user) {
-      // Not logged in — just clear local state
-      setMessages([createWelcomeMessage()]);
-      setError(null);
-      isFirstMessageRef.current = true;
-      navigate("/chat");
-      return;
-    }
-    try {
-      const newSession = await chatService.createSession("New Chat");
-      setSidebarRefreshKey((k) => k + 1);
-      navigate(`/chat/${newSession.id}`);
-    } catch (err) {
-      console.error("Failed to create session:", err);
-      setMessages([createWelcomeMessage()]);
-      setError(null);
-      navigate("/chat");
-    }
-  }, [user, navigate]);
+    setMessages([createWelcomeMessage()]);
+    setError(null);
+    isFirstMessageRef.current = true;
+    setSidebarRefreshKey((k) => k + 1);
+    navigate("/chat");
+  }, [navigate]);
 
   const handleSendMessage = useCallback(
     async (rawMessage) => {
@@ -106,8 +179,10 @@ const Chat = () => {
         try {
           const newSession = await chatService.createSession("New Chat");
           activeSessionId = newSession.id;
+          console.log("[Chat DEBUG] createSession result", { id: activeSessionId });
           setSidebarRefreshKey((k) => k + 1);
-          // Update URL without triggering a full re-render / message reload
+          suppressSessionFetchRef.current = activeSessionId;
+          console.log("[Chat DEBUG] navigate", { to: `/chat/${activeSessionId}`, replace: true });
           navigate(`/chat/${activeSessionId}`, { replace: true });
         } catch (err) {
           console.error("Failed to create session:", err);
@@ -122,7 +197,14 @@ const Chat = () => {
         text,
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, userMessage]);
+      setMessages((prev) => {
+        const next = [...prev, userMessage];
+        console.log("[Chat DEBUG] setMessages optimistic USER", {
+          prevLen: prev.length,
+          nextLen: next.length,
+        });
+        return next;
+      });
       setError(null);
       setIsLoading(true);
 
@@ -135,22 +217,48 @@ const Chat = () => {
       }
 
       try {
+        console.log("[Chat DEBUG] getLLMResponse START", {
+          activeSessionId,
+          hasUser: !!user,
+        });
         const botResponse = await chatService.getLLMResponse(text, activeSessionId);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: generateId("bot"),
-            sender: "bot",
-            text: botResponse.message,
-            image: botResponse.plot_file_path || null,
-            chart_spec: botResponse.chart_spec || null,
-            timestamp: new Date().toISOString(),
-          },
-        ]);
+        console.log("[Chat DEBUG] getLLMResponse END");
+        const failed = botResponse.success === false;
+        const replyText = failed
+          ? `Agent workflow failed${botResponse.error ? `: ${botResponse.error}` : ""}`
+          : botResponse.message;
+        setMessages((prev) => {
+          const next = [
+            ...prev,
+            {
+              id: generateId("bot"),
+              sender: "bot",
+              text: replyText,
+              image: failed ? null : botResponse.plot_file_path || null,
+              chart_spec: failed ? null : botResponse.chart_spec || null,
+              timestamp: new Date().toISOString(),
+            },
+          ];
+          console.log("[Chat DEBUG] setMessages after BOT", { prevLen: prev.length, nextLen: next.length });
+          return next;
+        });
+        if (activeSessionId && user) {
+          try {
+            await loadSessionMessages(activeSessionId, {
+              manageLoading: false,
+              allowEmptyWipe: false,
+            });
+          } catch (_) {
+            /* keep optimistic state */
+          }
+        }
       } catch (err) {
+        console.error("[Chat DEBUG] getLLMResponse FAILED", err);
         console.error("Failed to fetch assistant response", err);
         setError("The assistant is unavailable right now. Please try again in a moment.");
       } finally {
+        console.log("[Chat DEBUG] first-send finally: clear suppress, isLoading false");
+        suppressSessionFetchRef.current = null;
         setIsLoading(false);
       }
     },
@@ -175,6 +283,7 @@ const Chat = () => {
           isOpen={isSidebarOpen}
           currentSessionId={sessionId || null}
           refreshKey={sidebarRefreshKey}
+          shouldFetchSessions={Boolean(sessionId)}
         />
       </div>
 

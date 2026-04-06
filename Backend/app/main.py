@@ -28,7 +28,6 @@ app.add_middleware(
 
 
 if __name__ == "__main__":
-    # uvicorn is used to run the FastAPI app
-    import uvicorn 
-    # run the app with reload option for development
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    import uvicorn
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

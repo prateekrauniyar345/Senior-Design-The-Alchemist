@@ -5,8 +5,9 @@ const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnon, {
   auth: {
-    persistSession: true,     // stores session in localStorage
-    autoRefreshToken: true,
-    detectSessionInUrl: true, // handles OAuth callback
+    // Production: persist Supabase session. Dev: no persistence (refresh = clean slate).
+    persistSession: !import.meta.env.DEV,
+    autoRefreshToken: !import.meta.env.DEV,
+    detectSessionInUrl: true,
   },
 });

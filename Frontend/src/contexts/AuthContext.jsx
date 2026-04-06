@@ -1,14 +1,53 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
+
+/** Remove Supabase and related keys so no client session survives a dev reload. */
+function clearClientAuthStorage() {
+  try {
+    for (const store of [localStorage, sessionStorage]) {
+      const toRemove = [];
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (k && (k.startsWith('sb-') || k.toLowerCase().includes('supabase'))) {
+          toRemove.push(k);
+        }
+      }
+      toRemove.forEach((k) => store.removeItem(k));
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    const bootstrap = async () => {
+      // Local dev: always start logged out (no cookie / client restore). Production: /me restore.
+      if (import.meta.env.DEV) {
+        try {
+          await apiClient.post("/api/auth/logout");
+        } catch {
+          /* ignore: no cookies or API down */
+        }
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          /* ignore */
+        }
+        clearClientAuthStorage();
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      await checkAuth();
+    };
+    bootstrap();
   }, []);
 
   const checkAuth = async () => {
@@ -33,6 +72,9 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     const res = await apiClient.post("/api/auth/register", { name, email, password });
+    if (res.data?.user) {
+      setUser(res.data.user);
+    }
     return res.data;
   };
 

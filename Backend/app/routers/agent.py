@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, List, Optional
 import re
 import json
+import logging
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
 from app.agents import run_graph
@@ -19,6 +20,8 @@ from app.dependencies import get_optional_user
 
 # Create router instance
 router = APIRouter(prefix="/agent", tags=["agent"])
+
+log = logging.getLogger(__name__)
 
 
 # ------------------------------
@@ -38,6 +41,40 @@ async def chat_with_agent(
     try:
         clean_query = body.query.strip()
 
+        validation = validate_user_input(clean_query)
+        if validation["status"] != "safe":
+            err_detail = validation.get("message", "Invalid input.")
+            log.warning("[CHAT_PERSIST] input validation failed: %s", err_detail)
+            return AgentQueryResponse(
+                success=False,
+                message="Agent workflow failed",
+                data_file_path=None,
+                plot_file_path=None,
+                chart_spec=None,
+                chart_data=None,
+                error=err_detail,
+            )
+
+        log.info(
+            "[CHAT_PERSIST] /api/agent/chat start query_len=%s session_id=%s authenticated=%s "
+            "local_user_pk=%s",
+            len(clean_query),
+            body.session_id,
+            current_user is not None,
+            str(current_user.id) if current_user else None,
+        )
+
+        if body.session_id and not current_user:
+            log.warning(
+                "[CHAT_PERSIST] session_id=%s but no authenticated local user — refusing "
+                "(messages would not be saved; check cookies / get_optional_user)",
+                body.session_id,
+            )
+            raise HTTPException(
+                status_code=401,
+                detail="Authentication required to persist messages for this chat session",
+            )
+
         # --- Persist user message ---
         if current_user and body.session_id:
             try:
@@ -49,9 +86,17 @@ async def chat_with_agent(
                     output_type="text",
                 )
                 db.add(user_msg)
+                db.flush()
+                log.info(
+                    "[CHAT_PERSIST] user message INSERT pending id=%s session_id=%s user_pk=%s",
+                    user_msg.id,
+                    body.session_id,
+                    current_user.id,
+                )
                 db.commit()
+                log.info("[CHAT_PERSIST] user message COMMIT ok session_id=%s", body.session_id)
             except Exception as save_err:
-                print(f"Warning: Failed to save user message: {save_err}")
+                log.exception("[CHAT_PERSIST] user message INSERT failed: %s", save_err)
                 db.rollback()
 
         # --- Run agent ---
@@ -120,9 +165,17 @@ async def chat_with_agent(
                     meta_data=json.dumps(meta) if meta else None,
                 )
                 db.add(bot_msg)
+                db.flush()
+                log.info(
+                    "[CHAT_PERSIST] assistant message INSERT pending id=%s session_id=%s user_pk=%s",
+                    bot_msg.id,
+                    body.session_id,
+                    current_user.id,
+                )
                 db.commit()
+                log.info("[CHAT_PERSIST] assistant message COMMIT ok session_id=%s", body.session_id)
             except Exception as save_err:
-                print(f"Warning: Failed to save bot message: {save_err}")
+                log.exception("[CHAT_PERSIST] assistant message INSERT failed: %s", save_err)
                 db.rollback()
 
         return AgentQueryResponse(
@@ -135,7 +188,10 @@ async def chat_with_agent(
             error=None,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        log.exception("[CHAT_PERSIST] agent workflow error: %s", e)
         return AgentQueryResponse(
             success=False,
             message="Agent workflow failed",

@@ -55,7 +55,7 @@ print(f"[Initialize Agent] MCP Server URL configured as: {MCP_SERVER_URL}")
 # Load the tools from the MCP servers
 # ----------------------------------------------
 async def load_mcp_tools():
-    """Asynchronously load tools from the MCP servers"""
+    """Asynchronously load tools from the MCP servers. Returns [] if MCP is unreachable so chat persistence still runs."""
     try:
         print(f"[MCP Client] Attempting to connect to {MCP_SERVER_URL}")
         client = MultiServerMCPClient({
@@ -70,7 +70,11 @@ async def load_mcp_tools():
     except Exception as e:
         print(f"[MCP Client] Failed to load MCP tools from {MCP_SERVER_URL}: {e}")
         print(f"[MCP Client] Error type: {type(e).__name__}")
-        raise RuntimeError(f"Could not connect to MCP server at {MCP_SERVER_URL}. Make sure the MCP service is running.") from e
+        print(
+            "[MCP Client] Continuing with zero MCP tools — agents still run; "
+            "Mindat/MCP features are unavailable until the MCP server is up."
+        )
+        return []
 
 
 

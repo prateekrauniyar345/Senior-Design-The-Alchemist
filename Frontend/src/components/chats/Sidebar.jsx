@@ -13,6 +13,8 @@ const Sidebar = ({
   isOpen = true,
   currentSessionId = null,
   refreshKey = 0,
+  /** When false (e.g. on /chat with no session), do not list past chats—fresh UI only */
+  shouldFetchSessions = true,
 }) => {
   const { user } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -21,23 +23,36 @@ const Sidebar = ({
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch sessions when user logs in OR when Chat signals a change (refreshKey)
+  // Fetch sessions only when viewing a specific chat; on plain /chat keep list empty (no auto history)
   useEffect(() => {
-    if (user) {
-      loadSessions();
-    } else {
+    if (!user) {
       setSessions([]);
       setIsLoading(false);
+      return;
     }
-  }, [user, refreshKey]);
+    if (!shouldFetchSessions) {
+      setSessions([]);
+      setIsLoading(false);
+      return;
+    }
+    loadSessions();
+  }, [user, refreshKey, shouldFetchSessions]);
 
   const loadSessions = async () => {
     try {
       setIsLoading(true);
       const data = await chatService.getSessions();
-      setSessions(data || []);
+      const list = Array.isArray(data)
+        ? data
+        : data && Array.isArray(data.sessions)
+          ? data.sessions
+          : [];
+      if (data != null && !Array.isArray(data) && !Array.isArray(data?.sessions)) {
+        console.warn("[Sidebar] getSessions unexpected shape; using []", data);
+      }
+      setSessions(list);
     } catch (error) {
-      console.error('Failed to load sessions:', error);
+      console.error("Failed to load sessions:", error);
       setSessions([]);
     } finally {
       setIsLoading(false);

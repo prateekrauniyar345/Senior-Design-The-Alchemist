@@ -1,7 +1,42 @@
 import axios from "axios";
 
+/**
+ * Single API origin for all requests.
+ * - If VITE_API_URL is set: use it (trim trailing slash).
+ * - Dev + unset: relative "" so Vite proxies /api and /contents to the backend.
+ * - Prod fallback: direct backend on localhost (set VITE_API_URL in real deployments).
+ */
+export function resolveApiBaseUrl() {
+  const raw = import.meta.env.VITE_API_URL;
+  if (raw !== undefined && raw !== null && String(raw).trim() !== "") {
+    return String(raw).replace(/\/$/, "");
+  }
+  if (import.meta.env.DEV) {
+    return "";
+  }
+  return "http://localhost:8000";
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+/** FastAPI/Starlette validation errors and HTTPException detail */
+export function getApiErrorMessage(error) {
+  const d = error.response?.data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d)) {
+    return d
+      .map((x) => (x && typeof x.msg === "string" ? x.msg : JSON.stringify(x)))
+      .join("; ");
+  }
+  if (d && typeof d === "object") return JSON.stringify(d);
+  if (!error.response) {
+    return "Cannot reach API. Start the backend on port 8000 (or set VITE_API_URL / use dev proxy).";
+  }
+  return error.message || "Request failed";
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  baseURL: API_BASE_URL,
   timeout: 120000,  // 2 minutes for agent/LLM requests
   withCredentials: true,
   headers: {
@@ -12,7 +47,7 @@ const apiClient = axios.create({
 
 // Separate client for refresh requests to avoid interceptor loops
 const refreshClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  baseURL: API_BASE_URL,
   timeout: 10000,
   withCredentials: true,
   headers: {
