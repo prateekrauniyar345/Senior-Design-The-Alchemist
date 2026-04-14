@@ -9,7 +9,7 @@ from app.schema.agent import AgentTask
 
 
 class Session(Base):
-    __tablename__ = "sessions"
+    __tablename__ = "chat_sessions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link session to a user
@@ -17,17 +17,21 @@ class Session(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    messages = relationship("Message", back_populates="session")
+    messages = relationship(
+        "Message",
+        back_populates="session",
+        cascade="all, delete-orphan",
+    )
     user = relationship("User", back_populates="sessions")
     tasks = relationship("AgentTask", back_populates="session", cascade="all, delete-orphan")
 
 
 
 class Message(Base):
-    __tablename__ = "messages"
+    __tablename__ = "chat_messages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
+    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.id"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # add user tracking
     sender = Column(String(50), nullable=False)
     content = Column(Text, nullable=False)
@@ -40,6 +44,27 @@ class Message(Base):
     user = relationship("User", back_populates="messages")
     input_tasks = relationship("AgentTask", back_populates="input_message", foreign_keys="AgentTask.input_message_id")
     output_tasks = relationship("AgentTask", back_populates="output_message", foreign_keys="AgentTask.output_message_id")
+    artifacts = relationship(
+        "ChatArtifact",
+        back_populates="message",
+        cascade="all, delete-orphan",
+    )
+
+
+class ChatArtifact(Base):
+    __tablename__ = "chat_artifacts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chat_messages.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    artifact_type = Column(String(50), nullable=False)
+    file_url = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    message = relationship("Message", back_populates="artifacts")
 
 
 class AgentOutput(Base):
@@ -47,7 +72,7 @@ class AgentOutput(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"))
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_messages.id", ondelete="CASCADE"))
     output_data = Column(Text, nullable=False)  # could store JSON or serialized output
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

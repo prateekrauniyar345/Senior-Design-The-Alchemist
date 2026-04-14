@@ -12,10 +12,10 @@ class AgentTask(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link task to user
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id", ondelete="CASCADE"))
+    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.id", ondelete="CASCADE"))
     agent_name = Column(String(100), nullable=False)
-    input_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
-    output_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
+    input_message_id = Column(UUID(as_uuid=True), ForeignKey("chat_messages.id"))
+    output_message_id = Column(UUID(as_uuid=True), ForeignKey("chat_messages.id"))
     status = Column(String(50), default="pending")
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     finished_at = Column(DateTime(timezone=True))
@@ -31,7 +31,7 @@ class AgentRun(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))  # link run to user
     agent_name = Column(String(100), nullable=False)       # e.g., "Collector", "Plotter"
-    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
+    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.id"))
     status = Column(String(50), default="running")          # running, success, failed
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     finished_at = Column(DateTime(timezone=True), nullable=True)
