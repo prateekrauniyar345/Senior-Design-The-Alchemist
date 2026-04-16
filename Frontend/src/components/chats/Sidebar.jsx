@@ -1,22 +1,23 @@
 // Frontend/src/components/chats/Sidebar.jsx
 import React, { useState } from "react";
-import { Plus, User, Settings, X, Menu, Trash2 } from "lucide-react";
+import { Plus, User, Settings, X, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import SettingsModal from "./SettingsModal";
 import "./Sidebar.css";
 
 const Sidebar = ({
-  sessions = [],
-  activeSessionId = null,
-  onSelectSession = () => {},
-  onDeleteSession = () => {},
   onStartNewChat = () => {},
   onToggleSidebar = () => {},
   isOpen = true,
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const chatList = [
+    { id: 1, title: "Project brainstorm" },
+    { id: 2, title: "Math help session" },
+    { id: 3, title: "Code review notes" },
+  ];
 
   return (
     <aside
@@ -68,41 +69,14 @@ const Sidebar = ({
           {/* Chat List */}
           <nav className="flex-fill overflow-auto p-4">
             <div className="d-flex flex-column gap-2">
-              {sessions.map((chat) => {
-                const isActive =
-                  activeSessionId != null &&
-                  String(activeSessionId) === String(chat.id);
-                return (
-                  <div
-                    key={chat.id}
-                    className="d-flex align-items-stretch gap-1"
-                  >
-                    <button
-                      type="button"
-                      className="btn flex-grow-1 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
-                      style={
-                        isActive
-                          ? { outline: "1px solid rgba(255,255,255,0.25)" }
-                          : undefined
-                      }
-                      onClick={() => onSelectSession(chat.id)}
-                    >
-                      {chat.title}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary px-2 py-0 rounded-4 chat-list-btn"
-                      aria-label={`Delete ${chat.title}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteSession(chat.id);
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                );
-              })}
+              {chatList.map((chat) => (
+                <button
+                  key={chat.id}
+                  className="btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
+                >
+                  {chat.title}
+                </button>
+              ))}
             </div>
           </nav>
 

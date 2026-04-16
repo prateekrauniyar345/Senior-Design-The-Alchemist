@@ -1,14 +1,13 @@
 from .user import User
 from .profile import Profile
-from .chat import Session, Message, AgentOutput, ChatArtifact
+from .chat import Session, Message, AgentOutput
 from .agent import AgentTask, AgentRun, DataArtifact, Visualization
 
 __all__ = [
     "User",
     "Profile",
     "Session", 
-    "Message",
-    "ChatArtifact",
+    "Message", 
     "AgentOutput",
     "AgentTask", 
     "AgentRun", 

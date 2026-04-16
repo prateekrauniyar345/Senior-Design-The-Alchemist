@@ -1,7 +1,6 @@
 # Backend/app/core/app.py
 import os
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.routers import( 
@@ -23,14 +22,6 @@ def create_app() -> FastAPI:
         title="LLM-Driven Smart Agents for User-Friendly Access to an Open Data Portal", 
         description="A FastAPI application with Agentic Capabilities to facilitate user-friendly access to an open data portal using Large Language Models(GPT-4o).",
         version="0.0.1"
-    )
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
     )
     
     # Get base directory - Backend folder (one level up from app directory)
