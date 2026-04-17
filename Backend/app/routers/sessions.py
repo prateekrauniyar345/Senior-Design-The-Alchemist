@@ -91,7 +91,7 @@ async def get_messages(
     
     messages = db.query(Message).filter(
         Message.session_id == session_id
-    ).order_by(Message.created_at).all()
+    ).order_by(Message.created_at.asc(), Message.id.asc()).all()
     
     # Parse meta_data JSON strings back to dicts
     for msg in messages:
