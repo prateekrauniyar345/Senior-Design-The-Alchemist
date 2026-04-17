@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy.sql import desc
+from sqlalchemy import or_
 from app.database import get_db
 from app.schema.chat import Session as SessionModel, Message
 from app.schema.user import User
@@ -89,9 +90,18 @@ async def get_messages(
             detail="Session not found"
         )
     
-    messages = db.query(Message).filter(
-        Message.session_id == session_id
-    ).order_by(Message.created_at.asc(), Message.id.asc()).all()
+    messages = (
+        db.query(Message)
+        .filter(
+            Message.session_id == session_id,
+            or_(
+                Message.user_id == current_user.id,
+                Message.user_id.is_(None),
+            ),
+        )
+        .order_by(Message.created_at.asc(), Message.id.asc())
+        .all()
+    )
     
     # Parse meta_data JSON strings back to dicts
     for msg in messages:

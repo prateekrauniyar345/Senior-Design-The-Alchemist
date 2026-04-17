@@ -1,9 +1,10 @@
 // Frontend/src/pages/Chat.jsx
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/chats/Sidebar";
 import ChatWindow from "../components/chats/ChatWindow";
 import ChatInput from "../components/chats/ChatInput";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import chatService from "../services/chatService";
 import "./Chat.css";
 
@@ -41,6 +42,8 @@ const mapApiMessagesToUi = (rows) =>
 const Chat = () => {
   const navigate = useNavigate();
   const { sessionId: routeSessionId } = useParams();
+  const { user, loading: authLoading } = useAuth();
+  const prevAuthUserKeyRef = useRef(undefined);
 
   const [messages, setMessages] = useState([createWelcomeMessage()]);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,9 +65,39 @@ const Chat = () => {
     }
   }, []);
 
+  const authUserKey = user?.id != null ? String(user.id) : null;
+
   useEffect(() => {
+    if (authLoading) return;
+    if (
+      prevAuthUserKeyRef.current !== undefined &&
+      prevAuthUserKeyRef.current !== authUserKey
+    ) {
+      setSessions([]);
+      setPendingSessionId(null);
+      setError(null);
+      setMessages([createWelcomeMessage()]);
+      setConversationTitle("New conversation");
+      navigate("/chat", { replace: true });
+    }
+    prevAuthUserKeyRef.current = authUserKey;
+  }, [authLoading, authUserKey, navigate]);
+
+  useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     (async () => {
+      if (!authUserKey) {
+        if (!cancelled) setSessions([]);
+        if (!cancelled && routeSessionId) {
+          navigate("/chat", { replace: true });
+        }
+        if (!cancelled) {
+          setMessages([createWelcomeMessage()]);
+          setConversationTitle("New conversation");
+        }
+        return;
+      }
       try {
         const list = await chatService.getSessions();
         if (cancelled) return;
@@ -92,7 +125,7 @@ const Chat = () => {
     return () => {
       cancelled = true;
     };
-  }, [routeSessionId]);
+  }, [authLoading, authUserKey, navigate, routeSessionId]);
 
   const handleStartNewChat = useCallback(() => {
     navigate("/chat", { replace: true });
@@ -114,6 +147,10 @@ const Chat = () => {
     async (rawMessage) => {
       const text = rawMessage.trim();
       if (!text || isLoading) return;
+      if (authLoading || !authUserKey) {
+        setError("Please sign in to use chat.");
+        return;
+      }
 
       let sessionId = routeSessionId ?? pendingSessionId;
 
@@ -205,6 +242,8 @@ const Chat = () => {
       }
     },
     [
+      authLoading,
+      authUserKey,
       conversationTitle,
       isLoading,
       navigate,
