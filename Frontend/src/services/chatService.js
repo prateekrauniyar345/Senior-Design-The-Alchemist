@@ -12,10 +12,12 @@ const chatService = {
    * @param {string} sessionId - Optional session ID for message persistence
    * @returns {Promise<object>} The full response object from the backend agent.
    */
-  async getLLMResponse(userMessage, sessionId = null) {
+  async getLLMResponse(userMessage, sessionId) {
     try {
-      const payload = { query: userMessage };
-      if (sessionId) payload.session_id = sessionId;
+      if (!sessionId) {
+        throw new Error("sessionId is required for chat");
+      }
+      const payload = { query: userMessage, session_id: sessionId };
 
       const response = await apiClient.post("/api/agent/chat", payload);
       return response.data;

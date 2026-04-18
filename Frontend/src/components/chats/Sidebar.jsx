@@ -10,14 +10,12 @@ const Sidebar = ({
   onStartNewChat = () => {},
   onToggleSidebar = () => {},
   isOpen = true,
+  sessions = [],
+  activeSessionId = null,
+  onSelectChat = () => {},
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const chatList = [
-    { id: 1, title: "Project brainstorm" },
-    { id: 2, title: "Math help session" },
-    { id: 3, title: "Code review notes" },
-  ];
 
   return (
     <aside
@@ -69,14 +67,24 @@ const Sidebar = ({
           {/* Chat List */}
           <nav className="flex-fill overflow-auto p-4">
             <div className="d-flex flex-column gap-2">
-              {chatList.map((chat) => (
-                <button
-                  key={chat.id}
-                  className="btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4"
-                >
-                  {chat.title}
-                </button>
-              ))}
+              {sessions.map((chat) => {
+                const idStr = String(chat.id);
+                const isActive =
+                  activeSessionId != null && String(activeSessionId) === idStr;
+                return (
+                  <button
+                    key={idStr}
+                    type="button"
+                    className={`btn w-100 text-start px-4 py-3 rounded fw-medium chat-list-btn rounded-4${
+                      isActive ? " chat-list-btn-active" : ""
+                    }`}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() => onSelectChat(idStr)}
+                  >
+                    {chat.title || "Chat"}
+                  </button>
+                );
+              })}
             </div>
           </nav>
 

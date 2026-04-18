@@ -15,14 +15,17 @@ class AgentQueryRequest(BaseModel):
         description="The natural language query or instruction for the agent to process.",
         examples=["Generate a histogram of mineral samples from the Mojave desert."]
     )
-    session_id: Optional[UUID] = Field(
-        default=None,
-        description="Optional session ID. When provided and the user is authenticated, messages are persisted to the database."
+    session_id: UUID = Field(
+        ...,
+        description="Chat session ID. Messages are persisted to this session for the authenticated user."
     )
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"query": "Tell me about the geological composition of the Moon."}
+            "example": {
+                "query": "Tell me about the geological composition of the Moon.",
+                "session_id": "00000000-0000-4000-8000-000000000001",
+            }
         }
     )
 
