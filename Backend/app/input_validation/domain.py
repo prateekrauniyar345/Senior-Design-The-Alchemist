@@ -26,10 +26,19 @@ GENERAL_KEYWORDS = [
     "hello",
     "hi",
     "hey",
+    "how are you",
+    "how are you doing",
+    "how's it going",
+    "how is it going",
+    "good morning",
+    "good afternoon",
+    "good evening",
     "what can you do",
     "how do i use you",
     "help",
-    "who are you"
+    "who are you",
+    "thanks",
+    "thank you"
 ]
 
 
