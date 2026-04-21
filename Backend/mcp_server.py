@@ -1,6 +1,9 @@
 # Backend/mcp_server.py
 import sys
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 # Add the parent directory to sys.path to allow imports from the app package
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,9 +29,13 @@ mcp.tool(collect_localities)
 mcp.tool(profile_sample_data)
 
 # Run the Server
+import os
+
 if __name__ == "__main__":
+    port = int(os.environ.get("MCP_PORT", 8010))
+
     mcp.run(
-        transport="http", 
-        host="0.0.0.0", 
-        port=8010,
+        transport="http",
+        host="0.0.0.0",
+        port=port,
     )
