@@ -10,6 +10,7 @@ from app.input_validation.validator import validate_user_input
 import time
 from app.models.agent_models import AgentQueryRequest, AgentQueryResponse, AgentHealthResponse
 from app.utils.helpers import extract_file_paths, convert_path_to_url
+from app.utils.result_descriptions import build_result_description
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.schema.chat import Session as SessionModel, Message as MessageModel
@@ -352,14 +353,26 @@ async def chat_with_agent(
     final_message = _normalize_assistant_text(final_message)
 
     sample_data = None
+    result_data_rows = []
     try:
         if sample_data_path:
             with open(sample_data_path, "r", encoding="utf-8") as f:
                 raw = _json.load(f)
-            sample_data = raw.get("results", [])[:100]
+            result_data_rows = raw.get("results", []) if isinstance(raw, dict) else raw
+            sample_data = result_data_rows[:100]
     except Exception as e:
         print(f"Error reading sample data file at {sample_data_path}: {e}")
         sample_data = None
+        result_data_rows = []
+
+    if vega_spec or sample_data:
+        final_message = build_result_description(
+            query=clean_query,
+            vega_spec=vega_spec,
+            data_rows=result_data_rows or sample_data,
+            chart_generated=bool(vega_spec),
+        )
+        final_message = _normalize_assistant_text(final_message)
 
     data_url = convert_path_to_url(sample_data_path) if sample_data_path else None
 
