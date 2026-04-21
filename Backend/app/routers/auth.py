@@ -23,6 +23,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
 secure_flag = True if os.getenv("ENVIRONMENT") == "production" else False
+lax_flag = "none" if os.getenv("ENVIRONMENT") == "production" else "lax"
 
 @router.post("/login", response_model=AuthResponse)
 async def login(req: LoginRequest, response: Response, db: DBSession = Depends(get_db)):
@@ -64,7 +65,7 @@ async def login(req: LoginRequest, response: Response, db: DBSession = Depends(g
             value=auth_response.session.access_token,
             httponly=True,
             secure=secure_flag,  # Set to True in production with HTTPS
-            samesite="lax",
+            samesite=lax_flag,
             max_age=auth_response.session.expires_in
         )
         
@@ -73,7 +74,7 @@ async def login(req: LoginRequest, response: Response, db: DBSession = Depends(g
             value=auth_response.session.refresh_token,
             httponly=True,
             secure=secure_flag,
-            samesite="lax",
+            samesite=lax_flag,
             max_age=7 * 24 * 60 * 60  # 7 days
         )
         
@@ -140,7 +141,7 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
                 value=auth_response.session.access_token,
                 httponly=True,
                 secure=secure_flag,
-                samesite="lax",
+                samesite=lax_flag,
                 max_age=auth_response.session.expires_in
             )
             
@@ -149,7 +150,7 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
                 value=auth_response.session.refresh_token,
                 httponly=True,
                 secure=secure_flag,
-                samesite="lax",
+                samesite=lax_flag,
                 max_age=7 * 24 * 60 * 60
             )
         
