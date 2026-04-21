@@ -3,8 +3,10 @@ import sys
 import os
 
 # Add the parent directory to sys.path to allow imports from the app package
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-print("file is : ", sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+print("Current path added:", current_dir)
 
 from fastmcp import FastMCP
 from app.tools import (
