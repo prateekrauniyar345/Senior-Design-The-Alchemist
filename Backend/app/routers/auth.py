@@ -8,6 +8,8 @@ from app.schema import User
 from app.config import settings
 import uuid
 from app.models import LoginRequest, RegisterRequest, AuthResponse
+from app.models.auth_models import CurrentUserResponse
+from app.dependencies.auth import get_current_user, get_optional_user
 from supabase import create_client, Client
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -181,16 +183,17 @@ async def logout(response: Response):
 
 
 @router.get("/me")
-async def get_current_user(db: DBSession = Depends(get_db)):
+async def get_me(current_user: User = Depends(get_current_user)):
     """
-    Get current authenticated user from session.
-    This is a simplified version - in production, validate the token from cookies.
+    Get current authenticated user.
+    Requires valid session cookie (sb-access-token).
+    Returns 401 if user is not authenticated.
     """
-    # For now, return None - proper implementation would:
-    # 1. Get access token from cookies
-    # 2. Verify token with Supabase
-    # 3. Look up user in local database
-    # 4. Return user info
-    
-    # TODO: Implement proper token validation
-    return {"user": None}
+    return {
+        "user": {
+            "id": str(current_user.id),
+            "email": current_user.email,
+            "name": current_user.full_name,
+            "created_at": current_user.created_at.isoformat() if current_user.created_at else None
+        }
+    }

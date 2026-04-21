@@ -1,5 +1,5 @@
 // Frontend/src/components/chats/ProfileModal.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,10 +9,23 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name: '',
+    email: '',
   });
   const [previewImage, setPreviewImage] = useState(null);
+
+  /**
+   * Sync form data with AuthContext user data when modal opens or user changes
+   */
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+      });
+      console.log('Profile modal synced with user data:', { name: user.name, email: user.email });
+    }
+  }, [isOpen, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,8 +44,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
   };
 
   const handleSave = () => {
-    // TODO: Implement save logic later
+    // TODO: Implement save logic to update user profile via /api/users/user endpoint
     console.log('Saving profile:', formData);
+    // Example: await apiClient.patch('/api/users/user', { full_name: formData.name });
     onClose();
   };
 
@@ -113,7 +127,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 className="form-control"
                 placeholder="Enter your email"
+                disabled
               />
+              <small style={{ color: '#9ca3af', marginTop: '0.25rem', display: 'block' }}>
+                Email cannot be changed
+              </small>
             </div>
           </div>
         </div>
