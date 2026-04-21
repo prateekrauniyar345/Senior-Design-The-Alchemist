@@ -11,13 +11,18 @@ from app.models import LoginRequest, RegisterRequest, AuthResponse
 from app.models.auth_models import CurrentUserResponse
 from app.dependencies.auth import get_current_user, get_optional_user
 from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()  # Load environment variables from .env file
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 # Initialize Supabase client
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
-
+secure_flag = True if os.getenv("ENVIRONMENT") == "production" else False
 
 @router.post("/login", response_model=AuthResponse)
 async def login(req: LoginRequest, response: Response, db: DBSession = Depends(get_db)):
@@ -58,7 +63,7 @@ async def login(req: LoginRequest, response: Response, db: DBSession = Depends(g
             key="sb-access-token",
             value=auth_response.session.access_token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=secure_flag,  # Set to True in production with HTTPS
             samesite="lax",
             max_age=auth_response.session.expires_in
         )
@@ -67,7 +72,7 @@ async def login(req: LoginRequest, response: Response, db: DBSession = Depends(g
             key="sb-refresh-token",
             value=auth_response.session.refresh_token,
             httponly=True,
-            secure=False,
+            secure=secure_flag,
             samesite="lax",
             max_age=7 * 24 * 60 * 60  # 7 days
         )
@@ -134,7 +139,7 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
                 key="sb-access-token",
                 value=auth_response.session.access_token,
                 httponly=True,
-                secure=False,
+                secure=secure_flag,
                 samesite="lax",
                 max_age=auth_response.session.expires_in
             )
@@ -143,7 +148,7 @@ async def register(req: RegisterRequest, response: Response, db: DBSession = Dep
                 key="sb-refresh-token",
                 value=auth_response.session.refresh_token,
                 httponly=True,
-                secure=False,
+                secure=secure_flag,
                 samesite="lax",
                 max_age=7 * 24 * 60 * 60
             )
