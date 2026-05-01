@@ -1,0 +1,89 @@
+%%{init: {'theme':'base', 'themeVariables': {
+    'background': '#ffffff',
+    'fontSize': '22px',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000'
+}}}%%
+graph TB
+    subgraph FRONTEND["Frontend Layer"]
+        USER["User Input<br/>Natural Language Query"]
+        DISPLAY["Rendered Output<br/>Charts & Results"]
+    end
+    
+    subgraph BACKEND["Backend - LangGraph Engine"]
+        direction TB
+        
+        STATE["LangGraph State<br/>user_message<br/>session_id<br/>context"]
+        
+        subgraph CORE["Agentic Core"]
+            SUPER["<b>SUPERVISOR</b><br/>Decision Router<br/>Intent Classifier<br/>LLM: GPT-4o"]
+        end
+        
+        subgraph AGENTS["Specialized Agents"]
+            A1["<b>General Agent</b><br/>Greetings & FAQ<br/>No tools needed"]
+            A2["<b>Geomaterial Agent</b><br/>Mineral queries<br/>Property filters"]
+            A3["<b>Locality Agent</b><br/>Geographic search<br/>Country queries"]
+            A4["<b>Plot Agent</b><br/>Visualization specs<br/>Chart generation"]
+        end
+        
+        subgraph TOOLS["MCP Tools Layer"]
+            T1["collect_geomaterials()"]
+            T2["collect_localities()"]
+            T3["histogram_plot()"]
+            T4["network_plot()"]
+            T5["heatmap_plot()"]
+        end
+    end
+    
+    subgraph RESPONSE["Response Builder"]
+        JSON["JSON Response<br/>text + chart_data<br/>metadata + status"]
+    end
+    
+    %% Flow
+    USER -->|"HTTP POST<br/>/api/agent/chat"| STATE
+    STATE -->|"Invoke LangGraph"| SUPER
+    
+    SUPER -->|"Route: Greeting"| A1
+    SUPER -->|"Route: Mineral Data"| A2
+    SUPER -->|"Route: Location Data"| A3
+    SUPER -->|"Route: Visualization"| A4
+    
+    A1 -->|"Text Response"| SUPER
+    A2 -->|"Request Tools"| SUPER
+    A3 -->|"Request Tools"| SUPER
+    A4 -->|"Request Tools"| SUPER
+    
+    A2 -->|"Invoke"| T1
+    A3 -->|"Invoke"| T2
+    A4 -->|"Invoke"| T3
+    A4 -->|"Invoke"| T4
+    A4 -->|"Invoke"| T5
+    
+    T1 -->|"ToolResponse<br/>data + status"| SUPER
+    T2 -->|"ToolResponse<br/>data + status"| SUPER
+    T3 -->|"ToolResponse<br/>data + status"| SUPER
+    T4 -->|"ToolResponse<br/>data + status"| SUPER
+    T5 -->|"ToolResponse<br/>data + status"| SUPER
+    
+    SUPER -->|"Aggregated Response"| JSON
+    JSON -->|"HTTP 200"| DISPLAY
+    
+    %% Node styling (kept your colors)
+    style USER fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style DISPLAY fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    
+    style STATE fill:#f3e5f5,stroke:#512da8,stroke-width:2px
+    style SUPER fill:#d1c4e9,stroke:#512da8,stroke-width:3px
+    
+    style A1 fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
+    style A2 fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+    style A3 fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style A4 fill:#ffe0b2,stroke:#f57c00,stroke-width:2px
+    
+    style T1 fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style T2 fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style T3 fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    style T4 fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    style T5 fill:#ffccbc,stroke:#e64a19,stroke-width:2px
+    
+    style JSON fill:#b2dfdb,stroke:#00796b,stroke-width:2px

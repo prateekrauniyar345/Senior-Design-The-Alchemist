@@ -17,19 +17,15 @@ def to_params(q: Union[BaseModel, Dict[str, Any]]) -> Dict[str, str]:
     """
     Convert a Pydantic model or dict into API-ready params:
     - dump with aliases (if model)
-    - drop None
+    - drop None values
     - convert lists to CSV strings
-    - ensure limit is set to at least 100
+    - handle page-size parameter for Mindat API
     """
     if isinstance(q, BaseModel):
         params: Dict[str, Any] = q.model_dump(by_alias=True, exclude_none=True)
     else:
         # assume it's already a dict-like input; drop None values
         params = {k: v for k, v in q.items() if v is not None}
-
-    # Force limit to 100 if not present or less than 100 (Mindat API defaults to 10)
-    if 'limit' not in params or params.get('limit', 0) < 100:
-        params['limit'] = 100
 
     for k, v in list(params.items()):
         if isinstance(v, (list, tuple)):

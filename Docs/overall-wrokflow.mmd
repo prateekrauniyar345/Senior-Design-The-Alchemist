@@ -1,0 +1,67 @@
+
+%%{init: {'theme':'base', 'themeVariables': {
+    'background': '#ffffff',
+    'fontSize': '22px',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000'
+}}}%%
+graph TD
+    USER["User Query<br/>Natural Language Input"]
+    
+    USER -->|"HTTP POST<br/>/api/agent/chat"| FASTAPI["FastAPI Router<br/>Request Handler"]
+    
+    FASTAPI -->|"Initialize<br/>LangGraph State"| STATE["State Object<br/>user_message<br/>session_id<br/>context"]
+    
+    STATE -->|"Invoke Graph"| SUPERVISOR["Supervisor Agent<br/>LLM Decision Node<br/>Analyzes Intent"]
+    
+    SUPERVISOR -->|"LLM Call<br/>gpt-4o"| AZURE["Azure OpenAI<br/>GPT-4o API<br/>Token Generation"]
+    
+    AZURE -->|"Agent Selection<br/>Decision"| ROUTER{"Route Decision<br/>What to do?"}
+    
+    ROUTER -->|"Greeting/FAQ"| GENERAL["General Agent<br/>Conversational Response<br/>No Tools"]
+    
+    ROUTER -->|"Mineral Data"| GEO["Geomaterial Agent<br/>Collect Data<br/>Filter Parameters"]
+    
+    ROUTER -->|"Location Data"| LOC["Locality Agent<br/>Geographic Search<br/>Country Queries"]
+    
+    ROUTER -->|"Visualization"| VIZ["Plot Agent<br/>Chart Generation<br/>Spec Creation"]
+    
+    GENERAL -->|"Text Response"| SUPERVISOR
+    
+    GEO -->|"Invoke MCP Tool<br/>collect_geomaterials()"| MCP1["MCP Server<br/>localhost:8010<br/>Tool Registry"]
+    
+    LOC -->|"Invoke MCP Tool<br/>collect_localities()"| MCP1
+    
+    VIZ -->|"Invoke MCP Tool<br/>histogram_plot()<br/>heatmap_plot()"| MCP1
+    
+    MCP1 -->|"Build Pydantic Query<br/>to_params() conversion"| MCPTOOLS["MCP Tools Handler<br/>Parameter Validation<br/>Type Conversion"]
+    
+    MCPTOOLS -->|"HTTP/Auth<br/>Token: MINDAT_API_KEY"| MINDAT["Mindat.org API<br/>Geomaterials Endpoint<br/>Localities Endpoint"]
+    
+    MINDAT -->|"JSON Response<br/>200 OK"| PROCESSING["Data Processing<br/>Parse Results<br/>Aggregate Data<br/>Extract Features"]
+    
+    PROCESSING -->|"Save to Filesystem<br/>/contents/sample_data/"| CACHE["Cache Layer<br/>mindat_geomaterial_response.json<br/>mindat_locality_response.json"]
+    
+    CACHE -->|"Return ToolResponse<br/>status + data"| SUPERVISOR
+    
+    SUPERVISOR -->|"All agents responded<br/>Aggregate outputs"| AGGREGATOR["Response Aggregator<br/>Combine results<br/>Format output"]
+    
+    AGGREGATOR -->|"JSON Structure<br/>text + chart + metadata"| FASTAPI
+    
+    FASTAPI -->|"Save Message<br/>Session + AgentOutput"| DATABASE["Supabase PostgreSQL<br/>Messages Table<br/>AgentOutput Table"]
+    
+    FASTAPI -->|"HTTP 200<br/>JSON Response"| FRONTEND["React Frontend<br/>Render Response<br/>Display Chart<br/>Show Metadata"]
+    
+    FRONTEND -->|"Interactive UI<br/>Vega-Lite Chart"| USER_DISPLAY["User Sees Result<br/>Visualization + Text<br/>Download/Share Options"]
+    
+    style USER fill:#e1f5ff
+    style FASTAPI fill:#fff3e0
+    style SUPERVISOR fill:#f3e5f5
+    style AZURE fill:#e0f2f1
+    style GEO fill:#fce4ec
+    style LOC fill:#fce4ec
+    style VIZ fill:#fce4ec
+    style MCP1 fill:#fff9c4
+    style MINDAT fill:#ffccbc
+    style FRONTEND fill:#c8e6c9
+    style USER_DISPLAY fill:#a5d6a7

@@ -17,7 +17,7 @@ services:
         value: "3"
 
       - key: MCP_SERVER_URL
-        value: https://alchemist-mcp.onrender.com/mcp
+        value: https://senior-design-the-alchemist-mcp-server.onrender.com
 
       - key: AZURE_DEPLOYMENT_NAME
         sync: false
