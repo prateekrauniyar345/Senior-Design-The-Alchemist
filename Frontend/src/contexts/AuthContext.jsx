@@ -1,97 +1,109 @@
+// Frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiClient from '../api/apiClient';
 
 const AuthContext = createContext(null);
-
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
+  /**
+   * Check authentication status by calling /api/auth/me endpoint.
+   * This validates the session cookie and returns user info if authenticated.
+   */
   const checkAuth = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      }
+      const res = await apiClient.get("/api/auth/me");
+      setUser(res.data.user);
+      console.log('User authenticated:', res.data.user.email);
     } catch (err) {
-      console.error('Auth check failed:', err);
+      // Any error during checkAuth means user is not authenticated
+      // This is expected - just set user to null, don't redirect
+      setUser(null);
+      console.debug('User not authenticated');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Initial auth check on mount
+   */
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  /**
+   * Login with email and password.
+   * Sets user state on success.
+   */
   const login = async (email, password) => {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-    
-    if (!res.ok) {
-      throw new Error(data.message || "Login failed");
+    try {
+      const res = await apiClient.post("/api/auth/login", { email, password });
+      const userData = res.data.user;
+      setUser(userData);
+      console.log('User logged in:', userData.email);
+      return res.data;
+    } catch (err) {
+      setUser(null);
+      throw err;
     }
-
-    setUser(data.user);
-    return data;
   };
 
+  /**
+   * Register new user with name, email, and password.
+   * Sets user state on success.
+   */
   const register = async (name, email, password) => {
-    const res = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name, email, password }),
-    });
-
-    const data = await res.json();
-    
-    if (!res.ok) {
-      throw new Error(data.message || "Registration failed");
+    try {
+      const res = await apiClient.post("/api/auth/register", { name, email, password });
+      
+      // If registration was successful and we got user data, set it
+      if (res.data.user) {
+        setUser(res.data.user);
+        console.log('User registered:', res.data.user.email);
+      }
+      
+      return res.data;
+    } catch (err) {
+      setUser(null);
+      throw err;
     }
-
-    // Don't set user yet - user needs to verify email or login
-    return data;
   };
 
+  /**
+   * Logout the user.
+   * Clears session cookies on backend and user state.
+   */
   const logout = async () => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await apiClient.post("/api/auth/logout");
+      console.log('User logged out');
     } catch (err) {
-      console.error('Logout failed:', err);
+      console.error('Logout failed:', err.message);
+    } finally {
+      setUser(null);
     }
-    setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    register,
-    logout,
-    loading,
+  /**
+   * Force refresh of user data from /api/auth/me
+   * Useful after updating user profile
+   */
+  const refreshUser = async () => {
+    await checkAuth();
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUser, checkAuth }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

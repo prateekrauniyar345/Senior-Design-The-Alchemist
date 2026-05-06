@@ -1,9 +1,14 @@
+// Frontend/src/pages/Dashboard.jsx
 import React from 'react';
 import { Container, Navbar, Nav, Button, Row, Col, Card, Table, Badge } from 'react-bootstrap';
 import { LogIn, UserPlus, Sparkles, Activity, CheckCircle, Clock, Zap } from 'lucide-react';
 import Header from '../components/shared/header';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
+    // get the user from the auth context
+    const { user } = useAuth();
+
     const gradientTextStyle = {
         background: 'linear-gradient(90deg, #00BFFF, #ff1493)',
         WebkitBackgroundClip: 'text',
@@ -70,7 +75,7 @@ const Dashboard = () => {
                         
                         <div className="d-flex align-items-center gap-3">
                             <Button 
-                                href="/chat" 
+                                href={user ? "/chat" : "/signin"} 
                                 size="lg"
                                 className="fw-semibold d-inline-flex align-items-center px-5 py-3 fs-4"
                                 style={{ 

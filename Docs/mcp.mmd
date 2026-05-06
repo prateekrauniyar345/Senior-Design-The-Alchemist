@@ -1,0 +1,51 @@
+graph TD
+    subgraph "The Alchemist - Agentic Core"
+        AG[LangGraph Agents]
+        Supervisor[Supervisor Agent]
+        LLM[Azure OpenAI GPT-4o]
+        
+        AG <--> Supervisor
+        Supervisor <--> LLM
+    end
+
+    subgraph "MCP Client Layer (mcp_adapter.py)"
+        Adapter[LangChain MCP Adapter]
+        RemoteClient[MCP Python Client]
+    end
+
+    subgraph "MCP Server - Remote Process (localhost:8010)"
+        Server[FastMCP Server Instance]
+        
+        subgraph "Registered Tools"
+            T1[collect_geomaterials]
+            T2[collect_localities]
+            T3[histogram_plot]
+            T4[network_plot]
+            T5[heatmap_plot]
+            T6[profile_sample_data]
+        end
+    end
+
+    subgraph "External Resources"
+        Mindat[(Mindat.org API)]
+        FS[Local Filesystem /contents]
+    end
+
+    %% Flow connections
+    AG -->|Invocations| Adapter
+    Adapter --> RemoteClient
+    RemoteClient -.->|JSON-RPC over stdio/HTTP| Server
+    
+    %% Server to Tools
+    Server --> T1 & T2
+    Server --> T3 & T4 & T5
+    Server --> T6
+
+    %% Tool to Resources
+    T1 & T2 -->|Auth Token| Mindat
+    T3 & T4 & T5 -->|Save PNG/JSON| FS
+    T6 -->|Read JSON| FS
+
+    %% Data Return
+    FS -.->|Paths| Server
+    Server -.->|Structured ToolResponse| AG

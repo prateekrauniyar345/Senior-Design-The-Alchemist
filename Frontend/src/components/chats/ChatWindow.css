@@ -13,6 +13,7 @@
 .chat-window {
   background-color: #1c1c1e;
   color: #f3f4f6;
+  /* border: 1px solid red; */
 }
 
 .empty-chat-title {

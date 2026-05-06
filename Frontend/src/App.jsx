@@ -1,3 +1,4 @@
+// Frontend/src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
 
@@ -18,7 +19,8 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/chat" element={<Chat />} /> {/* No footer here */}
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/:sessionId" element={<Chat />} /> {/* Session-specific chat */}
         <Route path="/logout" element={<Logout />} />
       </Routes>
 
@@ -28,6 +30,7 @@ function App() {
         <Route path="/signin" element={null} />
         <Route path="/signup" element={null} />
         <Route path="/chat" element={null} />
+        <Route path="/chat/:sessionId" element={null} />
         <Route path="/logout" element={null} />
       </Routes>
     </BrowserRouter>

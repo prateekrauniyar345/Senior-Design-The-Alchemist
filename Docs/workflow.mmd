@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant User
+    participant React as React Frontend
+    participant Fast as FastAPI Router
+    participant Sup as Supervisor (LLM)
+    participant Loc as Locality Agent
+    participant Map as Heatmap Plotter
+    participant MCP as MCP Server (Mindat)
+
+    User->>React: "Map minerals in Korea"
+    React->>Fast: POST /api/agent/chat
+    Fast->>Sup: Start Graph Workflow
+
+    Note over Sup: Reasoning: Need location data
+    Sup->>Loc: Route to Locality Collector
+    Loc->>MCP: collect_localities(country="Korea")
+    MCP-->>Loc: Locality data
+    Loc-->>Sup: Data ready
+
+    Note over Sup: Reasoning: Generate visualization
+    Sup->>Map: Route to Heatmap Plotter
+    Map->>MCP: heatmap_plot(data)
+    MCP-->>Map: map.html
+    Map-->>Sup: Map ready
+
+    Sup->>Fast: FINISH
+    Fast-->>React: Response + plot_url
+    React-->>User: Display map

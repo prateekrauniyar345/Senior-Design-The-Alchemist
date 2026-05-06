@@ -1,18 +1,20 @@
 # Backend/mcp_server.py
 import sys
 import os
+from dotenv import load_dotenv
 
-# Add the parent directory to sys.path to allow imports from the Backend package
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print("file is : ", sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+load_dotenv()  # Load environment variables from .env file
+
+# Add the parent directory to sys.path to allow imports from the app package
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+print("Current path added:", current_dir)
 
 from fastmcp import FastMCP
-from Backend.tools import (
-    collect_geomaterials, 
-    collect_localities, 
-    network_plot, 
-    histogram_plot, 
-    heatmap_plot, 
+from app.tools import (
+    collect_geomaterials,
+    collect_localities,
     profile_sample_data
 )
 
@@ -24,15 +26,16 @@ mcp = FastMCP("Mindat Master Server")
 # Register the Tools
 mcp.tool(collect_geomaterials)
 mcp.tool(collect_localities)
-mcp.tool(network_plot)
-mcp.tool(histogram_plot)
-mcp.tool(heatmap_plot)
 mcp.tool(profile_sample_data)
 
 # Run the Server
+import os
+
 if __name__ == "__main__":
+    port = int(os.environ.get("MCP_PORT", 8010))
+
     mcp.run(
-        transport="http", 
-        host="0.0.0.0", 
-        port=8005,
+        transport="http",
+        host="0.0.0.0",
+        port=port,
     )
