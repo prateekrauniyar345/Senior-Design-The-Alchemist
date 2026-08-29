@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.graph.message import add_messages
 from langchain.messages import AnyMessage
 import operator
 from app.utils.custom_prompts import (
@@ -47,6 +48,78 @@ print(f"[Initialize Agent] MCP Server URL configured as: {MCP_SERVER_URL}")
 
 
 # ----------------------------------------------
+# Tool Schema Normalization for OpenAI
+# ----------------------------------------------
+def _normalize_schema_for_openai(schema: Dict[str, Any]) -> None:
+    """
+    Recursively rewrite a JSON schema in place so it satisfies OpenAI's strict
+    function-calling requirements:
+      1. Every object schema must set 'additionalProperties': false.
+      2. Every object schema's 'required' array must list ALL of its properties
+         (fields that were optional/had defaults are just included as-is; the
+         model is still free to omit meaningful values via nullable typing,
+         but MCP-generated schemas here don't mark them nullable, so we simply
+         mark everything required, matching how the underlying Python function
+         already provides sensible defaults for those args).
+
+    Pydantic/FastMCP-generated schemas commonly factor nested models out into a
+    top-level '$defs' section and reference them via '$ref' (e.g. a property
+    schema of just {"$ref": "#/$defs/SomeModel"}). We don't resolve $refs, but
+    since '$defs' entries are themselves full schemas, we normalize every
+    definition in '$defs' directly wherever we encounter one.
+    """
+    if not isinstance(schema, dict):
+        return
+
+    # Normalize any nested definitions (Pydantic nests these under '$defs',
+    # older JSON Schema drafts use 'definitions'). These are the actual object
+    # schemas that '$ref' pointers resolve to.
+    for defs_key in ("$defs", "definitions"):
+        defs = schema.get(defs_key)
+        if isinstance(defs, dict):
+            for def_schema in defs.values():
+                _normalize_schema_for_openai(def_schema)
+
+    if schema.get("type") == "object" or ("properties" in schema and "type" not in schema):
+        schema.setdefault("type", "object")
+        schema.setdefault("additionalProperties", False)
+        properties = schema.get("properties", {})
+        if isinstance(properties, dict) and properties:
+            schema["required"] = list(properties.keys())
+
+    # Recurse into nested property schemas
+    for prop_schema in schema.get("properties", {}).values():
+        _normalize_schema_for_openai(prop_schema)
+
+    # Recurse into array item schemas
+    items_schema = schema.get("items")
+    if isinstance(items_schema, dict):
+        _normalize_schema_for_openai(items_schema)
+
+    # Recurse into combinators (anyOf/oneOf/allOf) which is how Optional[...] fields are represented
+    for combinator in ("anyOf", "oneOf", "allOf"):
+        for sub_schema in schema.get(combinator, []):
+            _normalize_schema_for_openai(sub_schema)
+
+
+def normalize_tool_schemas(tools: List[Any]) -> List[Any]:
+    """
+    Normalize MCP tool schemas for OpenAI's strict function-calling requirements.
+
+    langchain_mcp_adapters exposes the raw MCP inputSchema dict as `tool.args_schema`
+    on the resulting StructuredTool, so we mutate it in place.
+    """
+    for tool in tools:
+        schema = getattr(tool, "args_schema", None)
+        if isinstance(schema, dict):
+            _normalize_schema_for_openai(schema)
+            print(f"[Tool Normalization] Normalized schema for '{tool.name}'")
+        else:
+            print(f"[Tool Normalization] Skipped '{getattr(tool, 'name', '?')}': args_schema is not a dict ({type(schema)})")
+    return tools
+
+
+# ----------------------------------------------
 # Load the tools from the MCP servers
 # ----------------------------------------------
 async def load_mcp_tools():
@@ -61,6 +134,10 @@ async def load_mcp_tools():
         })
         tools = await client.get_tools()
         print(f"[MCP Client] Successfully loaded {len(tools)} MCP tools from {MCP_SERVER_URL}")
+
+        # Normalize tool schemas so OpenAI's strict function-calling validation accepts them
+        tools = normalize_tool_schemas(tools)
+
         return tools
     except Exception as e:
         print(f"[MCP Client] Failed to load MCP tools from {MCP_SERVER_URL}: {e}")
@@ -149,8 +226,13 @@ class ControllerDecision(BaseModel):
 
 
 class State(TypedDict):
-    # The Annotated type with operator.add ensures that new messages are appended to the existing list rather than replacing it.
-    messages: Annotated[List[AnyMessage], operator.add]    
+    # create_agent's internal AgentState uses the add_messages reducer, which merges by
+    # message id and returns the FULL accumulated message list on every ainvoke() call
+    # (not just the newly generated ones). Using plain operator.add here would re-concatenate
+    # that already-complete list on top of our existing state, duplicating history every
+    # cycle and destabilizing the supervisor's routing decisions. add_messages merges by id
+    # instead, so re-adding the same messages is a no-op and only genuinely new ones are appended.
+    messages: Annotated[List[AnyMessage], add_messages]
     next: Optional[str]
 
     # sample_data path

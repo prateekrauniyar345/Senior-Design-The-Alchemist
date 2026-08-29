@@ -1,0 +1,101 @@
+%%{init: {'theme':'base', 'themeVariables': {
+    'primaryColor': '#0f0f0f',
+    'primaryBorderColor': '#4a5568',
+    'background': '#1a1a1a',
+    'fontSize': '18px',
+    'clusterBkg': '#2d3748',
+    'clusterBorder': '#4a5568',
+    'tertiaryTextColor': '#e2e8f0',
+    'actorBkg': '#ADD8E6',
+    'actorBorder': '#4a5568',
+    'actorTextColor': '#000000',
+    'actorLineColor': '#4a5568'
+}}}%%
+sequenceDiagram
+    participant User
+    participant React as React Frontend
+    participant Auth as Auth Service
+    participant Fast as FastAPI Router
+    participant Val as Input Validator
+    participant DB as PostgreSQL
+    participant Graph as LangGraph Engine
+    participant Sup as Supervisor LLM
+    participant GeoC as Geomaterial Collector
+    participant LocC as Locality Collector
+    participant VegaA as Vega Plot Agent
+    participant MCP as MCP Server
+    participant Azure as Azure OpenAI
+
+    User->>React: Query: Map minerals in Korea
+    React->>Auth: Validate Session Token
+    Auth-->>React: Token Valid
+    
+    React->>Fast: POST /api/agent/chat
+    Note over React,Fast: message, session_id, user_id
+    
+    Fast->>Val: Validate Input
+    Note over Val: length, security, domain
+    Val-->>Fast: Valid Query
+    
+    Fast->>DB: Load or Create Session
+    Note over DB: Save user_id and session_id<br/>to sessions table
+    DB-->>Fast: Session Ready
+    
+    Fast->>DB: Save User Message
+    Note over DB: Insert message into<br/>messages table
+    DB-->>Fast: Message ID
+    
+    Fast->>Graph: Initialize LangGraph State
+    Note over Graph: messages, user_query, session_id
+    Graph->>Sup: Execute Supervisor Node
+    
+    Sup->>Azure: Analyze Query Intent
+    Note over Sup,Azure: LLM reasoning
+    Azure-->>Sup: Route Decision: Need location<br/>data and visualization
+    
+    Sup->>Graph: Multi-Agent Dispatch
+    
+    par Parallel Agent Execution
+        Graph->>LocC: Execute Locality Collector
+        LocC->>MCP: collect_localities country=Korea
+        MCP-->>LocC: locations, elements, ore_info
+        LocC->>Azure: Refine Location Data
+        Note over LocC,Azure: LLM processing
+        Azure-->>LocC: Enriched localities
+        LocC->>Graph: Locality Agent Complete
+        
+        Graph->>GeoC: Execute Geomaterial Collector
+        GeoC->>MCP: collect_geomaterials filters
+        MCP-->>GeoC: minerals, hardness, formula
+        GeoC->>Azure: Rank by Relevance
+        Note over GeoC,Azure: LLM scoring
+        Azure-->>GeoC: Ranked minerals
+        GeoC->>Graph: Geomaterial Agent Complete
+    end
+    
+    Graph->>VegaA: Execute Vega Plot Agent
+    VegaA->>MCP: profile_sample_data
+    Note over MCP: locations, minerals
+    MCP-->>VegaA: schema, types, ranges
+    VegaA->>Azure: Generate Vega-Lite Spec
+    Note over VegaA,Azure: chart configuration
+    Azure-->>VegaA: JSON spec with mark and encoding
+    VegaA->>Graph: Vega Agent Complete
+    
+    Graph->>Sup: Aggregate Agent Results
+    Sup->>Azure: Generate Natural Language Response
+    Note over Sup,Azure: findings and summary
+    Azure-->>Sup: Summary and insights
+    
+    Graph-->>Fast: FINISH with AgentQueryResponse
+    Note over Graph,Fast: text, chart_spec, data, session_id
+    
+    Fast->>DB: Save Agent Output
+    Note over DB: Insert agent_output<br/>with response data
+    DB-->>Fast: Output saved
+    
+    Fast-->>React: Response with message<br/>and visualization
+    
+    React->>React: Render Output
+    Note over React: VegaChart, DataTable, Message
+    React-->>User: Interactive heatmap<br/>Mineral distribution in Korea

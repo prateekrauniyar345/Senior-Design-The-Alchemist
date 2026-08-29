@@ -347,6 +347,18 @@ async def chat_with_agent(
                     final_message = match.group(1)
                     break
                 continue
+            # Provider-strategy structured output (e.g. GeneralAgentOutput/CollectorAgentOutput)
+            # is serialized as a raw JSON object in message.content. Extract just the
+            # human-readable 'message' field instead of showing the whole JSON blob.
+            if content.startswith("{") and content.endswith("}"):
+                try:
+                    parsed = _json.loads(content)
+                except (ValueError, TypeError):
+                    parsed = None
+                if isinstance(parsed, dict) and isinstance(parsed.get("message"), str) and parsed["message"].strip():
+                    final_message = parsed["message"]
+                    break
+                continue
             final_message = content
             break
     final_message = _normalize_assistant_text(final_message)

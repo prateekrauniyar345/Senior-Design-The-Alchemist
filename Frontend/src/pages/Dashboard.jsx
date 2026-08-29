@@ -67,7 +67,7 @@ const Dashboard = () => {
                             Revolutionize Mineral Exploration
                         </p>
                         <h1 className="fw-bold text-white mb-4" style={{ fontSize: 'clamp(3rem, 6vw, 5rem)', lineHeight: '1.1' }}>
-                            Creative <span style={gradientTextStyle}>Data Projects</span><br />with AI-Powered Agents
+                            Minerals <span style={gradientTextStyle}>Explorations</span><br />with AI-Powered Agents
                         </h1>
                         <p className="text-secondary mb-5 mx-auto fs-4" style={{ maxWidth: '800px' }}>
                             Next-gen platform for querying and visualizing mineralogical data from Mindat.org using LangChain and LangGraph.
