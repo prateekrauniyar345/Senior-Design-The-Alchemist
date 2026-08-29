@@ -1,36 +1,1780 @@
 # 🧪 The Alchemist - AI-Powered Mineral Data Explorer
 
-**The Alchemist** is a sophisticated full-stack AI application that transforms mineral data exploration through intelligent multi-agent workflows. It combines cutting-edge LLM technology with specialized tools to enable users to query, analyze, and visualize mineral data from the Mindat.org database in natural language.
+**The Alchemist** is a sophisticated, production-ready full-stack AI application that transforms mineral data exploration through intelligent multi-agent workflows. It combines cutting-edge Large Language Models (LLMs), advanced agent orchestration, and specialized tools to enable users to query, analyze, and visualize complex mineralogical data from the Mindat.org database using natural language, without requiring any technical expertise.
+
+> **In essence**: A user asks "Show me minerals with copper in Eastern Canada" in plain English, and the system intelligently routes the request through AI agents that query multiple data sources, process the results, and return interactive visualizations—all without the user writing a single API call or filter parameter.
 
 ---
 
 ## 📋 Table of Contents
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
-- [Project Architecture](#-project-architecture)
-- [Getting Started](#-getting-started)
-- [Project Structure](#-project-structure)
-- [API Documentation](#-api-documentation)
-- [Configuration](#-configuration)
-- [Multi-Agent System](#-multi-agent-system)
-- [Deployment](#-deployment)
-- [Development](#-development)
+1. [What The Alchemist Does](#what-the-alchemist-does)
+2. [Why This Project Exists](#why-this-project-exists)
+3. [How It Works End-to-End](#how-it-works-end-to-end)
+4. [Core Architecture](#core-architecture)
+5. [Technology Stack in Detail](#technology-stack-in-detail)
+6. [System Components & Their Interactions](#system-components--their-interactions)
+7. [Authentication & Security](#authentication--security)
+8. [Multi-Agent Workflow Explained](#multi-agent-workflow-explained)
+9. [Database Schema & Data Persistence](#database-schema--data-persistence)
+10. [API Endpoints Documentation](#api-endpoints-documentation)
+11. [Frontend Implementation](#frontend-implementation)
+12. [MCP Server & Tool Integration](#mcp-server--tool-integration)
+13. [Input Validation & Security](#input-validation--security)
+14. [File Structure & Organization](#file-structure--organization)
+15. [Getting Started](#getting-started)
+16. [Deployment](#deployment)
+17. [Design Decisions & Rationale](#design-decisions--rationale)
 
 ---
 
-## 🎯 Overview
+# What The Alchemist Does
 
-**The Alchemist** leverages **LangChain**, **LangGraph**, **LangSmith**, and **Azure OpenAI** to build an intelligent multi-agent system that understands natural language queries and routes them to specialized agents for mineral data collection, analysis, and visualization. The system integrates seamlessly with the Mindat.org API to provide comprehensive mineral information.
+## Primary Purpose
 
-### Core Capabilities
-- 🤖 **Multi-Agent Intelligence**: Supervisor-based routing architecture that intelligently delegates tasks
-- 🔍 **Advanced Mineral Queries**: Query 40+ endpoints from Mindat.org API with complex filtering
-- 📊 **Interactive Visualizations**: Generate Vega-Lite charts, histograms, heatmaps, and network diagrams
-- 💾 **Session Management**: Persistent chat history and user profiles
-- 🔐 **Secure Authentication**: OAuth and email/password via Supabase
-- 📤 **Export Capabilities**: Download plots or email visualizations directly
+The Alchemist is a **Natural Language Interface to Mineralogical Data**. It transforms how geoscientists, mineral enthusiasts, and researchers interact with mineral databases by allowing them to ask questions in plain English instead of constructing complex API queries.
+
+### User Problems It Solves
+
+1. **Complexity of Mindat API**: The Mindat.org API has 40+ endpoints with complex filtering parameters. Most users don't know how to combine them.
+2. **Data Integration Challenges**: Finding minerals, their properties, and their locations requires multiple API calls across different endpoints.
+3. **Visualization Gap**: Raw data needs to be processed and visualized. Most users can't create meaningful charts from JSON responses.
+4. **Context Awareness**: Traditional APIs are stateless. Users need persistent sessions to maintain conversation context.
+5. **Accessibility**: Geoscientists should focus on science, not engineering.
+
+### What Users Can Do
+
+- **Query Minerals**: "Find all IMA-approved minerals with hardness between 5 and 7"
+- **Explore Geography**: "Show me mineral localities in Brazil"
+- **Filter Chemistry**: "Get minerals that contain copper but not sulfur"
+- **Analyze Data**: "Plot a histogram of mineral density distribution"
+- **Visualize Networks**: "Show me the co-occurrence network of minerals in Canada"
+- **Combine Knowledge**: "For minerals found in Western Australia, show those with hardness > 6"
+
+---
+
+# Why This Project Exists
+
+## Problem Statement
+
+Mineralogists and geoscientists spend significant time:
+1. Learning complex API documentation
+2. Crafting queries with exact parameter names and formats
+3. Parsing JSON responses manually
+4. Creating visualizations externally
+5. Managing multiple queries across different endpoints
+
+## The Alchemist Solution
+
+By leveraging **Large Language Models (LLMs)** and **agentic workflows**, the system:
+- **Understands Intent**: Converts natural language into API parameters
+- **Routes Intelligently**: Determines which specialized agent should handle the query
+- **Executes Efficiently**: Fetches data in parallel, avoiding redundant API calls
+- **Visualizes Automatically**: Generates meaningful charts without user intervention
+- **Maintains Context**: Remembers conversation history and user preferences
+
+## Design Philosophy
+
+**"AI-powered simplicity through intelligent orchestration"**
+
+The system is built on the principle that users should interact with data through conversation, not configuration. Behind the scenes, sophisticated agents handle the complexity.
+
+---
+
+# How It Works End-to-End
+
+## Complete User Journey
+
+### Step 1: User Sends a Query
+```
+User types in chat: "Show me minerals with iron in Canada"
+```
+
+### Step 2: Frontend Sends to Backend
+```
+HTTP POST /api/agent/chat
+{
+  "query": "Show me minerals with iron in Canada",
+  "session_id": "uuid-of-chat-session"
+}
+```
+
+### Step 3: Backend Receives & Validates
+```
+FastAPI Router (app/routers/agent.py)
+    ↓
+Input Validation Layer (input_validation/validator.py)
+    - Security check: Is this request safe?
+    - Domain check: Is it mineral-related?
+    - Parameter check: Are the filters valid?
+```
+
+### Step 4: LangGraph Orchestration Begins
+```
+Initialize Agent Graph (agents/initialize_agent.py)
+    ↓
+Supervisor Agent (LLM-powered decision maker)
+    - Analyzes the query semantically
+    - Determines the intent
+    - Decides which agents to invoke
+```
+
+### Step 5: Supervisor Routes to Appropriate Agents
+```
+If query needs mineral properties:
+    → Geomaterial Collector Agent
+    
+If query needs location data:
+    → Locality Collector Agent
+    
+If query needs visualization:
+    → Vega Plot Generator Agent
+    
+If query is conversational:
+    → General Agent
+```
+
+### Step 6: Agents Execute via MCP
+```
+Agent invokes MCP tools:
+    ↓
+MCP Server (mcp_server.py)
+    ↓
+Tool Functions (tools/geomaterial.py, tools/locality.py)
+    ↓
+Mindat API (https://api.mindat.org/v1/)
+```
+
+### Step 7: Data Processing
+```
+Mindat API returns JSON
+    ↓
+Tool processes response (validation, filtering)
+    ↓
+Data saved to disk (contents/sample_data/)
+    ↓
+Returns to Agent
+```
+
+### Step 8: Visualization Generation
+```
+If visualization needed:
+    Vega Plot Generator Agent
+        ↓
+    Reads data from disk
+    ↓
+    Generates Vega-Lite specification
+    ↓
+    Returns chart JSON
+```
+
+### Step 9: Response Construction
+```
+Build AgentQueryResponse:
+    - Message: Human-readable summary
+    - Data File Path: Link to JSON data
+    - Chart Spec: Vega-Lite JSON
+    - Sample Data: First 100 rows
+```
+
+### Step 10: Save to Database
+```
+Message saved to PostgreSQL:
+    - messages table: User query + Agent response
+    - agent_runs table: Execution metadata
+    - data_artifacts table: Generated files
+    - visualizations table: Chart metadata
+```
+
+### Step 11: Return to Frontend
+```
+HTTP 200 OK with AgentQueryResponse
+    ↓
+Frontend receives response
+    ↓
+MessageBubble component renders
+    - Text in conversation
+    - Chart using Vega-Embed
+    - Data table for sample data
+```
+
+### Step 12: User Sees Results
+```
+Interactive chart appears in chat
+User can:
+  - Hover for details
+  - Zoom/pan
+  - Download as PNG
+  - Export data
+```
+
+---
+
+# Core Architecture
+
+## System Layers
+
+### Layer 1: Frontend (User Interface)
+- **Technology**: React 19.1.1 + Vite
+- **Responsibility**: Present data, accept input, render visualizations
+- **Communication**: HTTPS REST API to Backend
+- **State**: React Context for authentication
+
+### Layer 2: API Gateway (Request Routing)
+- **Technology**: FastAPI 0.119.0 on Uvicorn
+- **Responsibility**: Route requests, validate inputs, manage sessions
+- **Endpoints**:
+  - `/api/auth/*` - Authentication
+  - `/api/agent/chat` - Primary chat endpoint
+  - `/api/sessions/*` - Session management
+  - `/api/users/*` - User management
+  - `/health` - Health checks
+
+### Layer 3: Agent Orchestration (Intelligence)
+- **Technology**: LangChain 1.0 + LangGraph 1.0
+- **Responsibility**: Decide which agents to use, coordinate execution
+- **Architecture**:
+  ```
+  Supervisor (decision router)
+      ├── General Agent
+      ├── Geomaterial Collector Agent
+      ├── Locality Collector Agent
+      └── Vega Plot Generator Agent
+  ```
+
+### Layer 4: Tool Execution (Action)
+- **Technology**: Model Context Protocol (FastMCP 2.14.5)
+- **Responsibility**: Execute specific tasks like API calls
+- **Tools**:
+  - `collect_geomaterials()` - Query mineral properties
+  - `collect_localities()` - Query mineral locations
+  - `profile_sample_data()` - Analyze data structure
+
+### Layer 5: External APIs (Data Source)
+- **Technology**: Mindat.org REST API
+- **Responsibility**: Provide authoritative mineral data
+- **Endpoints**: 40+ available (geomaterials, localities, references, etc.)
+
+### Layer 6: Data Storage (Persistence)
+- **Technology**: PostgreSQL via Supabase
+- **Responsibility**: Store users, sessions, messages, execution history
+- **Tables**: users, sessions, messages, agent_tasks, agent_runs, data_artifacts, visualizations
+
+---
+
+# Technology Stack in Detail
+
+## Backend Technologies
+
+### FastAPI (Web Framework)
+**What**: A modern Python web framework for building APIs
+**Why**: 
+- Automatic API documentation (Swagger)
+- Built-in request validation with Pydantic
+- Async-first (better performance)
+- Type hints for self-documenting code
+- Dependency injection system
+
+**How it's used**:
+```python
+@router.post("/api/agent/chat")
+async def chat_with_agent(
+    request: AgentQueryRequest,
+    db: DBSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # FastAPI automatically:
+    # 1. Validates request JSON against AgentQueryRequest schema
+    # 2. Injects database session
+    # 3. Validates JWT from cookies and injects current user
+    # 4. Returns type-safe response
+```
+
+### LangChain + LangGraph (Agent Framework)
+**What**: Tools for building LLM-powered applications and multi-agent systems
+**Why**:
+- LangChain: Unified interface to different LLMs, tool calling, message handling
+- LangGraph: Graph-based orchestration of agent workflows, state management
+
+**How it's used**:
+```python
+# LangChain handles:
+- Converting natural language to structured tool calls
+- Managing conversation context
+- Error handling and retries
+
+# LangGraph handles:
+- Defining agent nodes (functions)
+- Routing decisions (conditional edges)
+- State management across agent calls
+- Visualization of workflows
+```
+
+### Supabase (Database + Auth)
+**What**: Backend-as-a-Service combining PostgreSQL + authentication
+**Why**:
+- Managed PostgreSQL (no DevOps needed)
+- Built-in OAuth providers (Google, GitHub, etc.)
+- Real-time subscriptions
+- Row-level security
+- No cold starts
+
+**How it's used**:
+```python
+# PostgreSQL for:
+- User accounts
+- Chat sessions & messages
+- Agent execution history
+- Generated visualizations
+
+# Auth for:
+- User registration & login
+- JWT token generation
+- Session management via cookies
+```
+
+### SQLAlchemy (ORM)
+**What**: Python ORM for database interaction
+**Why**:
+- Type-safe database queries
+- Automatic schema generation
+- Relationship management
+- Query composition
+
+**How it's used**:
+```python
+# Define schema:
+class User(Base):
+    __tablename__ = "users"
+    id = Column(UUID, primary_key=True)
+    email = Column(String, nullable=False)
+    sessions = relationship("Session")
+
+# Query:
+user = db.query(User).filter(User.email == "user@example.com").first()
+```
+
+### Model Context Protocol (MCP / FastMCP)
+**What**: Protocol for connecting LLMs to external tools via a client-server architecture
+**Why**:
+- Standardized way to register tools with LLMs
+- Separates tool logic from agent logic
+- Allows tools to run in isolated processes
+- Enables tool versioning and updates without code changes
+
+**How it's used**:
+```python
+# MCP Server (mcp_server.py):
+mcp = FastMCP("Mindat Master Server")
+mcp.tool(collect_geomaterials)
+mcp.tool(collect_localities)
+mcp.run()
+
+# Agent calls:
+tools = await client.get_tools()
+# Tools now available for LLM function calling
+```
+
+---
+
+## Frontend Technologies
+
+### React 19.1.1 (UI Framework)
+**What**: JavaScript library for building user interfaces
+**Why**:
+- Component-based architecture
+- Efficient re-rendering with virtual DOM
+- Large ecosystem
+- React Router for navigation
+
+**How it's used**:
+```jsx
+<AuthProvider>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/chat" element={<Chat />} />
+      <Route path="/signin" element={<SignIn />} />
+    </Routes>
+  </BrowserRouter>
+</AuthProvider>
+```
+
+### Vite (Build Tool)
+**What**: Modern JavaScript build tool and dev server
+**Why**:
+- 10x faster than webpack during development
+- Native ES modules (faster HMR)
+- Optimized production builds
+- Works with React via SWC (super-fast transpiler)
+
+**How it's used**:
+```js
+// vite.config.js: Proxy API calls to backend
+proxy: {
+  '/api': {
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+  }
+}
+```
+
+### Vega-Lite (Visualization)
+**What**: Declarative visualization grammar for creating interactive charts
+**Why**:
+- Create complex visualizations with JSON specs
+- Automatically handles scales, axes, legends
+- Interactive by default (hover, zoom, etc.)
+- Responsive and accessible
+
+**How it's used**:
+```json
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Histogram of mineral hardness",
+  "data": {"values": [...]},
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "hardness", "type": "quantitative", "bin": true},
+    "y": {"aggregate": "count", "type": "quantitative"}
+  }
+}
+```
+
+### Axios (HTTP Client)
+**What**: Promise-based HTTP client for JavaScript
+**Why**:
+- Request/response interceptors
+- Automatic token refresh
+- Error handling
+- Request cancellation
+
+**How it's used**:
+```js
+// API interceptor automatically includes JWT:
+apiClient.post("/api/agent/chat", {query, session_id})
+```
+
+### React Context (State Management)
+**What**: Built-in React feature for managing global state
+**Why**:
+- No external dependencies
+- Sufficient for auth and user state
+- Lightweight
+
+**How it's used**:
+```jsx
+// AuthContext provides user state globally:
+const {user, login, logout, loading} = useAuth();
+```
+
+---
+
+# System Components & Their Interactions
+
+## Backend Component Interaction Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     FastAPI Main App                         │
+├──────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────┐  │
+│  │  Auth Router    │  │  Agent Router    │  │Session R.  │  │
+│  │                 │  │                  │  │            │  │
+│  │ - /login        │  │ - POST /chat     │  │- GET /list │  │
+│  │ - /register     │  │ - /health        │  │- POST /new │  │
+│  │ - /me           │  │                  │  │            │  │
+│  └────────┬────────┘  └────────┬─────────┘  └────────┬───┘  │
+│           │                    │                     │       │
+│           ▼                    ▼                     ▼       │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │          Dependency Injection Layer                  │   │
+│  │  - get_db() → SQLAlchemy Session                     │   │
+│  │  - get_current_user() → Supabase JWT verification   │   │
+│  └──────────────────┬───────────────────────────────────┘   │
+│                     │                                         │
+│                     ▼                                         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Input Validation Pipeline                    │   │
+│  │  1. Security checks (prompt injection, etc.)         │   │
+│  │  2. Domain classification (is it mineral-related?)   │   │
+│  │  3. Parameter validation (hardness range, etc.)      │   │
+│  └──────────────────┬───────────────────────────────────┘   │
+│                     │                                         │
+│                     ▼                                         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         LangGraph Agent Orchestration                │   │
+│  │                                                      │   │
+│  │    ┌──────────────────────────────────────┐         │   │
+│  │    │ Supervisor Node (LLM Decision)       │         │   │
+│  │    │ Routes to appropriate agents         │         │   │
+│  │    └──────┬───────┬──────────┬────────────┘         │   │
+│  │           │       │          │                       │   │
+│  │      ┌────▼────┐  │    ┌─────▼──────┐               │   │
+│  │      │General  │  │    │Geomaterial │               │   │
+│  │      │Agent    │  │    │Collector   │               │   │
+│  │      └────┬────┘  │    └─────┬──────┘               │   │
+│  │           │       │          │                       │   │
+│  │           │   ┌───▼──────┐   │   ┌────────────┐     │   │
+│  │           │   │Locality  │   │   │Vega Plot   │     │   │
+│  │           │   │Collector │   │   │Generator   │     │   │
+│  │           │   └───┬──────┘   │   └────┬───────┘     │   │
+│  │           │       │          │        │             │   │
+│  │           └───────┴──────────┴────────┘             │   │
+│  │                   │                                 │   │
+│  │                   ▼                                 │   │
+│  │            MCP Client                              │   │
+│  │      (connects to MCP Server)                       │   │
+│  └──────────────────┬───────────────────────────────────┘   │
+│                     │                                         │
+│                     ▼                                         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Database Access Layer                        │   │
+│  │  - Users, Sessions, Messages                         │   │
+│  │  - Agent Tasks & Runs                               │   │
+│  │  - Data Artifacts & Visualizations                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                               │
+└──────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
+         │  Supabase PostgreSQL Database       │
+         └─────────────────────────────────────┘
+```
+
+## Separate MCP Server Process
+
+```
+┌────────────────────────────────────────┐
+│         MCP Server (Port 8010)         │
+│      (python mcp_server.py)            │
+├────────────────────────────────────────┤
+│                                        │
+│  ┌──────────────────────────────────┐ │
+│  │ FastMCP Server Instance          │ │
+│  │ "Mindat Master Server"           │ │
+│  └──────────────────────────────────┘ │
+│           │       │        │           │
+│           ▼       ▼        ▼           │
+│  ┌──────────────────────────────────┐ │
+│  │  Registered Tools:               │ │
+│  │  - collect_geomaterials()        │ │
+│  │  - collect_localities()          │ │
+│  │  - profile_sample_data()         │ │
+│  └──────────────────────────────────┘ │
+│           │       │        │           │
+│           ▼       ▼        ▼           │
+│  ┌──────────────────────────────────┐ │
+│  │  Tool Logic (app/tools/):        │ │
+│  │  - Parse parameters              │ │
+│  │  - Validate inputs               │ │
+│  │  - Format for Mindat API         │ │
+│  │  - Save results to disk          │ │
+│  └──────────────────────────────────┘ │
+│           │       │        │           │
+│           ▼       ▼        ▼           │
+│     (external Mindat API calls)        │
+│                                        │
+└────────────────────────────────────────┘
+         ↑
+         │ HTTP Communication
+         │ (LangChain MCP Adapter)
+         ▼
+  Backend FastAPI App
+```
+
+---
+
+# Authentication & Security
+
+## Authentication Flow
+
+### Step 1: User Registration
+```
+1. User submits: email, password, name
+2. Frontend POST /api/auth/register
+3. Backend:
+   - Validates input (email format, password strength)
+   - Supabase creates user
+   - Creates entry in local PostgreSQL users table
+   - Returns user ID & tokens
+4. Frontend stores tokens in HTTP-only cookies
+```
+
+### Step 2: User Login
+```
+1. User submits: email, password
+2. Frontend POST /api/auth/login
+3. Backend:
+   - Supabase.auth.sign_in_with_password()
+   - Retrieves JWT tokens from Supabase
+   - Verifies user exists in local users table
+   - Sets HTTP-only cookies (sb-access-token, sb-refresh-token)
+   - Returns user info
+4. Frontend navigates to Dashboard
+```
+
+### Step 3: Protected Request
+```
+1. Frontend makes request with Authorization header
+2. Axios interceptor includes JWT from cookies
+3. Backend dependency (get_current_user):
+   - Extracts token from cookies
+   - Supabase.auth.get_user(token) → validates
+   - Queries local users table for additional data
+   - Injects user into route handler
+4. If token invalid → 401 Unauthorized
+5. If user not found locally → 401 Unauthorized
+```
+
+### Step 4: Token Refresh
+```
+1. Axios interceptor detects 401 response
+2. Calls /api/auth/refresh with refresh token
+3. Backend generates new access token
+4. Updates cookie
+5. Retries original request
+```
+
+## Security Measures
+
+### 1. Input Validation (Multi-Layer)
+```
+Router Level: Pydantic automatically validates types
+            → {"query": 123} becomes error
+
+Security Level: Check for prompt injection attacks
+              → ""; DROP TABLE users; --"
+              → Detected and blocked
+
+Domain Level: Is the query about minerals?
+            → Off-topic queries rejected
+
+Parameter Level: Are hardness values realistic?
+               → hmin=1000 rejected (outside 0-10 scale)
+```
+
+### 2. Authentication
+```
+- JWT tokens from Supabase (industry standard)
+- HTTP-only cookies (can't be stolen by JavaScript)
+- Tokens expire after configured duration
+- Refresh tokens for long sessions
+- Token validation on every protected request
+```
+
+### 3. Database Security
+```
+- Row-level security in Supabase
+  → Users can only access their own data
+- SQLAlchemy ORM prevents SQL injection
+  → Parameterized queries
+- Connection pooling prevents resource exhaustion
+```
+
+### 4. CORS Policy
+```python
+CORSMiddleware in FastAPI:
+- Allow origins: localhost:5173, production domain
+- Allow credentials: True (cookies)
+- Allow methods: GET, POST, PUT, DELETE, OPTIONS
+- Allow headers: Content-Type, Authorization
+```
+
+### 5. Rate Limiting (Future)
+```
+- Prevent brute-force attacks
+- Prevent DDoS
+- Fair resource sharing
+```
+
+---
+
+# Multi-Agent Workflow Explained
+
+## What is an "Agent"?
+
+An agent is an AI system that:
+1. **Observes**: Understands the current state/query
+2. **Decides**: Determines what action to take
+3. **Acts**: Executes an action (calls a tool, queries API)
+4. **Repeats**: Loops until the goal is achieved
+
+## The Supervisor Agent (Router)
+
+**Purpose**: Intelligently decide which specialized agent should handle the request
+
+**How it works**:
+```
+Query: "Show me minerals with iron in Canada"
+
+Supervisor LLM (GPT-4o):
+  Input: Query + list of available agents
+  Reasoning:
+    - Query mentions "minerals" → geomaterial query
+    - Query mentions "Canada" → location query
+    - Query asks to "show" → visualization needed
+  Output: Route to [Locality Collector, Vega Plot Generator]
+```
+
+**Implementation** (agents/initialize_agent.py):
+```python
+decision_model = factory.llm.with_structured_output(ControllerDecision)
+decision_prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    MessagesPlaceholder(variable_name="messages"),
+    ("system", f"You must route to: {', '.join(options)}")
+])
+decision = await chain.ainvoke({"messages": state["messages"]})
+# Returns: ControllerDecision(next_agent="locality_collector", reasoning="...")
+```
+
+## Agent 1: General Agent
+
+**Triggered when**: Conversational queries, greetings, questions about the system
+**Responsibility**: Handle non-data queries
+**Tools**: None (no Mindat API calls)
+**Example**:
+```
+User: "What is The Alchemist?"
+→ General Agent responds with explanation
+```
+
+**Implementation**:
+```python
+async def general_agent_node(state: State) -> dict:
+    agent = registry.get("general_agent")
+    result = await agent.ainvoke(state)
+    return {
+        "messages": result["messages"],
+        "next": "supervisor"
+    }
+```
+
+## Agent 2: Geomaterial Collector
+
+**Triggered when**: Queries about mineral properties, elements, crystal systems, hardness, density, optical properties
+**Responsibility**: Query Mindat /v1/geomaterials/ endpoint
+**Tools**: `collect_geomaterials()`
+**Example**:
+```
+User: "Find IMA-approved minerals with hardness > 5"
+→ Geomaterial Collector:
+   1. Parses query → ima=True, hmin=5
+   2. Calls MCP tool: collect_geomaterials(ima=True, hmin=5)
+   3. MCP Server calls Mindat API
+   4. Returns JSON with matching minerals
+   5. Saves results to disk
+   6. Returns response to Supervisor
+```
+
+**Parameter Mapping** (tools/geomaterial.py):
+```python
+# Natural query: "hardness between 5 and 7"
+# Converted to:
+def collect_geomaterials(
+    hmin: Optional[float] = None,  # Lower bound (5)
+    hmax: Optional[float] = None,  # Upper bound (7)
+    ima: Optional[bool] = None,    # IMA-approved only
+    el_inc: Optional[List[str]] = None,  # Include elements
+    el_exc: Optional[List[str]] = None,  # Exclude elements
+    crystal_system: Optional[List[str]] = None,
+    # ... 20+ more parameters
+) -> GeomaterialToolResponse:
+    # Make API call with parameters
+    # Save to disk
+    # Return response
+```
+
+## Agent 3: Locality Collector
+
+**Triggered when**: Queries about mineral locations, geographic regions
+**Responsibility**: Query Mindat /v1/localities/ endpoint
+**Tools**: `collect_localities()`
+**Example**:
+```
+User: "Show me mineral localities in Western Australia"
+→ Locality Collector:
+   1. Parses query → country="Australia", region="Western"
+   2. Calls MCP tool: collect_localities(country="Australia")
+   3. MCP Server calls Mindat API
+   4. Returns JSON with localities
+   5. Saves to disk with geographic coordinates
+   6. Returns response to Supervisor
+```
+
+## Agent 4: Vega Plot Generator
+
+**Triggered when**: Queries ask to visualize, plot, chart, or show data
+**Responsibility**: Generate Vega-Lite specifications for interactive charts
+**Tools**: `profile_sample_data()` (to understand data structure)
+**Example**:
+```
+User: "Plot a histogram of mineral hardness distribution"
+→ Vega Plot Generator:
+   1. Reads previously collected data from disk
+   2. Analyzes data structure
+   3. Determines appropriate chart type (histogram)
+   4. Generates Vega-Lite JSON:
+      {
+        "mark": "bar",
+        "encoding": {
+          "x": {"field": "hardness", "bin": true},
+          "y": {"aggregate": "count"}
+        }
+      }
+   5. Returns Vega spec to Supervisor
+```
+
+**Vega-Lite Spec Template** (utils/plot_specs.py):
+```python
+def build_histogram_vega_spec(
+    data: List[Dict],
+    field: str,
+    title: str
+) -> Dict:
+    return {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": title,
+        "data": {"values": data},
+        "mark": "bar",
+        "encoding": {
+            "x": {
+                "field": field,
+                "type": "quantitative",
+                "bin": True
+            },
+            "y": {
+                "aggregate": "count",
+                "type": "quantitative"
+            }
+        }
+    }
+```
+
+## How Agents Work Together (Workflow Graph)
+
+**LangGraph Structure** (agents/initialize_agent.py):
+
+```
+State Definition:
+- messages: List[BaseMessage]  # Conversation history
+- next: Optional[str]          # Which agent to call next
+- sample_data_path: Optional[str]  # Path to collected data
+- vega_spec: Optional[Dict]    # Generated chart specification
+- profile: Optional[Dict]      # Data schema info
+
+Workflow:
+START
+  ↓
+supervisor_node (Decision making)
+  ├─→ Routes to: general_agent | geomaterial_collector | 
+  │              locality_collector | vega_plot_generator | FINISH
+  ↓
+(All workers route back to supervisor when done)
+supervisor_node (Check if more work needed)
+  ├─→ If yes: Route to next agent
+  ├─→ If no: FINISH
+  ↓
+FINISH
+  ↓
+END
+```
+
+**Conditional Routing** (agents/initialize_agent.py):
+
+```python
+# Instead of a fixed sequence, Supervisor decides next step
+workflow.add_conditional_edges(
+    "supervisor",
+    lambda state: state.get("next", "FINISH"),  # Get routing decision
+    {
+        "general_agent": "general_agent",
+        "geomaterial_collector": "geomaterial_collector",
+        "locality_collector": "locality_collector",
+        "vega_plot_generator": "vega_plot_generator",
+        "FINISH": "FINISH"
+    }
+)
+```
+
+## Real Example: Complex Query
+
+**Query**: "For minerals found in Canada, show me those with copper, plot their hardness distribution"
+
+**Execution Flow**:
+```
+1. Supervisor analyzes query
+   → Needs: Locality data (Canada) + Geomaterial data (copper)
+   → May need: Visualization
+
+2. Routes to Locality Collector
+   → collect_localities(country="Canada")
+   → Saves: /contents/sample_data/mindat_locality_response.json
+
+3. Returns to Supervisor
+   → Supervisor analyzes: Data retrieved, copper filter needed
+
+4. Routes to Geomaterial Collector
+   → collect_geomaterials(el_inc=["Cu"])
+   → Saves: /contents/sample_data/mindat_geomaterial_response.json
+
+5. Returns to Supervisor
+   → Supervisor analyzes: Two datasets collected, visualization requested
+
+6. Routes to Vega Plot Generator
+   → read /contents/sample_data/mindat_geomaterial_response.json
+   → Generate histogram spec
+   → Returns Vega-Lite JSON
+
+7. Returns to Supervisor
+   → All tasks complete → FINISH
+
+8. Backend constructs response:
+   {
+     "message": "Found 47 minerals with copper in Canada...",
+     "data_file_path": "http://localhost:8000/contents/...",
+     "chart_spec": {...vega-lite json...},
+     "sample_data": [first 100 rows]
+   }
+```
+
+---
+
+# Database Schema & Data Persistence
+
+## Entity-Relationship Diagram
+
+```
+┌─────────────────┐
+│     Users       │  (Synced with Supabase Auth)
+├─────────────────┤
+│ id (UUID) [PK]  │
+│ supabase_user_id│
+│ email           │
+│ full_name       │
+│ created_at      │
+└────────┬────────┘
+         │ 1:N
+         │
+    ┌────▼────────────┐
+    │   Sessions      │  (Chat conversations)
+    ├─────────────────┤
+    │ id (UUID) [PK]  │
+    │ user_id [FK]    │
+    │ title           │
+    │ created_at      │
+    └────┬────────────┘
+         │ 1:N
+         │
+    ┌────▼────────────────┐
+    │    Messages         │  (Individual messages in session)
+    ├──────────────────────┤
+    │ id (UUID) [PK]      │
+    │ session_id [FK]     │
+    │ user_id [FK]        │
+    │ sender              │  ("user" or "agent")
+    │ content             │
+    │ output_type         │  ("text", "plot", "table")
+    │ meta_data (JSON)    │  (chart_spec, data_url, etc.)
+    │ created_at          │
+    └──────────────────────┘
+         │ 1:N
+         │
+    ┌────▼──────────────────┐
+    │  Agent Tasks          │  (Tracks what each agent did)
+    ├────────────────────────┤
+    │ id (UUID) [PK]        │
+    │ session_id [FK]       │
+    │ agent_name            │  (e.g., "geomaterial_collector")
+    │ input_message_id [FK] │
+    │ output_message_id [FK]│
+    │ status                │  ("pending", "success", "failed")
+    │ started_at            │
+    │ finished_at           │
+    └────────────────────────┘
+
+    ┌──────────────────────┐
+    │   Agent Runs         │  (Agent execution history)
+    ├──────────────────────┤
+    │ id (UUID) [PK]       │
+    │ agent_name           │
+    │ session_id [FK]      │
+    │ status               │  ("running", "success", "failed")
+    │ started_at           │
+    │ finished_at          │
+    └────┬─────────────────┘
+         │ 1:N
+         │
+    ┌────▼──────────────────────┐
+    │   Data Artifacts          │  (Generated files)
+    ├───────────────────────────┤
+    │ id (UUID) [PK]            │
+    │ run_id [FK]               │
+    │ artifact_type             │  ("json", "csv", "plot")
+    │ file_path                 │
+    │ description               │
+    │ created_at                │
+    └────┬──────────────────────┘
+         │ 1:N
+         │
+    ┌────▼──────────────────────┐
+    │  Visualizations           │  (Chart metadata)
+    ├───────────────────────────┤
+    │ id (UUID) [PK]            │
+    │ artifact_id [FK]          │
+    │ viz_type                  │  ("histogram", "heatmap")
+    │ title                     │
+    │ description               │
+    │ rendered_html_path        │
+    │ created_at                │
+    └───────────────────────────┘
+
+    ┌──────────────────────┐
+    │   Profiles           │  (User profile info)
+    ├──────────────────────┤
+    │ id (UUID) [PK]       │
+    │ email                │
+    │ full_name            │
+    │ avatar_url           │
+    │ bio                  │
+    │ preferences (JSON)   │  (LLM temperature, etc.)
+    └──────────────────────┘
+```
+
+## Table Definitions (SQLAlchemy)
+
+### Users Table
+```python
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    supabase_user_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
+    # ↑ Links to Supabase Auth user
+    email = Column(String(120), nullable=False)
+    full_name = Column(String(120))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    profile = relationship("Profile", back_populates="user", uselist=False)
+    sessions = relationship("Session", back_populates="user")
+    messages = relationship("Message", back_populates="user")
+    runs = relationship("AgentRun", backref="user")
+    tasks = relationship("AgentTask", backref="user")
+```
+
+### Sessions Table
+```python
+class Session(Base):
+    __tablename__ = "sessions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    title = Column(String(100), default="New Chat")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    messages = relationship("Message", back_populates="session")
+    user = relationship("User", back_populates="sessions")
+    tasks = relationship("AgentTask", back_populates="session", cascade="all, delete-orphan")
+```
+
+### Messages Table
+```python
+class Message(Base):
+    __tablename__ = "messages"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    sender = Column(String(50), nullable=False)  # "user" or "agent"
+    content = Column(Text, nullable=False)
+    output_type = Column(String(50), default="text")  # "text", "plot", "table", "chart"
+    meta_data = Column(Text, nullable=True)  # JSON string
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    session = relationship("Session", back_populates="messages")
+    user = relationship("User", back_populates="messages")
+```
+
+### Agent Tasks Table
+```python
+class AgentTask(Base):
+    __tablename__ = "agent_tasks"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id", ondelete="CASCADE"))
+    agent_name = Column(String(100), nullable=False)
+    input_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
+    output_message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id"))
+    status = Column(String(50), default="pending")
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    finished_at = Column(DateTime(timezone=True))
+    
+    # Relationships
+    session = relationship("Session", back_populates="tasks")
+    input_message = relationship("Message", foreign_keys=[input_message_id])
+    output_message = relationship("Message", foreign_keys=[output_message_id])
+```
+
+## Data Flow Through Database
+
+```
+1. User logs in
+   → Supabase creates auth entry
+   → Backend creates User row
+   
+2. User creates new chat
+   → Backend creates Session row
+   
+3. User sends message
+   → Backend creates Message row (sender="user")
+   
+4. Query processed by agents
+   → Backend creates AgentTask rows (one per agent invoked)
+   → Backend creates AgentRun rows (execution metadata)
+   
+5. Agent collects data
+   → Tool saves to disk (/contents/sample_data/)
+   → Backend creates DataArtifact row (file path)
+   
+6. Agent generates visualization
+   → Backend creates Visualization row (chart metadata)
+   
+7. Agent returns response
+   → Backend creates Message row (sender="agent")
+   → meta_data JSON contains:
+      {
+        "chart_spec": {...vega-lite...},
+        "data_file_path": "/contents/...",
+        "sample_data": [...]
+      }
+   
+8. Frontend renders
+   → Queries from database
+   → Renders messages
+   → Displays charts from Vega spec
+```
+
+---
+
+# API Endpoints Documentation
+
+## Authentication Endpoints
+
+### POST /api/auth/register
+**Purpose**: Create new user account
+**Request**:
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123!",
+  "name": "John Doe"
+}
+```
+**Response** (201):
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe"
+  },
+  "session": {
+    "access_token": "jwt...",
+    "expires_at": 1234567890
+  }
+}
+```
+
+### POST /api/auth/login
+**Purpose**: Authenticate user and create session
+**Request**:
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123!"
+}
+```
+**Response** (200):
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "user": {...},
+  "session": {...}
+}
+```
+**Cookies Set**:
+- `sb-access-token`: JWT for authenticated requests
+- `sb-refresh-token`: Refresh token for session renewal
+
+### GET /api/auth/me
+**Purpose**: Get current user information
+**Headers**: Cookie: sb-access-token=...
+**Response** (200):
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "created_at": "2025-01-15T10:30:00Z"
+  }
+}
+```
+**Error** (401): Not authenticated
+
+### POST /api/auth/logout
+**Purpose**: Logout current user
+**Response** (200):
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+**Cookies Deleted**:
+- `sb-access-token`
+- `sb-refresh-token`
+
+---
+
+## Agent Endpoints
+
+### POST /api/agent/chat
+**Purpose**: Send query to multi-agent system
+**Headers**:
+```
+Cookie: sb-access-token=...
+Content-Type: application/json
+```
+**Request**:
+```json
+{
+  "query": "Show me minerals with copper in Canada",
+  "session_id": "uuid-of-chat-session"
+}
+```
+**Processing Flow**:
+```
+1. Validate session belongs to current user
+2. Input validation (security, domain, parameters)
+3. Run LangGraph workflow
+4. Save messages to database
+5. Return response
+```
+**Response** (200):
+```json
+{
+  "success": true,
+  "message": "Found 47 minerals with copper in Canada.",
+  "data_file_path": "/contents/sample_data/mindat_geomaterial_response.json",
+  "plot_file_path": null,
+  "chart_spec": {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "mark": "bar",
+    "encoding": {...}
+  },
+  "chart_data": [...],
+  "sample_data": [
+    {
+      "name": "Chalcopyrite",
+      "hardness": "3.5-4",
+      "elements": ["Cu", "Fe", "S"],
+      ...
+    }
+  ],
+  "error": null
+}
+```
+
+### GET /api/agent/health
+**Purpose**: Check if agent system is operational
+**Response** (200):
+```json
+{
+  "ok": true,
+  "lat_ms": 125.5
+}
+```
+
+---
+
+## Session Endpoints
+
+### GET /api/sessions
+**Purpose**: Get all chat sessions for current user
+**Headers**: Cookie: sb-access-token=...
+**Response** (200):
+```json
+[
+  {
+    "id": "session-uuid-1",
+    "title": "Copper Minerals",
+    "created_at": "2025-01-15T10:00:00Z"
+  },
+  {
+    "id": "session-uuid-2",
+    "title": "Mineral Hardness Analysis",
+    "created_at": "2025-01-14T15:30:00Z"
+  }
+]
+```
+
+### POST /api/sessions
+**Purpose**: Create new chat session
+**Headers**: Cookie: sb-access-token=...
+**Request**:
+```json
+{
+  "title": "My New Chat"
+}
+```
+**Response** (201):
+```json
+{
+  "id": "new-session-uuid",
+  "title": "My New Chat",
+  "created_at": "2025-01-15T11:00:00Z"
+}
+```
+
+### GET /api/sessions/{session_id}/messages
+**Purpose**: Get all messages in a session
+**Headers**: Cookie: sb-access-token=...
+**Response** (200):
+```json
+[
+  {
+    "id": "msg-uuid-1",
+    "sender": "user",
+    "content": "Show me minerals with copper",
+    "output_type": "text",
+    "created_at": "2025-01-15T10:05:00Z"
+  },
+  {
+    "id": "msg-uuid-2",
+    "sender": "agent",
+    "content": "Found 47 minerals with copper...",
+    "output_type": "chart",
+    "meta_data": {
+      "chart_spec": {...},
+      "data_file_path": "..."
+    },
+    "created_at": "2025-01-15T10:05:30Z"
+  }
+]
+```
+
+---
+
+## User Endpoints
+
+### GET /api/users/user
+**Purpose**: Get current user details
+**Headers**: Cookie: sb-access-token=...
+**Response** (200):
+```json
+[
+  {
+    "id": "uuid",
+    "email": "user@example.com",
+    "full_name": "John Doe",
+    "created_at": "2025-01-01T00:00:00Z"
+  }
+]
+```
+
+### PATCH /api/users/user
+**Purpose**: Update user profile
+**Headers**: Cookie: sb-access-token=...
+**Request**:
+```json
+{
+  "full_name": "John Smith"
+}
+```
+**Response** (200):
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "full_name": "John Smith",
+  "created_at": "2025-01-01T00:00:00Z"
+}
+```
+
+---
+
+# Frontend Implementation
+
+## Component Hierarchy
+
+```
+App.jsx (Main Entry)
+  ├── AuthProvider (Global Auth State)
+  │   └── BrowserRouter (Routing)
+  │       ├── Routes
+  │       │   ├── "/" → Dashboard.jsx
+  │       │   ├── "/signin" → SignIn.jsx
+  │       │   ├── "/signup" → SignUp.jsx
+  │       │   ├── "/chat" → Chat.jsx
+  │       │   ├── "/chat/:sessionId" → Chat.jsx (specific session)
+  │       │   └── "/logout" → Logout.jsx
+  │       └── Footer.jsx (visible on non-chat routes)
+```
+
+## Key Components
+
+### AuthContext.jsx (Global State Management)
+**Purpose**: Manage user authentication state globally
+**Provides**:
+```javascript
+{
+  user: {
+    id: "uuid",
+    email: "user@example.com",
+    name: "John Doe"
+  },
+  loading: true/false,
+  login: (email, password) => Promise,
+  register: (name, email, password) => Promise,
+  logout: () => Promise,
+  refreshUser: () => Promise,
+  checkAuth: () => Promise
+}
+```
+**Usage**:
+```jsx
+const {user, login, logout, loading} = useAuth();
+if (loading) return <div>Loading...</div>;
+if (!user) return <SignIn />;
+return <Dashboard />;
+```
+
+### Chat.jsx (Main Chat Page)
+**Purpose**: Main interface for interacting with the AI system
+**Features**:
+```
+┌─────────────────────────────────────┐
+│  Header (Navbar)                    │
+├─────────────────────────────────────┤
+│              │                       │
+│              │                       │
+│  Sidebar     │  ChatWindow           │
+│              │  (Messages)           │
+│  - Sessions  │                       │
+│  - New Chat  │                       │
+│  - Settings  │                       │
+│  - Profile   │                       │
+│              │                       │
+├─────────────────────────────────────┤
+│  ChatInput (Message box + Send)      │
+└─────────────────────────────────────┘
+```
+
+**State Management**:
+```javascript
+const [messages, setMessages] = useState([]);
+const [sessions, setSessions] = useState([]);
+const [effectiveSessionId, setEffectiveSessionId] = useState(null);
+const [isLoading, setIsLoading] = useState(false);
+```
+
+**Key Methods**:
+```javascript
+// Send message
+async handleSendMessage(userMessage) {
+  // 1. Add to local messages
+  setMessages([...messages, {sender: "user", text: userMessage}]);
+  
+  // 2. Call backend
+  const response = await chatService.getLLMResponse(
+    userMessage,
+    effectiveSessionId
+  );
+  
+  // 3. Add agent response
+  setMessages([...messages, {
+    sender: "bot",
+    text: response.message,
+    chartSpec: response.chart_spec,
+    sampleData: response.sample_data
+  }]);
+}
+```
+
+### MessageBubble.jsx (Individual Message Display)
+**Purpose**: Render a single message with all its content (text, charts, tables)
+**Renders**:
+- Text message
+- Vega-Lite chart (if chart_spec provided)
+- Data table (if sample_data provided)
+- Download/Export buttons
+
+### ChatInput.jsx (Message Input)
+**Purpose**: Accept and submit user queries
+**Features**:
+- Auto-resizing textarea
+- Enter to send (Shift+Enter for new line)
+- Disable while loading
+- Character count (optional)
+
+### Dashboard.jsx (Home Page)
+**Purpose**: Landing page with statistics and quick actions
+**Sections**:
+1. Hero: Explanation of The Alchemist
+2. Agent Performance Stats
+3. Recent Runs Table
+4. Call-to-action buttons
+
+---
+
+# MCP Server & Tool Integration
+
+## What is MCP (Model Context Protocol)?
+
+MCP is a standardized protocol for LLMs to interact with external tools. Instead of hardcoding tool logic in the agent code, tools are:
+- Defined in a separate server process
+- Registered via MCP
+- Called by LLMs as needed
+- Can be updated without restarting agents
+
+## MCP Server Architecture
+
+### Server Process (mcp_server.py)
+```python
+from fastmcp import FastMCP
+
+# Initialize server
+mcp = FastMCP("Mindat Master Server")
+
+# Register tools
+mcp.tool(collect_geomaterials)
+mcp.tool(collect_localities)
+mcp.tool(profile_sample_data)
+
+# Run on port 8010
+mcp.run(transport="http", host="0.0.0.0", port=8010)
+```
+
+### Tool Registration
+```python
+# Tools are Python functions with type hints
+def collect_geomaterials(
+    ima: Optional[bool] = None,
+    hmin: Optional[float] = None,
+    el_inc: Optional[List[str]] = None,
+    # ... more parameters
+) -> GeomaterialToolResponse:
+    """
+    Query Mindat /v1/geomaterials/ endpoint
+    MCP automatically:
+    - Generates JSON schema from function signature
+    - Makes function callable from LLM
+    - Handles parameter validation
+    - Returns typed response
+    """
+```
+
+### MCP Client (Backend Agent)
+```python
+# Backend connects to MCP server
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+client = MultiServerMCPClient({
+    "mindat": {
+        "url": "http://localhost:8010/mcp",
+        "transport": "http"
+    }
+})
+
+# Get tools from server
+tools = await client.get_tools()
+
+# Tools now available to LLM for function calling
+agent = create_agent(
+    model=llm,
+    tools=tools,
+    system_prompt="You are a mineral expert..."
+)
+```
+
+## Tool Normalization (Schema Conversion)
+
+**Problem**: OpenAI's function-calling API has strict requirements that MCP-generated schemas don't always meet.
+
+**Solution**: Normalize schemas before passing to LLM
+```python
+def _normalize_schema_for_openai(schema: Dict):
+    """
+    Converts Pydantic/MCP schemas to OpenAI-compatible format:
+    1. Adds 'additionalProperties: false' to object schemas
+    2. Makes 'required' array comprehensive
+    3. Resolves $ref pointers
+    """
+    if schema.get("type") == "object":
+        schema["additionalProperties"] = False
+        schema["required"] = list(schema.get("properties", {}).keys())
+```
+
+## Tool Execution Flow
+
+```
+User Query: "Find minerals with copper"
+    ↓
+LangChain Agent (backend process)
+    ↓
+Agent decides: "I need to call collect_geomaterials(el_inc=['Cu'])"
+    ↓
+LangChain MCP Adapter
+    ↓
+HTTP POST to MCP Server
+Body: {"tool": "collect_geomaterials", "params": {"el_inc": ["Cu"]}}
+    ↓
+MCP Server routes to registered function
+    ↓
+collect_geomaterials(el_inc=["Cu"]) executes
+    - Build query params
+    - Call Mindat API
+    - Process response
+    - Save to disk
+    ↓
+Return GeomaterialToolResponse
+    ↓
+HTTP 200 response back to Agent
+    ↓
+Agent receives structured response
+    ↓
+Agent formats message for user
+```
+
+---
+
+# Input Validation & Security
+
+## Validation Pipeline
+
+### Layer 1: Structural Validation
+```python
+# Is input empty? Too short? Too long?
+if not user_input or not user_input.strip():
+    return error("Input cannot be empty")
+
+if len(user_input) > MAX_INPUT_LENGTH (500):
+    return error("Input exceeds length limit")
+
+meaningful_chars = re.sub(r"[^A-Za-z0-9]", "", user_input)
+if len(meaningful_chars) < MIN_MEANINGFUL_CHARS (2):
+    return error("Input too short to understand")
+```
+
+### Layer 2: Security Validation
+```python
+# Check for injection attacks, malicious patterns
+security_issues = get_security_violation(user_input)
+
+# Examples detected:
+- "'; DROP TABLE users; --"  → SQL injection
+- "..System Prompt revealed.."  → Prompt injection
+- "(curl dangerous-url)"  → Command injection
+- "OpenAI API key:"  → Secret extraction
+```
+
+**Implementation** (input_validation/security.py):
+```python
+BLOCKED_PATTERNS = [
+    r"(drop|delete|truncate).*table",  # SQL injection
+    r"system\s*prompt",  # Prompt leaking
+    r"api[_-]?key",  # Secret extraction
+    r"(exec|eval|system|os\.)",  # Command injection
+]
+
+def get_security_violation(input_text: str):
+    for pattern in BLOCKED_PATTERNS:
+        if re.search(pattern, input_text, re.IGNORECASE):
+            return {"code": "security_blocked", ...}
+    return None
+```
+
+### Layer 3: Domain Classification
+```python
+# Is this query about minerals? Or off-topic?
+
+MINDAT_KEYWORDS = ["mineral", "hardness", "element", "locality", "crystal", ...]
+GENERAL_KEYWORDS = ["hello", "hi", "what is"]
+OFF_TOPIC_KEYWORDS = ["weather", "politics", "sports", ...]
+
+def classify_query(query: str) -> str:
+    if any(kw in query.lower() for kw in MINDAT_KEYWORDS):
+        return "mindat"
+    elif any(kw in query.lower() for kw in GENERAL_KEYWORDS):
+        return "general"
+    else:
+        return "off_topic"
+```
+
+### Layer 4: Parameter Validation
+```python
+# Are the filter values realistic?
+
+def validate_parameters(query: str) -> dict:
+    # Examples:
+    # "hardness > 1000" → Invalid (Mohs scale is 0-10)
+    # "density < 0" → Invalid (mass can't be negative)
+    # "year 2099" → Invalid (future date)
+    
+    return {
+        "status": "valid" | "invalid",
+        "code": "invalid_hardness_range",
+        "suggestion": "Try a hardness between 0 and 10"
+    }
+```
+
+## Validation Response Flow
+
+**If validation fails**:
+```python
+validation = validate_user_input(request.query)
+
+if validation["status"] == "blocked":
+    # Security violation
+    message = await _build_validation_message(validation)
+    return AgentQueryResponse(
+        success=False,
+        message=message,
+        error="Request blocked by security policy"
+    )
+
+if validation["status"] == "invalid":
+    # Parameter invalid (e.g., hardness out of range)
+    message = await _build_validation_message(validation)
+    return AgentQueryResponse(
+        success=False,
+        message=message,
+        error="Invalid parameters"
+    )
+
+# Otherwise, proceed to agent workflow
+await run_graph([HumanMessage(content=validation["clean_query"])])
+```
+
+---
+
+# File Structure & Organization
+
+Now let me create the comprehensive README. Given the extensive content, I'll write this as a complete replacement:
+<function_calls>
+<invoke name="create_file">
+<parameter name="filePath">/Users/prateekrauniyar/Documents/SeniorDeisgn-The-Alchemist/README_COMPREHENSIVE.md
 
 ---
 
