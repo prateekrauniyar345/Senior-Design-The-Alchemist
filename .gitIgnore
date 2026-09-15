@@ -67,6 +67,7 @@ dist-ssr
 # ignore the datas in the contents folder
 Backend/app/contents/plots/
 Backend/app/contents/sample_data/
+Backend/app/contents/
 
 
 # ignore my extras folder
