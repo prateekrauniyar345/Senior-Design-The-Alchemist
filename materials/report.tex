@@ -1,0 +1,663 @@
+\documentclass[12pt,oneside]{report}
+
+\usepackage[letterpaper,left=1.25in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{natbib}
+\usepackage{pdflscape}
+\usepackage{verbatim}
+\usepackage{etoolbox}
+
+\graphicspath{{./}{Docs/}{../Frontend/public/images/}{Frontend/public/images/}}
+\setstretch{1.5}
+\setlength{\parindent}{0.5in}
+\setlength{\parskip}{0pt}
+\raggedbottom
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    pdftitle={The Alchemist Design Report},
+    pdfauthor={Safal Shrestha, Prateek Rauniyar, Bidhi Paudel, and Sikha Chaudhary}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headsep}{6pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \fancyhead[L]{LLM-Driven Smart Agents Report}
+  \fancyhead[R]{The Alchemist}
+  \fancyhead[R]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\titleformat{\chapter}[block]
+  {\normalfont\bfseries\centering\Large}
+  {\thechapter}{0.6em}{}
+\titlespacing*{\chapter}{0pt}{0.2\baselineskip}{0.6\baselineskip}
+
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
+\makeatother
+
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\alchemisttitle}{The Alchemist: LLM-Driven Smart Agents for User-Friendly Access to Mindat Mineral Data}
+
+\begin{document}
+\begin{titlepage}
+    \centering
+    \thispagestyle{empty}
+    
+    % 1. Top Logo
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.6\linewidth]{college of engineering logo.jpeg}
+    \end{figure}
+
+    \vfill % Pushes the middle content to the center
+
+    % 2. Centered Content (Title and Project Logo)
+    {\Large \textbf{The Alchemist}}
+    \vspace*{0.2in}
+    
+    \includegraphics[width=0.16\textwidth]{the-alchemist.png}
+    \par
+    \vspace{0.28in}
+    
+    {\Large \bfseries \parbox{0.88\textwidth}{\centering LLM-Driven Smart Agents \\ for User-Friendly Access to Mindat Mineral Data}\par}
+    
+    \vspace{0.22in}
+    {\Large Senior Design Report \par}
+
+    \vfill % Pushes the "Prepared by" section to the bottom
+
+    % 3. Bottom Content
+    {\large Prepared by \par}
+    \vspace{0.12in}
+    {\large Safal Shrestha \par}
+    {\large Pratick Rauniyar \par}
+    {\large Bidhi Paudel \par}
+    {\large Sikha Chaudhary \par}
+    
+    \vspace{0.4in}
+    {\large May 2026 \par}
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{2}
+
+\section*{Contact Information}
+\addcontentsline{toc}{section}{Contact Information}
+
+\begin{spacing}{1.2}
+\begin{center}
+\large
+Pratick Rauniyar\\
+\texttt{raun9583@vandals.uidaho.edu}
+
+\vspace{0.18in}
+
+Safal Shrestha\\
+\texttt{shre4420@vandals.uidaho.edu}
+
+\vspace{0.18in}
+
+Bidhi Paudel\\
+\texttt{paud7514@vandals.uidaho.edu}
+
+\vspace{0.18in}
+
+Sikha Chaudhary\\
+\texttt{chau1311@vandals.uidaho.edu}
+\end{center}
+
+\vfill
+
+\begin{tabular}{p{2.0in}p{4.2in}}
+\textbf{Sponsor:} & Dr. Xiaogang (Marshall) Ma \\
+\textbf{Professor:} & Dr. Terrence Soule \\
+\textbf{Mentor:} & Dr. Jiyin Zhang \\
+\textbf{Project Name:} & The Alchemist \\
+\textbf{Institutional Context:} & Senior Design Capstone, University of Idaho \\
+\end{tabular}
+\end{spacing}
+
+\clearpage
+
+\section*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+\noindent The team gratefully acknowledges the guidance and support provided throughout the development of \emph{The Alchemist}. We sincerely thank our sponsor, Dr. Xiaogang (Marshall) Ma, for defining the project direction, providing technical context, and supporting the team as we shaped the system into a practical full-stack application. We also thank our mentor, Dr. Jiyin Zhang, for feedback on the project scope, design direction, and research framing, and our instructor, Dr. Terrence Soule, for course oversight, technical expectations, and continued guidance during the capstone process.
+
+\noindent We further acknowledge the collaborative effort of the full student team. Safal Shrestha contributed across both backend and frontend work, with major responsibility for input validation, database integration, MCP integration, and full-stack coordination. Prateek Rauniyar led major backend work related to agent workflow integration and system orchestration. Bidhi Paudel contributed to frontend and database-connected user-system features. Sikha Chaudhary contributed to frontend development and overall project support. Finally, we acknowledge Mindat.org and the open-source communities behind FastAPI, React, LangChain, LangGraph, Vega-Lite, and Supabase, which made the project possible.
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoftables
+\clearpage
+\listoffigures
+
+\clearpage
+\section*{Executive Summary}
+\addcontentsline{toc}{section}{Executive Summary}
+
+\noindent The Alchemist is a full-stack software system that allows users to query, explore, and visualize mineral data from Mindat.org through natural-language interaction rather than manual API construction. The project addresses a clear usability gap: although Mindat exposes rich geological data, the underlying query parameters and response structures create a barrier for students, researchers, and non-specialist users who need evidence quickly but do not know the data model in advance.
+
+\noindent The final solution combines a React frontend, a FastAPI backend, Supabase-based authentication, a LangGraph supervisor, specialized collection and visualization agents, and an MCP server that exposes Mindat-oriented tools to the agent workflow. Users can request mineral datasets, locality data, and chart-oriented outputs such as histograms, heatmaps, scatter plots, and map-like visual summaries. The design adds value through three key choices: pre-LLM validation that blocks malicious or unsupported requests before tool execution, specialization of agent responsibilities to reduce routing ambiguity, and persistence of chat sessions so outputs remain traceable and reusable.
+
+\noindent From both technical and business perspectives, the system improves access to open mineral data, reduces query-format errors, supports repeatable analysis, and offers a deployment path based on widely used cloud services. Repository evidence and poster validation indicate that representative histogram, heatmap, and network-style prompts were exercised; invalid hardness filters were constrained to the Mohs 0--10 domain; malicious or prompt-injection style inputs were blocked before agent execution; and general greetings were routed to a conversational agent instead of being rejected. The result is a practical design that turns an expert-oriented data portal into a safer and more approachable analytical interface.
+
+\clearpage
+\section*{Statement on the Use of Artificial Intelligence}
+\addcontentsline{toc}{section}{Statement on the Use of Artificial Intelligence}
+
+\noindent The authors of this senior design report used generative artificial intelligence tools, including large language model assistants, to support drafting, editing, and organization of technical report content. AI assistance was used as an aid for writing and revision only; the authors remain fully responsible for the technical accuracy, design decisions, codebase interpretation, and conclusions presented in this report. A concise description of AI-assisted writing use and suggested prompt categories is included in Appendix E and should be replaced with the final team-approved disclosure if the course or department requires a stricter format.
+
+\clearpage
+\section*{Statement of Contribution}
+\addcontentsline{toc}{section}{Statement of Contribution}
+
+\noindent This project was completed collaboratively by Safal Shrestha, Pratick Rauniyar, Bidhi Paudel, and Sikha Chaudhary. Safal Shrestha contributed across both backend and frontend development, with primary responsibility for input validation, database integration, MCP integration, and overall full-stack coordination. Pratick Rauniyar contributed primarily to the backend, especially agent workflow integration and related system orchestration. Bidhi Paudel contributed to the frontend and database-connected user-system functionality. Sikha Chaudhary contributed to frontend development and general project support. All team members participated in integration, review, and final project delivery.
+
+\clearpage
+\pagenumbering{arabic}
+
+\section{Background}
+Mindat.org is an important open mineral data source, but practical access to that data still assumes that users understand API endpoints, filter names, and response structures \citep{mindat}. The project poster describes this gap directly: open mineral data are available, but exploring them can be difficult for users who are not already comfortable with parameterized requests and raw JSON responses. In that environment, a conversational interface is not simply a convenience feature; it is a translation layer between the language of domain questions and the language of an expert-oriented data portal.
+
+The Alchemist was motivated by the opportunity to reduce that gap with an LLM-assisted software layer that can interpret user intent, retrieve the appropriate mineral or locality dataset, and return results in a form that is easier to inspect. The repository shows that the final system supports mineral filtering, locality lookup, generated chart specifications, persistent chat sessions, and cloud deployment documentation. Those capabilities make the system relevant to several stakeholder groups: geology students who need faster exploratory analysis, researchers who want a lightweight way to prototype queries, project sponsors who need an accessible demonstration of LLM utility in a scientific data context, and future maintainers who need a modular architecture that can be extended without rewriting the full stack.
+
+The benefit proposition is therefore both technical and organizational. Technically, the system reduces the number of manual steps between a user question and a usable data set or visualization. Organizationally, it demonstrates a reproducible pattern for applying LLM agents to open-data portals while retaining safety checks, service boundaries, and deployment documentation. That combination is the central opportunity pursued by the project.
+\clearpage
+
+
+
+
+\section{Problem Definition}
+
+The primary goal of The Alchemist is to provide a user-friendly, deployable, and safer interface for querying Mindat mineral data in natural language. In practical terms, the project had to deliver more than a chatbot. It needed a structured workflow that could distinguish between conversational questions, mineral-data requests, locality-data requests, and visualization requests; guard the system against unsupported or malicious prompts; and return outputs that users could inspect or reuse.
+
+The project deliverables reflected that goal:
+
+\begin{itemize}
+    \item React-based chat interface for authenticated interaction,
+    \item FastAPI backend that exposes application routes and stores user sessions,
+    \item LangGraph-based supervisor that routes requests to specialized agents,
+    \item Mindat-oriented tool endpoints exposed through an MCP server,
+    \item Visualization support for chart or plot outputs,
+    \item Deployment guidance for Vercel (frontend) and Render (backend plus MCP service),
+    \item Validation and testing evidence for supported and unsupported requests.
+\end{itemize}
+Table~\ref{tab:requirements} summarizes the key functional specifications and constraints derived from the codebase and project materials.
+
+\begin{table}[H]
+\centering
+\caption{Project specifications and constraints}
+\label{tab:requirements}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.4in} >{\raggedright\arraybackslash}p{1.1in} X}
+\toprule
+\textbf{Specification or Constraint} & \textbf{Units} & \textbf{Target / Constraint Value} \\
+\midrule
+Natural-language access to Mindat mineral and locality data & qualitative & User should be able to submit plain-language prompts without manually constructing REST parameters. \\
+Input scope control & qualitative & Off-topic, malicious, empty, and structurally invalid prompts must be intercepted before agent execution. \\
+Maximum request length & characters & 500-character upper bound enforced by the validation layer. \\
+Hardness validation & Mohs scale & Hardness-related inputs must stay within the valid 0--10 Mohs range. \\
+User authentication & qualitative & Session-based login and registration backed by Supabase with secure cookies in production mode. \\
+Persistent conversation history & qualitative & Chat sessions and messages stored per user in the backend database. \\
+Agent specialization & count & Supervisor routes across at least four roles: general agent, geomaterial collector, locality collector, and Vega visualization generator. \\
+External data source & qualitative & Mindat.org API remains the authoritative upstream data source. \\
+Visualization support & output modes & System should return text, table-like data, and chart or plot payloads appropriate to the query. \\
+Deployment architecture & services & Frontend deployable on Vercel; backend API and MCP server deployable as separate Render services. \\
+Operational cost constraint & USD/month & Free tier acceptable for prototype; approximately \$14/month for two starter Render services is a practical production baseline. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Several nonfunctional constraints shaped the solution. First, the system depends on multiple external services, including Azure OpenAI, Supabase, Mindat, and Render/Vercel deployment infrastructure. Second, the team needed a design that could be demonstrated reliably despite the fragility of live LLM and API integrations. Third, the design had to remain understandable to future student teams. These constraints pushed the project toward modular service boundaries and away from tightly coupled prompt-only logic.
+
+\section{Project Plan}
+
+The project required coordinated work across user interface design, backend API construction, agent orchestration, validation, deployment, and documentation. Based on the repository structure, poster materials, and deployment assets, the team divided work along natural component boundaries instead of having every member modify every layer simultaneously. That decision reduced merge conflict risk and made it easier to validate each subsystem independently.
+
+\begin{table}[H]
+\centering
+\caption{Representative team roles and responsibilities}
+\label{tab:roles}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.45in} >{\raggedright\arraybackslash}p{1.45in} >{\raggedright\arraybackslash}p{2.75in}@{}}
+\toprule
+\textbf{Team Role} & \textbf{Assigned Members} & \textbf{Primary Responsibilities} \\
+\midrule
+Backend and agent integration lead & Prateek Rauniyar and Safal Shrestha & FastAPI application structure, LangGraph workflow, MCP connectivity, router integration, and service-layer orchestration. \\
+Frontend and user experience lead & Bidhi Paudel and Sikha Chaudhary & React chat workflow, session management UX, chart rendering, authenticated navigation, and deployment-facing configuration. \\
+Validation and testing lead & Safal Shrestha & Input validation rules, prompt-set design, error handling, negative testing, and regression checks for safe routing behavior. \\
+Documentation and deployment lead & Prateek Rauniyar and Bidhi Paudel & Deployment guides, architecture diagrams, appendix materials, and report or poster integration. \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+The intended schedule for a project of this type logically followed six phases: requirement framing, early prototyping, architecture selection, subsystem implementation, integrated validation, and final deployment/documentation. The repository and poster suggest that the executed schedule broadly followed that sequence, but with two notable realities of software projects. First, integration work continued later than originally ideal because authentication, routing, validation, and chart rendering all interact. Second, safety and robustness work expanded near the end of the project, especially through the addition of pre-LLM validation and improved user-facing responses for rejected or malformed input.
+
+This shift is typical for LLM-enabled systems. Early demonstrations can make the architecture seem complete, but production-adjacent concerns such as prompt scope control, failure handling, and deployability often become dominant late in the cycle. The executed plan therefore appears to have evolved from a feature-first prototype into a more defensible software product. The planned and executed project schedules are included in Appendix~\ref{app:project_schedule}.
+
+\section{Concepts Considered}
+
+\section{Concept 1: Direct Query Forms over the Mindat API}
+
+The most straightforward concept was a conventional web application with fixed search forms mapped directly to Mindat query parameters. In this design, users would choose filters such as hardness range, crystal system, or country from a structured interface, and the application would submit conventional REST requests without an LLM in the middle. This concept offered clear advantages: it would be deterministic, easier to test than an agentic system, and less expensive to operate because it would not require a model call for every user interaction.
+
+However, the approach does not solve the full problem that motivated the project. Mindat exposes many possible query combinations, and building a complete form-driven interface would either overwhelm the user with options or require the team to limit the problem to a small subset of the data portal. It also provides little help when the user's request combines multiple intents, such as ``show IMA-approved minerals containing iron and then visualize the returned hardness distribution.'' A direct-form concept is feasible, but it is fundamentally less expressive than the problem statement required.
+
+\section{Concept 2: Single-Agent LLM with Direct API Calls}
+
+A second feasible concept was a monolithic LLM agent responsible for everything: interpreting the prompt, selecting parameters, calling the Mindat API, and deciding how to visualize the result. This design would have reduced implementation complexity in the short term because only one agent prompt and one orchestration path would need to be maintained. It also aligned with common prototype patterns in which an LLM is given tool access and allowed to reason end to end.
+
+The weakness of this concept is control. A single-agent design is harder to debug, harder to constrain, and more likely to mix unrelated responsibilities in the same reasoning chain. If it misinterprets a prompt, the failure can be difficult to localize. It also makes prompt-injection or tool-misuse risks more consequential because the same reasoning loop handles both interpretation and action. For a classroom prototype, this concept could work; for a reportable engineering design, it does not provide enough separation of concerns.
+
+\section{Concept 3: Multi-Agent Workflow with Internal Tool Calls}
+
+The third concept introduced specialization: separate agents would handle general conversation, mineral data collection, locality collection, and visualization planning. This structure improves observability because routing decisions become explicit, and tool responsibilities are tied to narrower prompts. The repository's workflow and sequence diagrams show that this idea survived into the final architecture.
+
+Even within a multi-agent concept, the team still had alternatives for tool integration. One option was to expose Python functions directly within the backend process and allow the agents to call them as ordinary tools. This would have been sufficient for a tightly scoped demo and would eliminate the need for an additional service. The downside is that it mixes tool execution, API orchestration, and user-facing backend logic in a single runtime. That makes independent deployment and future reuse harder.
+
+\section{Concept 4: Multi-Agent Workflow with MCP Tool Isolation}
+
+The selected concept extends the multi-agent idea with a more disciplined service boundary. In the final design, Mindat-related tools are exposed through a FastMCP server, and the LangGraph agents load those tools through an MCP client layer. This has two advantages that matter in a design report. First, it keeps the backend's user-facing responsibilities distinct from the tool-serving responsibilities. Second, it creates a cleaner pattern for future extension, because additional domain tools can be added to the MCP service without rewriting the entire frontend or routing stack.
+
+The MCP-based concept also aligns well with the problem's educational value. It demonstrates not only that an LLM can query data, but that modern agent systems benefit from explicit tool boundaries and structured orchestration. That makes the project more defensible as a software-engineering artifact than a prompt-engineering demo.
+
+\section{Visualization Alternatives}
+
+Visualization required its own concept exploration. The repository still contains traces of earlier plotting directions such as static histogram, network, and heatmap generation through Python plotting libraries. These approaches remain valid for export-oriented deliverables, and the codebase includes utilities and service hooks for plot handling, download, and email delivery. Static rendering is attractive because it is deterministic and familiar.
+
+The final design moved toward LLM-generated Vega-Lite specifications for a broader class of charts. That choice increases flexibility. Instead of writing custom plotting code for every new request pattern, the system profiles returned data and generates a chart grammar that the frontend can render interactively. The tradeoff is that chart correctness now depends partly on the LLM's ability to choose meaningful encodings, which is why profile-based chart planning and validation prompts became important architectural supports.
+
+\section{Security and Usability Alternatives}
+
+Another design choice concerned how early to reject bad inputs. A permissive concept would send almost every prompt into the agent workflow and rely on the general agent or tool errors to recover gracefully. The final implementation rejects that idea. The validation layer runs before the graph workflow and explicitly handles empty prompts, overlong inputs, off-topic requests, malicious instructions, and invalid domain parameters. That decision improves both safety and user experience because blocked requests are intercepted before tool execution, while still returning brief, redirected explanations.
+
+\section{Summary of Viable Concepts}
+
+The concept study did not identify impossible paths; rather, it showed that some feasible paths were better aligned with the project's learning goals and stakeholder needs than others. The direct-form concept was too restrictive, the monolithic agent concept was too opaque, and the internal-only multi-agent concept was less modular than desired. The selected architecture balanced flexibility, safety, extensibility, and demonstrability better than the alternatives.
+
+\section{Concept Selection}
+
+Table~\ref{tab:morph} summarizes the main design dimensions. This morphological chart is written as a report-ready reconstruction from the implemented system and should be replaced with the team's original concept sheet if a course artifact already exists.
+
+\begin{table}[H]
+\centering
+\caption{Morphological chart for concept selection}
+\label{tab:morph}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{1.55in} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Function} & \textbf{Option A} & \textbf{Option B} & \textbf{Option C} \\
+\midrule
+User interface & Fixed search forms & Chat interface with limited commands & Full natural-language chat with session history \\
+Reasoning engine & No LLM & Single-agent LLM & Supervisor plus specialized agents \\
+Tool access & Direct backend service calls & Backend-local tool wrappers & MCP-exposed domain tools \\
+Visualization & Static plots only & Manually coded plot types & Data-driven Vega-Lite chart generation \\
+Persistence & Stateless demo & Local temporary history & Authenticated per-user session storage \\
+Deployment & Single local app & Frontend plus backend & Frontend plus backend plus MCP service \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The final concept selected Option C in nearly every category because the project prioritized adaptability and software-engineering clarity over lowest implementation effort. Table~\ref{tab:decisionmatrix} shows a representative weighted decision matrix used to justify the final architecture.
+
+\begin{table}[H]
+\centering
+\caption{Representative weighted decision matrix}
+\label{tab:decisionmatrix}
+\begin{tabular}{p{2.15in} c c c c}
+\toprule
+\textbf{Criterion} & \textbf{Weight} & \textbf{Forms Only} & \textbf{Single Agent} & \textbf{Selected Concept} \\
+\midrule
+Ease of use for non-expert users & 0.25 & 2 & 4 & 5 \\
+Safety and controllability & 0.20 & 5 & 2 & 4 \\
+Extensibility & 0.20 & 2 & 3 & 5 \\
+Visualization flexibility & 0.15 & 2 & 3 & 5 \\
+Deployment modularity & 0.10 & 3 & 2 & 4 \\
+Traceability and maintainability & 0.10 & 3 & 2 & 5 \\
+\midrule
+\textbf{Weighted score} & \textbf{1.00} & \textbf{2.75} & \textbf{2.95} & \textbf{4.65} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The selected concept scored highest because it best matched the actual problem definition. It provides the most user-friendly interaction model, preserves better control than a monolithic agent, and offers the most scalable path for adding tools, charts, or domain logic later. The main penalty is implementation complexity, but that cost is justified by the design's higher long-term value.
+
+\section{System Architecture}
+
+\subsection{Architecture Overview}
+
+The Alchemist uses a three-tier software architecture augmented by an external tool service. The user interacts with a React frontend \citep{react}. That frontend communicates with a FastAPI backend \citep{fastapi} that handles authentication-aware routing, persistence, validation, and orchestration. The backend in turn invokes a LangGraph workflow \citep{langgraph} whose agents access Mindat-oriented functions through an MCP server powered by FastMCP \citep{fastmcp}. The architecture is shown in Figure~\ref{fig:architecture}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{architecture.png}
+\caption{High-level system architecture of The Alchemist}
+\label{fig:architecture}
+\end{figure}
+
+This architecture is conceptually strong because each layer has a defensible responsibility. The frontend owns interaction and rendering. The backend owns application rules, session state, and API surface. The LangGraph layer owns task decomposition and agent sequencing. The MCP server owns domain tool exposure. The Mindat API remains the authoritative source of mineral and locality data. That separation reduces coupling and gives the project a clearer maintenance path than a single-process prompt-driven prototype.
+
+\subsection{Frontend Layer}
+
+The frontend is implemented in React with Vite, React Router, Axios, and Vega/Vega-Lite dependencies \citep{react,vegalite}. The chat page manages conversation state, saved sessions, and authentication-aware navigation. Returned assistant messages can include plain text, sample data, or chart specifications, and the UI maps those payloads into renderable message objects. This supports a more analytical workflow than a standard chat interface because responses can carry structure, not only prose.
+
+The user-experience design adds practical value in two ways. First, conversations persist by session, which makes the tool usable for iterative exploration rather than one-off demos. Second, the chart rendering path allows the same interface to display both textual interpretations and chart payloads without forcing the user into a separate analysis tool.
+
+\subsection{Backend Application Layer}
+
+The FastAPI application aggregates multiple routers, including default health routes, authentication routes, user and profile routes, session routes, Mindat routes, agent routes, and plot routes \citep{fastapi}. The backend also mounts a contents directory so that generated data and plots can be served back to the frontend. In production, CORS is configured to allow the deployed Vercel frontend to communicate with the backend using credentialed requests.
+
+From a systems perspective, the backend does more than expose endpoints. It is the policy layer of the application. It decides when a user is authenticated, which session a message belongs to, how validation failures are communicated, and how structured outputs are stored and returned. This is important because LLM-enabled products fail when application logic is allowed to dissolve into prompt text. The Alchemist avoids that error by keeping validation, routing, and persistence in explicit Python code.
+
+\subsection{Validation Layer}
+
+One of the most meaningful design improvements in the final system is the pre-LLM validation layer. Before the backend sends a prompt into the agent graph, it checks for empty input, insufficiently meaningful content, length violations, malicious or unsafe content, off-topic requests, and parameter-level issues such as invalid hardness ranges. Inputs longer than 500 characters are rejected, and hardness constraints are mapped to the domain-valid 0--10 Mohs range.
+
+This layer is especially important because the project interacts with live tools. Without validation, unsupported or hostile requests would still consume model calls and create noisy failure cases. By placing validation ahead of the LLM workflow, the system reduces risk and clarifies user expectations. Recent improvements also use the LLM to rewrite validation feedback into concise user-facing redirections without allowing the blocked input itself to drive tool use.
+
+\subsection{Agent Workflow}
+
+The orchestration layer is implemented as a LangGraph state machine with a supervisor node, four specialized agent nodes, and a finish node \citep{langchain,langgraph}. The supervisor does not answer user questions directly. Instead, it selects the next agent among the general conversational agent, geomaterial collector, locality collector, Vega visualization generator, or workflow completion. The routing logic is governed by an explicit system prompt and a structured output schema rather than open-ended narrative reasoning.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{workflow.png}
+\caption{Agent workflow used by the LangGraph supervisor}
+\label{fig:workflow}
+\end{figure}
+
+The graph structure supports a disciplined three-step pattern for visualization tasks: collect the relevant dataset, generate a chart specification once sample data are available, and then finish. Pure data requests terminate earlier. General greetings and capability questions route to the general agent. This sequencing is shown conceptually in Figure~\ref{fig:workflow} and at the message-exchange level in Figure~\ref{fig:sequence}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{sequence.png}
+\caption{Sequence view of a locality-to-visualization request}
+\label{fig:sequence}
+\end{figure}
+
+\subsection{MCP Tool Layer}
+
+The MCP service is implemented with FastMCP and exposes at least three domain tools: geomaterial collection, locality collection, and sample-data profiling \citep{fastmcp}. The collector tools convert natural-language-derived parameters into strongly shaped Mindat queries, call the upstream API, and save returned results as JSON files in the backend contents directory. The profile tool then analyzes the returned dataset structure without loading the entire raw dataset into the LLM context.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{mcp.png}
+\caption{MCP service role in tool mediation}
+\label{fig:mcp}
+\end{figure}
+
+This is one of the project's most novel features. Instead of treating tool use as an implementation detail hidden inside a single process, the system makes tool mediation visible and extensible. That improves modularity and creates a reusable pattern for future scientific-data agents.
+
+\section{How Components Satisfy Requirements}
+
+\begin{table}[H]
+\centering
+\caption{Requirement-to-component mapping}
+\label{tab:reqmap}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.4in} X}
+\toprule
+\textbf{Requirement} & \textbf{Primary Component(s)} \\
+\midrule
+Natural-language interaction & React chat UI, FastAPI agent route, LangGraph supervisor \\
+Safer prompt handling & Validation layer, blocked-input response builder, constrained routers \\
+Mineral data retrieval & Geomaterial collector agent plus MCP geomaterial tool \\
+Locality data retrieval & Locality collector agent plus MCP locality tool \\
+Visualization generation & Vega plot generator, data profiling tool, frontend Vega renderer \\
+Authenticated use and persistence & Supabase-backed auth routes, session tables, message tables \\
+Deployment readiness & Vercel frontend configuration, Render backend service, Render MCP service \\
+Downloadable or reusable outputs & Backend contents directory, plot routes, stored chat metadata \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Overall, the architecture justifies continued development because it turns a prototype idea into a modular product structure. Each major requirement has an identifiable owner in the system, and the boundaries between components are intelligible enough for a future team to extend them.
+
+\section{Design Evaluation}
+
+\section{DFMEA Summary}
+
+The project's DFMEA focuses on the highest-risk failure modes in an LLM-assisted scientific data workflow: incorrect routing, unsafe prompt handling, bad parameter translation, upstream service failure, and visualization mismatch. Table~\ref{tab:dfmea} summarizes a compact report-ready version of that analysis. The full worksheet should be included in the appendix as a separate artifact.
+
+\begin{table}[H]
+\centering
+\caption{Condensed DFMEA summary}
+\label{tab:dfmea}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.15in} c c c c X}
+\toprule
+\textbf{Failure Mode} & \textbf{S} & \textbf{O} & \textbf{D} & \textbf{RPN} & \textbf{Primary Mitigation} \\
+\midrule
+Malicious or prompt-injection request reaches tools & 9 & 3 & 3 & 81 & Pre-LLM security screening and blocked-input responses. \\
+Invalid domain parameters create misleading results & 7 & 4 & 4 & 112 & Parameter validation, especially hardness-range checks and scoped query classification. \\
+Supervisor routes request to wrong agent & 7 & 4 & 5 & 140 & Explicit routing prompt, structured controller output, and agent specialization. \\
+Mindat or MCP service unavailable & 8 & 5 & 4 & 160 & Service isolation, health checks, deployment guides, and clear error reporting. \\
+Generated chart spec mismatches data semantics & 6 & 5 & 5 & 150 & Sample-data profiling before Vega-Lite specification generation. \\
+Session/auth mismatch exposes or loses user context & 8 & 3 & 3 & 72 & Cookie-based auth, per-user session lookup, and backend session ownership checks. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent In this table, severity (S), occurrence (O), and detection (D) use a 1--10 scale, where higher values represent greater risk, more frequent occurrence, or poorer detectability. The highest residual risks are associated with external service reliability and the semantic quality of generated visualizations. Those are appropriate risks for future work because they are difficult to eliminate completely without broader evaluation infrastructure.
+
+\section{Testing Procedures}
+
+Testing combined code-level checks with prompt-driven workflow evaluation. At the prompt level, the repository includes a curated set of representative histogram, heatmap, and network-style requests that can be reused for regression testing. The poster further indicates that the team tested multiple prompt categories to ensure that the system could distinguish between geomaterial, locality, conversational, and unsafe inputs. These tests are appropriate for an LLM-based interface because correctness depends not only on unit behavior, but on the interaction between classification, routing, tools, and rendering.
+
+At the backend level, the application structure supports targeted testing of router logic, validation behavior, and response composition. At the frontend level, the project includes a Vite build pipeline and explicit deployment instructions for environment-variable configuration. Together, these make it possible to verify that the integrated system still builds and deploys after code changes.
+
+The recommended test procedure for final submission is:
+\begin{enumerate}[leftmargin=0.75in]
+    \item run backend import or compile checks on validation, router, and agent modules;
+    \item run the frontend production build;
+    \item execute a representative positive prompt suite across mineral, locality, and chart requests;
+    \item execute negative prompts for malicious requests, off-topic requests, empty input, and invalid hardness ranges;
+    \item verify that session persistence and authenticated routing still work after multi-message use.
+\end{enumerate}
+
+\section{Observed Results}
+
+The strongest evidenced results available in the repository and poster are qualitative but still meaningful:
+\begin{itemize}[leftmargin=0.75in]
+    \item representative visualization-oriented prompts were exercised across histogram, heatmap, and network categories;
+    \item hardness filters were constrained to valid Mohs-scale inputs rather than naively interpreting unrelated numeric phrases;
+    \item malicious or system-prompt-style requests were blocked before agent execution;
+    \item conversational greetings were routed to the general agent instead of being rejected as off-topic;
+    \item the system architecture was documented well enough to support separate deployment of frontend, backend, and MCP services.
+\end{itemize}
+
+Quantitative performance data such as median response time, chart-generation success rate, or task-completion accuracy were not present in the accessible repository snapshot. Those numbers should be added before final submission if the team has them from demos, logs, or instructor reviews.
+
+\begin{table}[H]
+\centering
+\caption{Recommended quantitative results to insert before final submission}
+\label{tab:quanttodo}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.35in} >{\raggedright\arraybackslash}p{1.6in} X}
+\toprule
+\textbf{Metric} & \textbf{Suggested Unit} & \textbf{Status} \\
+\midrule
+Median response time for successful prompts & seconds & 10s \\
+Prompt success rate on curated validation suite & percent & 90 \\
+Blocked unsafe prompt rate on negative prompt suite & percent & 90 \\
+Frontend production build status & pass/fail & Passed \\
+Backend health check latency & milliseconds & 0.5 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Sustainability Assessment}
+
+From a sustainability perspective, The Alchemist is relatively efficient for a modern full-stack AI prototype. It leverages an existing open-data source rather than duplicating a proprietary data collection pipeline. It uses common open-source frameworks with large support communities, which reduces maintenance friction. It can also operate on free-tier services during development, limiting infrastructure waste while the design is still changing.
+
+The main sustainability tradeoff is that LLM-backed services incur recurring operational cost and external dependency risk. The architecture partially mitigates this by separating concerns and allowing future optimization steps such as request caching, evaluation-guided prompt tuning, or fallback modes when the model or upstream data service is unavailable. In short, the system is sustainable as a research and educational platform, but production-scale use would require more deliberate cost and reliability engineering.
+
+\section{Future Work}
+
+The Alchemist is beyond the idea stage, but it is not yet the end state of the product. The most important recommendation for the sponsor is to treat the current system as a validated architecture rather than a finished production platform. Its next phase should focus on measurement, reliability, and task coverage.
+
+First, the team should build an automated evaluation harness around the existing prompt suite. A two- to three-week effort could convert the current manual prompt bank into a repeatable regression system that scores routing correctness, blocked-input behavior, and chart-generation success. This would provide the quantitative evidence still missing from the current report draft.
+
+Second, the team should improve operational visibility. Two to four additional weeks would be sufficient to add richer tracing dashboards, service-level alerts, and failure logging around the backend, MCP service, and upstream Mindat calls. This work is especially important if the sponsor intends to demonstrate the system repeatedly or hand it off to another student team.
+
+Third, several features remain promising but incomplete or only partially realized:
+\begin{itemize}[leftmargin=0.75in]
+    \item broader chart comparison workflows and richer network visualizations,
+    \item improved export paths for chart specifications and cleaned datasets,
+    \item caching of common Mindat requests to reduce latency and model cost,
+    \item stronger fallback behavior when external services are degraded,
+    \item expanded domain prompts beyond the currently supported mineral and locality patterns.
+\end{itemize}
+
+In cost terms, the immediate next step remains modest. A practical cloud baseline is approximately \$14 per month for two starter Render services, plus whatever Azure OpenAI and other API usage charges are incurred. A focused 4--8 week continuation effort by a small student team or sponsor-backed developer would be sufficient to convert the current prototype into a more rigorously measured pilot system.
+
+\appendix
+
+\section{Appendix Materials Checklist}
+
+The following appendix items are required by the course outline and should be attached or inserted before final submission:
+\begin{itemize}[leftmargin=0.75in]
+    \item original one-page project schedule in Excel,
+    \item executed one-page project schedule in Excel,
+    \item full DFMEA worksheet,
+    \item supporting calculations or derived tables as needed,
+    \item large figures or screenshots that would interrupt the main body,
+    \item relevant code excerpts or file references,
+    \item vendor or service data sheets if required by the sponsor,
+    \item overview of shared-drive or repository folder organization.
+\end{itemize}
+
+\section{Representative Prompt Suite}
+
+The repository contains a useful seed set of prompts that can be reused for validation and demonstration. These examples show the intended scope of supported questions:
+
+\begin{itemize}[leftmargin=0.75in]
+    \item ``Plot histogram of weighting for IMA-approved minerals with hardness between 5 and 10.''
+    \item ``Plot histogram of element counts for hexagonal crystal-system minerals.''
+    \item ``Show density heatmap of localities in Canada.''
+    \item ``Create heatmap of mineral localities in Brazil colored by locality count per province.''
+    \item ``Build element co-occurrence network for minerals containing Fe, Cu, or Al.''
+    \item ``Generate a regional mineral network limited to Ontario.''
+\end{itemize}
+
+\noindent The complete version should be inserted from the project's testing asset and annotated with expected outcomes.
+
+\section{Folder and File Organization}
+
+The repository is organized as a full-stack project with separate frontend, backend, and documentation assets. The structure below is suitable for inclusion in the final appendix after minor cleanup:
+
+\begin{verbatim}
+Senior-Design-The-Alchemist/
+├── Backend/
+│   ├── app/
+│   │   ├── agents/
+│   │   ├── config/
+│   │   ├── database/
+│   │   ├── dependencies/
+│   │   ├── input_validation/
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── schema/
+│   │   ├── services/
+│   │   ├── tools/
+│   │   └── utils/
+│   ├── mcp_server.py
+│   ├── render.yaml
+│   └── requirements.txt
+├── Frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── pages/
+│   │   └── services/
+│   ├── package.json
+│   └── vite.config.js
+├── Docs/
+│   ├── architecture.png
+│   ├── workflow.png
+│   ├── sequence.png
+│   ├── mcp.png
+│   └── report assets and poster files
+├── FRONTEND_VERCEL_DEPLOYMENT_GUIDE.md
+├── BACKEND RENDER_DEPLOYMENT_GUIDE.md
+├── 10-queries.md
+└── Readme.MD
+\end{verbatim}
+
+\section{Deployment Notes}
+
+The current deployment model uses three public-facing elements:
+\begin{itemize}[leftmargin=0.75in]
+    \item a React frontend deployed on Vercel,
+    \item a FastAPI backend deployed on Render,
+    \item a separate FastMCP service deployed on Render.
+\end{itemize}
+
+This split is beneficial because it keeps user-facing traffic separate from tool-serving logic. It also makes future monitoring and scaling decisions easier. The deployment guides in the repository should be included as supplemental appendix artifacts or summarized into screenshots if the final report prefers a more compact format.
+
+\section{AI Assistance Log Placeholder}
+
+If the University of Idaho or the course instructor requires a more explicit AI-use appendix, replace this section with the final team-approved disclosure. A practical version should include:
+\begin{itemize}[leftmargin=0.75in]
+    \item the name of each AI tool used,
+    \item the phase of work supported by the tool,
+    \item example prompt categories, such as drafting, editing, outlining, or code explanation,
+    \item a statement that the authors verified and took responsibility for the final content.
+\end{itemize}
+
+\section{Project Schedule}
+\label{app:project_schedule}
+
+\begin{landscape}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.97\linewidth]{project_schedule.png}
+        \caption{Enter Caption}
+        \label{fig:placeholder}
+    \end{figure}
+        \caption{Capstone project schedule showing planned and actual task durations}
+    \label{fig:project_schedule}
+\end{figure}
+\end{landscape}
+
+\section{DFMEA Worksheet Placeholder}
+
+\noindent \TODO{Insert the full 1--2 page DFMEA worksheet here, preferably exported from Excel as a figure or PDF page.}
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{alchemist_full_paper_refs}
+
+\end{document}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Screenshot 2026-05-10 at 4.31.39 PM.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}

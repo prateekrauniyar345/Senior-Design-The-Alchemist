@@ -46,8 +46,8 @@ def collect_geomaterials(
     # ── Misc ────────────────────────────────────────────────
     entrytype: Optional[List[int]] = None,
     expand: Optional[List[str]] = None,
-    limit: int = 100,
-    offset: int = 0,
+    page: int = 1,
+    page_size: int = 100,
 ) -> GeomaterialToolResponse:
     """
     Query Mindat /v1/geomaterials using flat filter parameters.
@@ -66,7 +66,8 @@ def collect_geomaterials(
     density_min   : minimum density g/cm³
     density_max   : maximum density g/cm³
     opticaltype   : "Biaxial", "Isotropic", or "Uniaxial"
-    limit         : max records (default 100)
+    page          : page number for pagination (default 1)
+    page_size     : results per page (default 100)
     """
     try:
         # Build the Pydantic query using Python field names (aliases map to API params)
@@ -100,8 +101,8 @@ def collect_geomaterials(
             bi_max=bi_max,
             entrytype=entrytype,
             expand=expand,
-            limit=limit,
-            offset=offset,
+            page=page,
+            page_size=page_size,
         )
 
         query_dict = to_params(query)

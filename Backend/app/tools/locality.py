@@ -13,8 +13,8 @@ def collect_localities(
     description: Optional[str] = None,
     elements_inc: Optional[List[str]] = None,
     elements_exc: Optional[List[str]] = None,
-    limit: int = 100,
-    offset: int = 0,
+    page: int = 1,
+    page_size: int = 100,
 ) -> LocalityToolResponse:
     """
     Query Mindat /v1/localities using individual filter parameters.
@@ -28,8 +28,8 @@ def collect_localities(
     description   : locality description contains this string
     elements_inc  : elements that MUST be present at the locality, e.g. ["Au","Ag"]
     elements_exc  : elements that must NOT be present, e.g. ["Pb","Zn"]
-    limit         : max records to return (default 100)
-    offset        : pagination offset (default 0)
+    page          : page number for pagination (default 1)
+    page_size     : results per page (default 100)
     """
     try:
         if not country:
@@ -44,8 +44,8 @@ def collect_localities(
             description=description,
             elements_inc=elements_inc,
             elements_exc=elements_exc,
-            limit=limit,
-            offset=offset,
+            page=page,
+            page_size=page_size,
         )
 
         print(f"Locality Tool called with: {query}")
