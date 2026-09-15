@@ -1,75 +1,137 @@
 // src/services/chatService.js
+import apiClient from "../api/apiClient";
 
 /**
- * Chat service for handling LLM API interactions
+ * Chat service for handling LLM API interactions and chat history
+ * Uses axios apiClient for consistent error handling and token refresh
  */
 const chatService = {
-    /**
- * Get response from the backend agent.
- * @param {string} userMessage - The user's message.
- * @returns {Promise<object>} The full response object from the backend agent, including message and plot_file_path.
- */
-async getLLMResponse(userMessage) {
-  try {
-    const response = await fetch('/api/agent/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: userMessage }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'An unknown error occurred.' }));
-      throw new Error(errorData.detail || `HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-
-  } catch (error) {
-    console.error('Error in getLLMResponse:', error);
-    throw error; // Re-throw to be handled by the component
-  }
-},
-  
-/**
- * Optional: Stream response from LLM API
- * @param {string} userMessage - The user's message
- * @param {Function} onChunk - Callback for each chunk of data
- * @returns {Promise<void>}
- */
-async streamLLMResponse(userMessage, onChunk) {
-  try {
-      // TODO: Implement streaming API call
-      // Example with fetch streaming:
-      // const response = await fetch('YOUR_STREAMING_ENDPOINT', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ message: userMessage })
-      // });
-      
-      // const reader = response.body.getReader();
-      // const decoder = new TextDecoder();
-      
-      // while (true) {
-      //   const { done, value } = await reader.read();
-      //   if (done) break;
-      //   const chunk = decoder.decode(value);
-      //   onChunk(chunk);
-      // }
-      
-      // Simulated streaming for now
-      const fullResponse = `Streamed response to: "${userMessage}"`;
-      for (let i = 0; i < fullResponse.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        onChunk(fullResponse.slice(0, i + 1));
+  /**
+   * Get response from the backend agent.
+   * @param {string} userMessage - The user's message.
+   * @param {string} sessionId - Optional session ID for message persistence
+   * @returns {Promise<object>} The full response object from the backend agent.
+   */
+  async getLLMResponse(userMessage, sessionId) {
+    try {
+      if (!sessionId) {
+        throw new Error("sessionId is required for chat");
       }
+      const payload = { query: userMessage, session_id: sessionId };
+
+      const response = await apiClient.post("/api/agent/chat", payload);
+      return response.data;
     } catch (error) {
-        console.error('Error in streamLLMResponse:', error);
-        throw error;
-      }
+      console.error('Error in getLLMResponse:', error.message);
+      throw error;
     }
-  };
-  
-  export default chatService;
+  },
+
+  // ========== SESSION MANAGEMENT ==========
+
+  /**
+   * Get all chat sessions for the current user
+   * @returns {Promise<Array>} Array of session objects
+   */
+  async getSessions() {
+    try {
+      const response = await apiClient.get("/api/sessions");
+      return response.data;
+    } catch (error) {
+      console.error('Error in getSessions:', error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new chat session
+   * @param {string} title - Title for the new session
+   * @returns {Promise<object>} The created session object
+   */
+  async createSession(title = "New Chat") {
+    try {
+      const response = await apiClient.post("/api/sessions", { title });
+      return response.data;
+    } catch (error) {
+      console.error('Error in createSession:', error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Update session title
+   * @param {string} sessionId - The session ID
+   * @param {string} title - New title for the session
+   * @returns {Promise<object>} The updated session object
+   */
+  async updateSession(sessionId, title) {
+    try {
+      const response = await apiClient.put(`/api/sessions/${sessionId}`, { title });
+      return response.data;
+    } catch (error) {
+      console.error('Error in updateSession:', error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a chat session
+   * @param {string} sessionId - The session ID to delete
+   * @returns {Promise<object>} Confirmation message
+   */
+  async deleteSession(sessionId) {
+    try {
+      const response = await apiClient.delete(`/api/sessions/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error in deleteSession:', error.message);
+      throw error;
+    }
+  },
+
+  // ========== MESSAGE MANAGEMENT ==========
+
+  /**
+   * Get all messages in a session
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Array>} Array of message objects
+   */
+  async getMessages(sessionId) {
+    try {
+      const response = await apiClient.get(`/api/sessions/${sessionId}/messages`);
+      return response.data;
+    } catch (error) {
+      console.error('Error in getMessages:', error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Save a message to a session
+   * @param {string} sessionId - The session ID
+   * @param {string} content - Message content
+   * @param {string} sender - "user" or "bot"
+   * @param {string} outputType - Type of output (text, plot, chart, etc.)
+   * @param {object} metadata - Additional metadata (plot URLs, chart specs, etc.)
+   * @returns {Promise<object>} The saved message object
+   */
+  async saveMessage(sessionId, content, sender, outputType = "text", metadata = null) {
+    try {
+      const response = await apiClient.post(
+        `/api/sessions/${sessionId}/messages`,
+        {
+          content,
+          sender,
+          output_type: outputType,
+          meta_data: metadata,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error in saveMessage:', error.message);
+      throw error;
+    }
+  },
+};
+
+export default chatService;

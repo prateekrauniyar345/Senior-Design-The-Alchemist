@@ -1,0 +1,81 @@
+
+%%{init: {'theme':'base', 'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryBorderColor': '#000000',
+    'fontSize': '32px',
+    'fontFamily': 'Arial',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'tertiaryTextColor': '#000000',
+    'nodePadding': '40'
+}, 'flowchart': {'useMaxWidth': false, 'htmlLabels': true, 'curve': 'linear', 'rankSpacing': 200, 'nodeSpacing': 120, 'padding': '50'}}}%%
+graph TB
+    subgraph FRONTEND["FRONTEND LAYER"]
+        direction TB
+        USER["User Input<br/>Natural Language Query"]
+    end
+
+    subgraph BACKEND["BACKEND - LangGraph Engine"]
+        direction TB
+
+        STATE["LangGraph State<br/>Messages & Context"]
+
+        subgraph CORE["AGENTIC CORE"]
+            direction TB
+            SUPER["SUPERVISOR<br/>Decision & Routing"]
+        end
+
+        subgraph AGENTS["SPECIALIZED AGENTS"]
+            direction TB
+            A1["General Agent<br/>QA Response"]
+            A2["Geomaterial Agent<br/>Mineral Data"]
+            A3["Locality Agent<br/>Geographic Data"]
+            A4["Vega Plot Agent<br/>Visualization"]
+        end
+
+        subgraph TOOLS["MCP TOOLS LAYER"]
+            direction TB
+            T1["collect_geomaterials()"]
+            T2["collect_localities()"]
+            T6["vega spec()"]
+        end
+    end
+
+    USER -->|"HTTP POST<br/>/api/agent/chat"| STATE
+    STATE -->|"Invoke<br/>LangGraph"| SUPER
+
+    SUPER -->|"Route to<br/>General QA"| A1
+    SUPER -->|"Route to<br/>Mineral Data"| A2
+    SUPER -->|"Route to<br/>Location Data"| A3
+    SUPER -->|"Route to<br/>Visualization"| A4
+
+    A1 -->|"Text<br/>Response"| SUPER
+    A2 -->|"Request<br/>Tools"| SUPER
+    A3 -->|"Request<br/>Tools"| SUPER
+    A4 -->|"Request<br/>Tools"| SUPER
+
+    A2 -->|"Invoke"| T1
+    A3 -->|"Invoke"| T2
+    A4 -->|"Invoke"| T6
+
+    T1 -->|"ToolResponse"| SUPER
+    T2 -->|"ToolResponse"| SUPER
+    T6 -->|"Validation<br/>Response"| SUPER
+
+    SUPER -->|"Aggregated<br/>Response"| USER
+
+    style USER fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+
+    style STATE fill:#f3e5f5,stroke:#512da8,stroke-width:3px,color:#000
+    style SUPER fill:#d1c4e9,stroke:#512da8,stroke-width:4px,color:#000
+
+    style A1 fill:#f8bbd0,stroke:#c2185b,stroke-width:3px,color:#000
+    style A2 fill:#bbdefb,stroke:#1976d2,stroke-width:3px,color:#000
+    style A3 fill:#c8e6c9,stroke:#388e3c,stroke-width:3px,color:#000
+    style A4 fill:#ffe0b2,stroke:#f57c00,stroke-width:3px,color:#000
+
+    style T1 fill:#fff9c4,stroke:#fbc02d,stroke-width:3px,color:#000
+    style T2 fill:#fff9c4,stroke:#fbc02d,stroke-width:3px,color:#000
+    style T6 fill:#e8d4f8,stroke:#7b1fa2,stroke-width:3px,color:#000
+
+    linkStyle default stroke:#000,stroke-width:3px

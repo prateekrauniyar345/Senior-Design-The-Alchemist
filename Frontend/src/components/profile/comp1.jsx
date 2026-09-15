@@ -1,1 +1,1 @@
-// component3.jsx
+// Frontend/src/components/profile/comp1.jsx

@@ -161,7 +161,15 @@
 .form-group .form-control:focus {
   outline: none;
   border-color: #5a67d8;
-  background-color: #2a2c34;
+  background-color: #1c1c1e;
+  color: #fff;
+}
+
+.form-group .form-control:disabled {
+  background-color: #1c1c1e;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .form-group .form-control::placeholder {

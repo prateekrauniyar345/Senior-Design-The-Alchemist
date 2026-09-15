@@ -1,3 +1,4 @@
+// Frontend/src/pages/Logout.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';

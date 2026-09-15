@@ -1,4 +1,4 @@
-// testBackendHealth.js
+// Frontend/src/api/testEndpoint.js
 export async function testBackendHealth() {
   try {
     const response = await fetch("/api/health"); 

@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/SettingsModal.jsx
 import React, { useState } from 'react';
 import { X, Brain, Thermometer, MessageSquare, Sliders } from 'lucide-react';
 import './SettingsModal.css';

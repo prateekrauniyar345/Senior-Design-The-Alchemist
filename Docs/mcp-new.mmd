@@ -1,0 +1,65 @@
+%%{init: {'theme':'base', 'themeVariables': {
+    'background': '#ffffff',
+    'fontSize': '18px',
+    'clusterBkg': '#f0f4ff',
+    'clusterBorder': '#001a4d',
+    'primaryColor': '#bbdefb',
+    'primaryBorderColor': '#0d47a1'
+}}}%%
+graph TD
+    subgraph "MCP Server (mcp_server.py - Port 8010)"
+        direction TB
+        
+        FastMCP["<b>FastMCP Instance</b><br/>Mindat Master Server<br/>HTTP Transport on :8010"]
+        
+        subgraph "Registered Tools"
+            T1["<b>collect_geomaterials</b><br/>Query Mindat geomaterials<br/>with filters"]
+            T2["<b>collect_localities</b><br/>Query Mindat localities<br/>by country/elements"]
+            T3["<b>profile_sample_data</b><br/>Infer schema from JSON<br/>type inference"]
+        end
+        
+        FastMCP --> T1
+        FastMCP --> T2
+        FastMCP --> T3
+    end
+
+    subgraph "Tool Dependencies & Resources"
+        MinAPI["🌐 Mindat.org API<br/>(~40 endpoints)"]
+        FS["📁 /contents<br/>sample_data/"]
+        Geom["geomaterial.py<br/>collect_geomaterials()"]
+        Loc["locality.py<br/>collect_localities()"]
+        Prof["data_profile.py<br/>profile_sample_data()"]
+    end
+
+    subgraph "Service Layer"
+        GeoSvc["GeomaterialAPI<br/>mindat_endpoints_services.py"]
+        LocSvc["LocalityAPI<br/>mindat_endpoints_services.py"]
+    end
+
+    %% Tool to Implementation
+    T1 --> Geom
+    T2 --> Loc
+    T3 --> Prof
+
+    %% Implementation to Service
+    Geom --> GeoSvc
+    Loc --> LocSvc
+
+    %% Service to External
+    GeoSvc --> MinAPI
+    LocSvc --> MinAPI
+    Prof --> FS
+
+    %% Return paths
+    MinAPI -->|Save JSON| FS
+    FS -->|Return Paths| Prof
+
+    %% Server Communication
+    Client["MCP Client<br/>(initialize_agent.py)<br/>HTTP localhost:8010/mcp"]
+    Client <-->|JSON-RPC| FastMCP
+
+    style FastMCP fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px
+    style T1 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style T2 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style T3 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Client fill:#b3e5fc,stroke:#0277bd,stroke-width:2px

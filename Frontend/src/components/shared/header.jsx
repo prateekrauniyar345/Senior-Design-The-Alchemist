@@ -1,3 +1,4 @@
+// Frontend/src/components/shared/header.jsx
 import { Navbar, Nav, Button, Dropdown } from "react-bootstrap";
 import { LogIn, UserPlus, User, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';

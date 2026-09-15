@@ -1,10 +1,13 @@
+// Frontend/src/components/chats/MessageBubble.jsx
 import React, { useState } from 'react';
 import { IconUser } from './IconComponents.jsx';
 import { Download, Mail, FileImage, FileText } from 'lucide-react';
+import DataTable from './DataTable.jsx';
+import VegaChart from './VegaChart.jsx';
 
 // --- Component: MessageBubble ---
 const MessageBubble = React.memo(({ message }) => {
-  const { sender, text, timestamp, image } = message;
+  const { sender, text, timestamp, image, sampleData, chartSpec, chartData } = message;
   const isUser = sender === 'user';
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
@@ -88,10 +91,20 @@ const MessageBubble = React.memo(({ message }) => {
   };
 
   return (
-    <div className={`d-flex ${isUser ? 'justify-content-end' : 'justify-content-start'} mb-4`}>
+    <div className={`w-100 d-flex ${isUser ? 'justify-content-end' : 'justify-content-start'} mb-4`}
+      style={{
+        // backgroundColor : 'blue',
+        // maxWidth : '100% !important'
+        // border: '1px solid blue'
+      }}
+    >
       <div
         className={`d-flex align-items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-        style={{ maxWidth: '48rem' }}
+        style={{ 
+          maxWidth: '48rem',
+          // maxWidth : '100%',
+          // border : '1px solid pink'
+        }}
       >
         {/* Avatar */}
         <div 
@@ -99,7 +112,8 @@ const MessageBubble = React.memo(({ message }) => {
           style={{ 
             width: '32px', 
             height: '32px', 
-            backgroundColor: isUser ? '#374151' : 'transparent'
+            backgroundColor: isUser ? '#374151' : 'transparent',
+            // border : '1px solid red'
           }}
           aria-hidden="true"
         >
@@ -115,7 +129,13 @@ const MessageBubble = React.memo(({ message }) => {
         </div>
         
         {/* Message Content */}
-        <div className={`d-flex flex-column ${isUser ? 'align-items-end' : 'align-items-start'}`}>
+        <div 
+          className={`d-flex flex-column ${isUser ? 'align-items-end' : 'align-items-start'}`} 
+          style={{ 
+            width: '100%', 
+            // border : '1px solid blue'
+          }}
+        >
           <div
             className="p-3 rounded"
             style={{
@@ -130,43 +150,73 @@ const MessageBubble = React.memo(({ message }) => {
                 fontSize: '14px', 
                 lineHeight: '1.625', 
                 whiteSpace: 'pre-wrap', 
-                wordBreak: 'break-word' 
+                wordBreak: 'break-word', 
               }}>
                 {text}
               </p>
             )}
+          </div>
 
-            {/* Image (Plot) */}
-            {image && (
-              <div className="mt-2">
-                {isHtmlFile ? (
-                  <iframe
-                    src={image}
-                    title="Interactive Heatmap"
-                    style={{
-                      width: '100%',
-                      height: '500px',
-                      borderRadius: '8px',
-                      border: '1px solid #4b5563'
-                    }}
-                  />
-                ) : (
-                  <img
-                    src={image}
-                    alt="Generated plot"
-                    style={{
-                      maxWidth: '100%',
-                      height: 'auto',
-                      borderRadius: '8px',
-                      border: '1px solid #4b5563'
-                    }}
-                  />
-                )}
+          {/* Data Table — only when no chart is present */}
+          {sampleData && sampleData.length > 0 && !chartSpec && (
+            <div style={{ width: '100%', marginTop: '8px' }}>
+              <DataTable data={sampleData} />
+            </div>
+          )}
+
+          {/* Vega-Lite Chart */}
+          {chartSpec && (
+            <div style={{ width: '100%' }}>
+              <VegaChart spec={chartSpec} data={sampleData || chartData} />
+            </div>
+          )}
+
+          {/* Image (Plot) */}
+          {image && (
+            <div className="mt-2">
+              {isHtmlFile ? (
+                <iframe
+                  src={image}
+                  title="Interactive Heatmap"
+                  style={{
+                    width: '100%',
+                    height: '500px',
+                    borderRadius: '8px',
+                    border: '1px solid #4b5563'
+                  }}
+                />
+              ) : (
+                <img
+                  src={image}
+                  alt="Generated plot"
+                  style={{
+                    maxWidth: '100%',
+                    height: 'auto',
+                    borderRadius: '8px',
+                    border: '1px solid #4b5563'
+                  }}
+                />
+              )}
+              
+              {/* Download and Email Buttons */}
+              <div className="mt-3 d-flex gap-2 flex-wrap">
+                <button
+                  onClick={() => handleDownload(isHtmlFile ? 'html' : 'png')}
+                  disabled={isDownloading}
+                  className="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
+                  style={{
+                    fontSize: '0.875rem',
+                    padding: '0.375rem 0.75rem',
+                    borderRadius: '6px'
+                  }}
+                >
+                  <FileImage size={16} />
+                  {isDownloading ? 'Downloading...' : `Download ${isHtmlFile ? 'HTML' : 'PNG'}`}
+                </button>
                 
-                {/* Download and Email Buttons */}
-                <div className="mt-3 d-flex gap-2 flex-wrap">
+                {!isHtmlFile && (
                   <button
-                    onClick={() => handleDownload(isHtmlFile ? 'html' : 'png')}
+                    onClick={() => handleDownload('pdf')}
                     disabled={isDownloading}
                     className="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
                     style={{
@@ -175,42 +225,26 @@ const MessageBubble = React.memo(({ message }) => {
                       borderRadius: '6px'
                     }}
                   >
-                    <FileImage size={16} />
-                    {isDownloading ? 'Downloading...' : `Download ${isHtmlFile ? 'HTML' : 'PNG'}`}
+                    <FileText size={16} />
+                    {isDownloading ? 'Converting...' : 'Download PDF'}
                   </button>
-                  
-                  {!isHtmlFile && (
-                    <button
-                      onClick={() => handleDownload('pdf')}
-                      disabled={isDownloading}
-                      className="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
-                      style={{
-                        fontSize: '0.875rem',
-                        padding: '0.375rem 0.75rem',
-                        borderRadius: '6px'
-                      }}
-                    >
-                      <FileText size={16} />
-                      {isDownloading ? 'Converting...' : 'Download PDF'}
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={() => setShowEmailModal(true)}
-                    className="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
-                    style={{
-                      fontSize: '0.875rem',
-                      padding: '0.375rem 0.75rem',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    <Mail size={16} />
-                    Email
-                  </button>
-                </div>
+                )}
+                
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="btn btn-sm btn-outline-light d-flex align-items-center gap-1"
+                  style={{
+                    fontSize: '0.875rem',
+                    padding: '0.375rem 0.75rem',
+                    borderRadius: '6px'
+                  }}
+                >
+                  <Mail size={16} />
+                  Email
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Timestamp */}
           {timestamp && (
@@ -226,6 +260,8 @@ const MessageBubble = React.memo(({ message }) => {
           )}
         </div>
       </div>
+
+      
 
       {/* Email Modal */}
       {showEmailModal && (

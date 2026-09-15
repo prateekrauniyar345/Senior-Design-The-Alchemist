@@ -1,3 +1,4 @@
+// Frontend/src/components/chats/ChatInput.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { IconSend } from './IconComponents.jsx';
 
